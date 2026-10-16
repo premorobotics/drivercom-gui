@@ -8,9 +8,11 @@ import { Text } from "../../../components/ui/text";
 import { FormNumberInput } from "../../../components/Form/FormNumberInput";
 import { FormCheckBox } from "../../../components/Form/FormCheckBox";
 
-import { IconChevronDown } from "@tabler/icons-solidjs";
+import { IconChevronDown, IconHelp } from "@tabler/icons-solidjs";
 import { prettierLabel } from "~/utils/PrettierLabel";
 import { css } from "styled-system/css";
+import { Tooltip } from "~/components/ui/tooltip";
+import { IconButton } from "~/components/ui/icon-button";
 
 export type ConfigFormatObjectProps = {
   id: string;
@@ -32,6 +34,12 @@ export const ConfigFormatObject = (props: ConfigFormatObjectProps) => {
 
   let mapKey: string | undefined = props.linkKey;
   const entries = Object.entries(props.format);
+  const objectEntries = entries.filter(
+    ([, value]) => typeof value === "object",
+  );
+  const nonObjectEntries = entries.filter(
+    ([, value]) => typeof value !== "object",
+  );
 
   onMount(() => {
     checkLinkField();
@@ -93,343 +101,381 @@ export const ConfigFormatObject = (props: ConfigFormatObjectProps) => {
   };
 
   return (
-    <div style={{ display: "flex", "flex-direction": "column", gap: "0.5rem" }}>
+    <div style={{ display: "flex", "flex-direction": "column", gap: "0.2rem" }}>
       <Show when={render()}>
-        <For each={entries}>
-          {(entry, index) => {
-            const key = entry[0];
-            const value = entry[1];
-            const id = props.id + "." + key;
-            const config = props.config[`${key}` as keyof typeof props.config];
-            const originalFile = props.originalFile
-              ? props.originalFile[key as keyof typeof props.originalFile]
-              : null;
-            const label = !isNaN(Number(key))
-              ? `${props.id.split(".").pop()} ${Number(key) + 1}`
-              : key;
-            const description = props.description
-              ? props.description[key as keyof typeof props.description]
-              : undefined;
-            const descriptionText = props.description
-              ? props.description[`__${key}` as keyof typeof props.description]
-              : null;
+        <Show when={objectEntries.length > 0}>
+          <For each={objectEntries}>
+            {(entry) => {
+              const key = entry[0];
+              const value = entry[1];
+              const id = props.id + "." + key;
+              const config =
+                props.config[`${key}` as keyof typeof props.config];
+              const originalFile = props.originalFile
+                ? props.originalFile[key as keyof typeof props.originalFile]
+                : null;
+              const label = !isNaN(Number(key))
+                ? `${props.id.split(".").pop()} ${Number(key) + 1}`
+                : key;
+              const description = props.description
+                ? props.description[key as keyof typeof props.description]
+                : undefined;
+              const descriptionText = props.description
+                ? props.description[
+                    `__${key}` as keyof typeof props.description
+                  ]
+                : null;
 
-            if (typeof value === "object") {
-              const innerValues = Object.values(value);
-              if (
-                innerValues.length === 1 &&
-                typeof innerValues[0] === "object" &&
-                innerValues[0]
-              ) {
-                const innerKey = Object.keys(value)[0];
-                const innerId = id + "." + innerKey;
-                const innerConfig = () =>
-                  config[innerKey as keyof typeof config];
-                const innerOriginalFile = originalFile
-                  ? originalFile[innerKey as keyof typeof originalFile]
-                  : null;
-                const accordionItemValue = label + "." + key + "." + innerKey;
-                const innerDesc = description
-                  ? description[innerKey as keyof typeof description]
-                  : null;
-                const innderDescText = description
-                  ? description[`__${innerKey}` as keyof typeof description]
-                  : null;
-
+              if (typeof value === "object") {
+                const innerValues = Object.values(value);
                 if (
-                  props.accordionStatuses &&
-                  !props.accordionStatuses.has(innerId)
+                  innerValues.length === 1 &&
+                  typeof innerValues[0] === "object" &&
+                  innerValues[0]
                 ) {
-                  props.accordionStatuses.set(innerId, [accordionItemValue]);
-                }
+                  const innerKey = Object.keys(value)[0];
+                  const innerId = id + "." + innerKey;
+                  const innerConfig = () =>
+                    config[innerKey as keyof typeof config];
+                  const innerOriginalFile = originalFile
+                    ? originalFile[innerKey as keyof typeof originalFile]
+                    : null;
+                  const accordionItemValue = label + "." + key + "." + innerKey;
+                  const innerDesc = description
+                    ? description[innerKey as keyof typeof description]
+                    : null;
+                  const innderDescText = description
+                    ? description[`__${innerKey}` as keyof typeof description]
+                    : null;
 
-                return (
-                  <Accordion.Root
-                    multiple
-                    style={{ "border-width": "1px", "border-radius": "0.5rem" }}
-                    defaultValue={props.accordionStatuses!.get(innerId)!}
-                    onValueChange={(details) => {
-                      if (props.accordionStatuses) {
-                        props.accordionStatuses.set(innerId, details.value);
-                      }
-                    }}
-                  >
-                    <Accordion.Item
-                      value={accordionItemValue}
-                      borderWidth="0"
-                      padding="0"
-                    >
-                      <Accordion.ItemTrigger
-                        fontSize={"sm"}
-                        justifyContent={"left"}
-                        alignItems={"center"}
-                      >
-                        <div
-                          style={{
-                            width: "50%",
-                            display: "flex",
-                            gap: "0.5rem",
-                            "align-items": "center",
-                          }}
-                        >
-                          <Text fontWeight={"bold"}>
-                            {isNaN(Number(key))
-                              ? prettierLabel(label)
-                              : `Axis ${Number(key) + 1}`}
-                          </Text>
+                  if (
+                    props.accordionStatuses &&
+                    !props.accordionStatuses.has(innerId)
+                  ) {
+                    props.accordionStatuses.set(innerId, [accordionItemValue]);
+                  }
 
-                          <Show when={innderDescText}>
-                            <Text
-                              textStyle="sm"
-                              fontWeight="light"
-                              style={{
-                                width: "100%",
-                              }}
-                              color="fg.default"
-                            >
-                              {
-                                innderDescText![
-                                  "description" as keyof typeof innderDescText
-                                ]
-                              }
-                            </Text>
-                          </Show>
-                        </div>
-                        <Accordion.ItemIndicator marginLeft={`50%`}>
-                          <IconChevronDown />
-                        </Accordion.ItemIndicator>
-                      </Accordion.ItemTrigger>
-                      <Accordion.ItemContent borderWidth="0" padding="0.5rem">
-                        <ConfigFormatObject
-                          id={innerId}
-                          format={innerValues[0]}
-                          config={innerConfig()}
-                          originalFile={
-                            innerOriginalFile &&
-                            typeof innerOriginalFile === "object"
-                              ? innerOriginalFile
-                              : undefined
-                          }
-                          description={innerDesc ?? undefined}
-                          changeUnit={props.changeUnit}
-                          accordionStatuses={props.accordionStatuses}
-                          focusFieldKey={props.focusFieldKey}
-                        />
-                      </Accordion.ItemContent>
-                    </Accordion.Item>
-                  </Accordion.Root>
-                );
-              } else {
-                const accordionItemValue = label + "." + key;
-                if (
-                  props.accordionStatuses &&
-                  !props.accordionStatuses.has(id)
-                ) {
-                  props.accordionStatuses.set(id, [accordionItemValue]);
-                }
-                return (
-                  <Accordion.Root
-                    multiple
-                    boxShadow={"md"}
-                    style={{
-                      padding: "0.5rem",
-                      "border-width": "1px",
-                      "border-radius": "0.5rem",
-                    }}
-                    defaultValue={
-                      props.accordionStatuses
-                        ? props.accordionStatuses.get(id)!
-                        : undefined
-                    }
-                    onValueChange={(details) => {
-                      if (props.accordionStatuses) {
-                        props.accordionStatuses.set(id, details.value);
-                      }
-                    }}
-                  >
-                    <Accordion.Item
-                      value={accordionItemValue}
-                      borderRadius={"0.2rem"}
-                      borderWidth="0"
+                  return (
+                    <Accordion.Root
+                      multiple
+                      style={{
+                        "border-width": "1px",
+                        "border-radius": "0.2rem",
+                        padding: "0.2rem",
+                      }}
+                      defaultValue={props.accordionStatuses!.get(innerId)!}
+                      onValueChange={(details) => {
+                        if (props.accordionStatuses) {
+                          props.accordionStatuses.set(innerId, details.value);
+                        }
+                      }}
                     >
-                      <Accordion.ItemTrigger
-                        fontSize={"sm"}
-                        justifyContent={"left"}
-                        alignItems={"center"}
+                      <Accordion.Item
+                        value={accordionItemValue}
+                        borderWidth="0"
                         padding="0"
                       >
-                        <div
-                          style={{
-                            width: "50%",
-                            display: "flex",
-                            gap: "0.5rem",
-                            "align-items": "center",
-                          }}
+                        <Accordion.ItemTrigger
+                          fontSize={"xs"}
+                          justifyContent={"left"}
+                          alignItems={"center"}
+                          padding="0"
+                          background={"gray.3"}
                         >
                           <div
                             style={{
-                              width: descriptionText ? "20rem" : "unset",
+                              width: "50%",
+                              display: "flex",
+                              "align-items": "center",
                             }}
                           >
                             <Text fontWeight={"bold"}>
                               {isNaN(Number(key))
                                 ? prettierLabel(label)
                                 : `Axis ${Number(key) + 1}`}
-                            </Text>
 
-                            <Show when={descriptionText}>
-                              <Text
-                                textStyle="sm"
-                                fontWeight="light"
-                                style={{
-                                  width: "100%",
-                                }}
-                                color="fg.default"
-                              >
-                                {
-                                  descriptionText![
-                                    "description" as keyof typeof descriptionText
-                                  ]
-                                }
-                              </Text>
-                            </Show>
+                              <Show when={innderDescText}>
+                                <Tooltip
+                                  content={
+                                    innderDescText![
+                                      "description" as keyof typeof innderDescText
+                                    ]
+                                  }
+                                >
+                                  <IconButton
+                                    variant="plain"
+                                    size="2xs"
+                                    color={"fg.subtle"}
+                                  >
+                                    <IconHelp />
+                                  </IconButton>
+                                </Tooltip>
+                              </Show>
+                            </Text>
                           </div>
-                        </div>
-                        <div
-                          style={{
-                            width: "100%",
-                            display: "flex",
-                            "flex-direction": "row-reverse",
-                          }}
-                        >
-                          <Accordion.ItemIndicator>
+                          <Accordion.ItemIndicator marginLeft={`50%`}>
                             <IconChevronDown />
                           </Accordion.ItemIndicator>
-                        </div>
-                      </Accordion.ItemTrigger>
-                      <Accordion.ItemContent padding="0.5rem">
-                        <ConfigFormatObject
-                          id={id}
-                          format={value}
-                          config={config}
-                          originalFile={
-                            originalFile && typeof originalFile === "object"
-                              ? originalFile
-                              : undefined
-                          }
-                          description={description ?? undefined}
-                          changeUnit={props.changeUnit}
-                          accordionStatuses={props.accordionStatuses}
-                          focusFieldKey={props.focusFieldKey}
-                        />
-                      </Accordion.ItemContent>
-                    </Accordion.Item>
-                  </Accordion.Root>
-                );
-              }
-            } else if (typeof value === "number") {
-              if (key === "_") return;
-
-              if (id.includes(`gain`) && !id.includes("denominator")) {
-                if (props.gainLockStatuses && !props.gainLockStatuses.has(id)) {
-                  props.gainLockStatuses.set(id, createSignal<boolean>(false));
+                        </Accordion.ItemTrigger>
+                        <Accordion.ItemContent borderWidth="0" gap="0">
+                          <ConfigFormatObject
+                            id={innerId}
+                            format={innerValues[0]}
+                            config={innerConfig()}
+                            originalFile={
+                              innerOriginalFile &&
+                              typeof innerOriginalFile === "object"
+                                ? innerOriginalFile
+                                : undefined
+                            }
+                            description={innerDesc ?? undefined}
+                            changeUnit={props.changeUnit}
+                            accordionStatuses={props.accordionStatuses}
+                            focusFieldKey={props.focusFieldKey}
+                          />
+                        </Accordion.ItemContent>
+                      </Accordion.Item>
+                    </Accordion.Root>
+                  );
+                } else {
+                  const accordionItemValue = label + "." + key;
+                  if (
+                    props.accordionStatuses &&
+                    !props.accordionStatuses.has(id)
+                  ) {
+                    props.accordionStatuses.set(id, [accordionItemValue]);
+                  }
+                  return (
+                    <Accordion.Root
+                      multiple
+                      style={{
+                        padding: "0.2rem",
+                        "border-width": "1px",
+                        "border-radius": "0.2rem",
+                      }}
+                      defaultValue={
+                        props.accordionStatuses
+                          ? props.accordionStatuses.get(id)!
+                          : undefined
+                      }
+                      onValueChange={(details) => {
+                        if (props.accordionStatuses) {
+                          props.accordionStatuses.set(id, details.value);
+                        }
+                      }}
+                    >
+                      <Accordion.Item
+                        value={accordionItemValue}
+                        borderRadius={"0.2rem"}
+                        borderWidth="0"
+                      >
+                        <Accordion.ItemTrigger
+                          fontSize={"xs"}
+                          justifyContent={"left"}
+                          alignItems={"center"}
+                          padding="0"
+                        >
+                          <div
+                            style={{
+                              width: "50%",
+                              display: "flex",
+                              "align-items": "center",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: descriptionText ? "20rem" : "unset",
+                              }}
+                            >
+                              <Text fontWeight={"bold"} display="flex">
+                                {isNaN(Number(key))
+                                  ? prettierLabel(label)
+                                  : `Axis ${Number(key) + 1}`}
+                                <Show when={descriptionText}>
+                                  <Tooltip
+                                    content={
+                                      descriptionText![
+                                        "description" as keyof typeof descriptionText
+                                      ]
+                                    }
+                                  >
+                                    <IconButton
+                                      variant="plain"
+                                      size="2xs"
+                                      color={"fg.subtle"}
+                                    >
+                                      <IconHelp />
+                                    </IconButton>
+                                  </Tooltip>
+                                </Show>
+                              </Text>
+                            </div>
+                          </div>
+                          <div
+                            style={{
+                              width: "100%",
+                              display: "flex",
+                              "flex-direction": "row-reverse",
+                            }}
+                          >
+                            <Accordion.ItemIndicator>
+                              <IconChevronDown />
+                            </Accordion.ItemIndicator>
+                          </div>
+                        </Accordion.ItemTrigger>
+                        <Accordion.ItemContent padding="0">
+                          <ConfigFormatObject
+                            id={id}
+                            format={value}
+                            config={config}
+                            originalFile={
+                              originalFile && typeof originalFile === "object"
+                                ? originalFile
+                                : undefined
+                            }
+                            description={description ?? undefined}
+                            changeUnit={props.changeUnit}
+                            accordionStatuses={props.accordionStatuses}
+                            focusFieldKey={props.focusFieldKey}
+                          />
+                        </Accordion.ItemContent>
+                      </Accordion.Item>
+                    </Accordion.Root>
+                  );
                 }
               }
+            }}
+          </For>
+        </Show>
+        <Show when={nonObjectEntries.length > 0}>
+          <div
+            style={{
+              width: "100%",
+              height: "fit-content",
+              display: "grid",
+              "grid-template-columns": `minmax(0, 1fr) 50%`,
+              "grid-auto-flow": "row",
+              "column-gap": "0.4rem",
+            }}
+          >
+            <For each={nonObjectEntries}>
+              {([key, value], index) => {
+                const id = props.id + "." + key;
+                const label = !isNaN(Number(key))
+                  ? `${props.id.split(".").pop()} ${Number(key) + 1}`
+                  : key;
+                const descriptionText = props.description
+                  ? props.description[
+                      `__${key}` as keyof typeof props.description
+                    ]
+                  : null;
+                if (typeof value === "number") {
+                  if (key === "_") return;
 
-              return (
-                <div
-                  style={{
-                    "border-top-width": index() === 0 ? "0px" : "1px",
-                    "padding-top": index() === 0 ? "0px" : "0.5rem",
-                  }}
-                  class={css({ borderColor: "gray.4" })}
-                >
-                  <FormNumberInput
-                    background={"gray.2"}
-                    id={id + "." + key}
-                    label={label}
-                    originalValue={
-                      props.originalFile
-                        ? props.originalFile[
-                            key as keyof typeof props.originalFile
-                          ]
-                        : undefined
-                    }
-                    desc={
-                      props.description && `__${key}` in props.description
-                        ? props.description[
-                            `__${key}` as keyof typeof props.description
-                          ]
-                        : undefined
-                    }
-                    changeUnits={props.changeUnit}
-                    lockStatus={props.gainLockStatuses}
-                    lockStatusKey={id}
-                    inputValue={store[key as keyof typeof store]}
-                    onInputChange={(value) => {
-                      setStore(
-                        key as keyof typeof store,
-                        // @ts-ignore: TSC unable to handle generic object type
-                        // in store
-                        value,
+                  if (id.includes(`gain`) && !id.includes("denominator")) {
+                    if (
+                      props.gainLockStatuses &&
+                      !props.gainLockStatuses.has(id)
+                    ) {
+                      props.gainLockStatuses.set(
+                        id,
+                        createSignal<boolean>(false),
                       );
-                    }}
-                    isFocus={props.focusFieldKey === key}
-                  />
-                </div>
-              );
-            } else if (typeof value === "boolean") {
-              const label = !isNaN(Number(key))
-                ? `${props.id.split(".").pop()} ${Number(key) + 1}`
-                : key;
-              return (
-                <div style={{ "margin-bottom": "0.5em" }}>
-                  <FormCheckBox
-                    id={props.id + "." + key}
-                    label={label}
-                    originalValue={
-                      props.originalFile
-                        ? props.originalFile[
-                            key as keyof typeof props.originalFile
-                          ]
-                        : undefined
                     }
-                    desc={
-                      props.description && `__${key}` in props.description
-                        ? props.description[
-                            `__${key}` as keyof typeof props.description
-                          ]
-                        : undefined
-                    }
-                    checked={store[key as keyof typeof store]}
-                    onCheckedChange={(checked) =>
-                      setStore(
-                        key as keyof typeof store,
-                        // @ts-ignore: TSC unable to handle generic object type
-                        // in store
-                        checked,
-                      )
-                    }
-                    onClick={() => {
-                      setPrevCheckBoxIndex(index());
-                    }}
-                    onShiftClick={() => {
-                      if (typeof prevCheckBoxIndex() === "number") {
-                        checkBoxShiftClick(
-                          prevCheckBoxIndex()!,
-                          index(),
-                          store,
-                        );
-                        setPrevCheckBoxIndex(null);
-                      }
-                    }}
-                    isFocus={props.focusFieldKey === key}
-                  />
-                </div>
-              );
-            }
-          }}
-        </For>
+                  }
+
+                  return (
+                    <div
+                      style={{
+                        "border-bottom-width":
+                          index() >=
+                          nonObjectEntries.length -
+                            (nonObjectEntries.length % 2 == 0 ? 2 : 1)
+                            ? "0px"
+                            : "1px",
+                      }}
+                      class={css({ borderColor: "gray.4" })}
+                    >
+                      <FormNumberInput
+                        background={"gray.2"}
+                        id={id + "." + key}
+                        label={label}
+                        originalValue={
+                          props.originalFile
+                            ? props.originalFile[
+                                key as keyof typeof props.originalFile
+                              ]
+                            : undefined
+                        }
+                        desc={descriptionText ?? props.description}
+                        changeUnits={props.changeUnit}
+                        lockStatus={props.gainLockStatuses}
+                        lockStatusKey={id}
+                        inputValue={store[key as keyof typeof store]}
+                        onInputChange={(value) => {
+                          setStore(
+                            key as keyof typeof store,
+                            // @ts-ignore: TSC unable to handle generic object type
+                            // in store
+                            value,
+                          );
+                        }}
+                        isFocus={props.focusFieldKey === key}
+                      />
+                    </div>
+                  );
+                } else if (typeof value === "boolean") {
+                  const label = !isNaN(Number(key))
+                    ? `${props.id.split(".").pop()} ${Number(key) + 1}`
+                    : key;
+                  return (
+                    <div
+                      style={{
+                        "border-top-width": index() < 2 ? "0px" : "1px",
+                      }}
+                    >
+                      <FormCheckBox
+                        id={props.id + "." + key}
+                        label={label}
+                        originalValue={
+                          props.originalFile
+                            ? props.originalFile[
+                                key as keyof typeof props.originalFile
+                              ]
+                            : undefined
+                        }
+                        desc={descriptionText ?? props.description}
+                        checked={store[key as keyof typeof store]}
+                        onCheckedChange={(checked) =>
+                          setStore(
+                            key as keyof typeof store,
+                            // @ts-ignore: TSC unable to handle generic object type
+                            // in store
+                            checked,
+                          )
+                        }
+                        onClick={() => {
+                          setPrevCheckBoxIndex(index());
+                        }}
+                        onShiftClick={() => {
+                          if (typeof prevCheckBoxIndex() === "number") {
+                            checkBoxShiftClick(
+                              prevCheckBoxIndex()!,
+                              index(),
+                              store,
+                            );
+                            setPrevCheckBoxIndex(null);
+                          }
+                        }}
+                        isFocus={props.focusFieldKey === key}
+                      />
+                    </div>
+                  );
+                }
+              }}
+            </For>
+          </div>
+        </Show>
       </Show>
     </div>
   );
