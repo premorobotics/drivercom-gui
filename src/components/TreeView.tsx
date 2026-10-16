@@ -25,6 +25,7 @@ export const TreeView = (props: ArkTreeView.RootProps<Node>) => {
         background: "gray.1",
         overflowY: "auto",
         borderRightWidth: "1px",
+        fontSize: "xs",
       })}
       {...props}
       collection={props.collection}

@@ -3,6 +3,7 @@ import "./index.css"; // Necessary for PandaCSS
 import { lazy } from "solid-js";
 import { render } from "solid-js/web";
 import { Route, Router } from "@solidjs/router";
+import "pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css";
 
 import App from "./App";
 const Configuration = lazy(
