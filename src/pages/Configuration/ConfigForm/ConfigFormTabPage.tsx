@@ -1,27 +1,9 @@
 import { AccordionStates } from "./ConfigForm";
 import { LinkStates } from "./ConfigForm";
 import { GainLockStates } from "./ConfigForm";
-import {
-  JSX,
-  onMount,
-  For,
-  createSignal,
-  Show,
-  createEffect,
-  on,
-} from "solid-js";
+import { JSX, onMount, createEffect, on } from "solid-js";
 import { createStore } from "solid-js/store";
-import * as Accordion from "../../../components/ui/accordion";
-import { FormNumberInput } from "../../../components/Form/FormNumberInput";
-import { Text } from "../../../components/ui/text";
-import { IconChevronDown } from "@tabler/icons-solidjs";
 import { ConfigFormatObject } from "./ConfigFormatObject";
-import { prettierLabel } from "~/utils/PrettierLabel";
-import * as Select from "../../../components/ui/select";
-import { createListCollection } from "@ark-ui/solid";
-import { cclinkSpeed } from "~/store/GlobalState";
-import { FormCheckBox } from "~/components/Form/FormCheckBox";
-import { css } from "styled-system/css";
 
 export type ConfigFormTabPageProps = {
   id: string;
@@ -39,7 +21,7 @@ export type ConfigFormTabPageProps = {
 } & JSX.HTMLAttributes<HTMLDivElement>;
 
 export const ConfigFormTabPage = (props: ConfigFormTabPageProps) => {
-  const [store, setStore] = createStore(props.config);
+  const [store] = createStore(props.config);
   let ref: HTMLDivElement | undefined;
 
   onMount(() => {
@@ -73,39 +55,6 @@ export const ConfigFormTabPage = (props: ConfigFormTabPageProps) => {
     ),
   );
 
-  const [prevCheckBoxIndex, setPrevCheckBoxIndex] = createSignal<number | null>(
-    null,
-  );
-
-  const checkBoxShiftClick = (
-    prevIndex: number,
-    nextIndex: number,
-    form: object,
-  ) => {
-    const startNumber = prevIndex > nextIndex ? nextIndex : prevIndex + 1;
-    const endNumber = prevIndex < nextIndex ? nextIndex + 1 : prevIndex;
-    const values = Object.values(form);
-    const parseValues = values.slice(startNumber, endNumber);
-    if (parseValues.includes(values[prevIndex])) return;
-
-    const keys = Object.keys(form).slice(startNumber, endNumber);
-    keys.forEach((key) => {
-      setStore(
-        key as keyof typeof store,
-        // @ts-ignore : TSC unable to handle generic object type
-        // in store
-        values[prevIndex],
-      );
-    });
-  };
-
-  const objectEntries = Object.entries(props.format ?? props.config).filter(
-    ([, value]) => typeof value === "object",
-  );
-  const nonObjectEntries = Object.entries(props.format ?? props.config).filter(
-    ([, value]) => typeof value !== "object",
-  );
-
   return (
     <div
       id={props.id}
@@ -135,327 +84,19 @@ export const ConfigFormTabPage = (props: ConfigFormTabPageProps) => {
           gap: "0.2rem",
         }}
       >
-        <Show when={nonObjectEntries.length > 0}>
-          <div
-            style={{
-              width: "100%",
-              height: "fit-content",
-              display: "grid",
-              "grid-template-columns": `minmax(0, 1fr) 50%`,
-              "grid-auto-flow": "row",
-              "column-gap": "0.4rem",
-            }}
-          >
-            <For each={nonObjectEntries}>
-              {([key, value], index) => {
-                const id = props.id + "." + key;
-                const originalFile = props.originalFile
-                  ? props.originalFile[key as keyof typeof props.originalFile]
-                  : null;
-                const description = props.description
-                  ? props.description[
-                      `__${key}` as keyof typeof props.description
-                    ]
-                  : props.description;
-                if (typeof value === "number") {
-                  if (key === "_") return;
-                  const label = !isNaN(Number(key))
-                    ? `${props.id.split(".").pop()} ${Number(key) + 1}`
-                    : key;
-
-                  return (
-                    <div
-                      style={{
-                        "border-bottom-width":
-                          index() >=
-                          nonObjectEntries.length -
-                            (nonObjectEntries.length % 2 == 0 ? 2 : 1)
-                            ? "0px"
-                            : "1px",
-                        "grid-column": "span 1",
-                      }}
-                    >
-                      <FormNumberInput
-                        background={"gray.2"}
-                        id={`${props.id}.${key}`}
-                        label={label}
-                        originalValue={
-                          props.originalFile
-                            ? Number(
-                                props.originalFile[
-                                  key as keyof typeof props.originalFile
-                                ],
-                              )
-                            : undefined
-                        }
-                        desc={description}
-                        changeUnits={props.unitChange}
-                        inputValue={store[key as keyof typeof store]}
-                        onInputChange={(value) => {
-                          setStore(
-                            key as keyof typeof store,
-                            // @ts-ignore: TSC unable to handle generic object type
-                            // in store
-                            value,
-                          );
-                        }}
-                        isFocus={props.focusFieldKey === key}
-                      />
-                    </div>
-                  );
-                } else if (key === "cc_link_speed") {
-                  const collection = createListCollection({
-                    items: cclinkSpeed().map((cclink) => {
-                      return { label: cclink, value: cclink };
-                    }),
-                  });
-                  return (
-                    <div
-                      style={{
-                        display: "grid",
-                        "grid-template-columns": `minmax(0,1fr) 40%`,
-                        "align-items": "center",
-                        "border-bottom-width":
-                          index() ===
-                          nonObjectEntries.length -
-                            (nonObjectEntries.length % 2 ? 2 : 1)
-                            ? "0px"
-                            : "1px",
-                      }}
-                    >
-                      <Text
-                        display="flex"
-                        alignItems="center"
-                        gap="0.4rem"
-                        fontSize="sm"
-                      >
-                        <Show
-                          when={
-                            originalFile !== store[key as keyof typeof store]
-                          }
-                        >
-                          <div
-                            class={css({
-                              background: "accent.9",
-                              width: "0.5rem",
-                              height: "0.5rem",
-                              borderRadius: "1rem",
-                              marginTop: "0.3rem",
-                            })}
-                          />
-                        </Show>
-                        <div
-                          class={css({
-                            background:
-                              props.focusFieldKey === key
-                                ? "accent.7"
-                                : "transparent",
-                          })}
-                        >
-                          {"cc link speed"}
-                        </div>
-                      </Text>
-                      <Select.Root
-                        size="sm"
-                        collection={collection}
-                        value={[store[key as keyof typeof store] as string]}
-                        onValueChange={(e) => {
-                          setStore(
-                            key as keyof typeof store,
-                            //@ts-ignore
-                            e.value[0],
-                          );
-                        }}
-                      >
-                        <Select.Control>
-                          <Select.Trigger
-                            borderColor={"gray.5"}
-                            padding={"0"}
-                            height={"1.5rem"}
-                          >
-                            <Select.ValueText
-                              id={id}
-                              width="100%"
-                              placeholder="Select a framework"
-                              textAlign={"end"}
-                            />
-                            <Select.IndicatorGroup>
-                              <Select.Indicator />
-                            </Select.IndicatorGroup>
-                          </Select.Trigger>
-                        </Select.Control>
-                        <Select.Positioner>
-                          <Select.Content>
-                            <For each={collection.items}>
-                              {(item) => (
-                                <Select.Item item={item.value}>
-                                  <Select.ItemText>
-                                    {item.label}
-                                  </Select.ItemText>
-                                  <Select.ItemIndicator />
-                                </Select.Item>
-                              )}
-                            </For>
-                          </Select.Content>
-                        </Select.Positioner>
-                      </Select.Root>
-                    </div>
-                  );
-                } else if (value === "boolean") {
-                  const label = !isNaN(Number(key))
-                    ? `${props.id.split(".").pop()} ${Number(key) + 1}`
-                    : key;
-                  return (
-                    <div
-                      style={{
-                        "border-top-width": index() < 2 ? "0px" : "1px",
-                      }}
-                    >
-                      <FormCheckBox
-                        id={props.id + "." + key}
-                        label={label}
-                        originalValue={
-                          props.originalFile
-                            ? props.originalFile[
-                                key as keyof typeof props.originalFile
-                              ]
-                            : undefined
-                        }
-                        desc={description}
-                        checked={store[key as keyof typeof store]}
-                        onCheckedChange={(checked) =>
-                          setStore(
-                            key as keyof typeof store,
-                            // @ts-ignore: TSC unable to handle generic object type
-                            // in store
-                            checked,
-                          )
-                        }
-                        onClick={() => {
-                          setPrevCheckBoxIndex(index());
-                        }}
-                        onShiftClick={() => {
-                          if (typeof prevCheckBoxIndex() === "number") {
-                            checkBoxShiftClick(
-                              prevCheckBoxIndex()!,
-                              index(),
-                              store,
-                            );
-                            setPrevCheckBoxIndex(null);
-                          }
-                        }}
-                        isFocus={props.focusFieldKey === key}
-                      />
-                    </div>
-                  );
-                }
-              }}
-            </For>
-          </div>
-        </Show>
-        <Show when={objectEntries.length > 0}>
-          <For each={objectEntries}>
-            {([key, value]) => {
-              const id = props.id + "." + key;
-              const originalFile = props.originalFile
-                ? props.originalFile[key as keyof typeof props.originalFile]
-                : null;
-              const description = props.description
-                ? props.description[key as keyof typeof props.description]
-                : null;
-
-              if (key in store) {
-                const accordionItemValue = id + "." + key;
-                if (
-                  props.accordionStatuses &&
-                  !props.accordionStatuses.has(id)
-                ) {
-                  props.accordionStatuses.set(id, [accordionItemValue]);
-                }
-
-                const getAccordionValue = () =>
-                  props.accordionStatuses
-                    ? props.accordionStatuses.get(id)!
-                    : undefined;
-
-                if (typeof store[key as keyof typeof store] === "object") {
-                  const label = prettierLabel(
-                    isNaN(Number(key)) ? key : `axis ${Number(key) + 1}`,
-                  );
-                  if (description) {
-                    const innerKeys = Object.keys(value);
-                    const findHidden = innerKeys.map((key) => {
-                      if (`__${key}` in description) {
-                        const fieldDesc =
-                          description[`__${key}` as keyof typeof description];
-                        if (fieldDesc && "hidden" in fieldDesc) {
-                          return fieldDesc[
-                            "hidden" as keyof typeof fieldDesc
-                          ] as boolean;
-                        }
-                        return false;
-                      }
-                    });
-                    if (findHidden.every((find) => find)) return;
-                  }
-                  return (
-                    <Accordion.Root
-                      id={id}
-                      multiple
-                      style={{
-                        "border-width": "1px",
-                        padding: "0.2rem",
-                        "border-radius": "0.2rem",
-                        "grid-column": "1 / -1",
-                      }}
-                      defaultValue={getAccordionValue()}
-                      onValueChange={(details) => {
-                        if (props.accordionStatuses) {
-                          props.accordionStatuses.set(id, details.value);
-                        }
-                      }}
-                    >
-                      <Accordion.Item
-                        borderWidth="0"
-                        value={accordionItemValue}
-                      >
-                        <Accordion.ItemTrigger
-                          padding="0"
-                          fontSize={"xs"}
-                          fontWeight={"bold"}
-                        >
-                          <Text>{label}</Text>
-                          <Accordion.ItemIndicator>
-                            <IconChevronDown />
-                          </Accordion.ItemIndicator>
-                        </Accordion.ItemTrigger>
-                        <Accordion.ItemContent padding={"0"} gap="0" style={{}}>
-                          <ConfigFormatObject
-                            id={props.id + "." + key}
-                            format={value}
-                            config={store[key as keyof typeof store] as object}
-                            originalFile={
-                              originalFile && typeof originalFile === "object"
-                                ? originalFile
-                                : undefined
-                            }
-                            description={description ?? undefined}
-                            changeUnit={props.unitChange}
-                            accordionStatuses={props.accordionStatuses}
-                            linkKey={props.linkKey}
-                            linkedStatuses={props.linkedStatuses}
-                            gainLockStatuses={props.gainLockStatuses}
-                            focusFieldKey={props.focusFieldKey}
-                          />
-                        </Accordion.ItemContent>
-                      </Accordion.Item>
-                    </Accordion.Root>
-                  );
-                }
-              }
-            }}
-          </For>
-        </Show>
+        <ConfigFormatObject
+          id={props.id}
+          format={props.format}
+          config={store}
+          originalFile={props.originalFile}
+          description={props.description}
+          changeUnit={props.unitChange}
+          accordionStatuses={props.accordionStatuses}
+          linkKey={props.linkKey}
+          linkedStatuses={props.linkedStatuses}
+          gainLockStatuses={props.gainLockStatuses}
+          focusFieldKey={props.focusFieldKey}
+        />
       </div>
     </div>
   );

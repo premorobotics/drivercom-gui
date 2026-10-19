@@ -25,7 +25,7 @@ export const TreeView = (props: ArkTreeView.RootProps<Node>) => {
         background: "gray.1",
         overflowY: "auto",
         borderRightWidth: "1px",
-        fontSize: "xs",
+        fontSize: "sm",
       })}
       {...props}
       collection={props.collection}
@@ -202,24 +202,27 @@ interface Node {
 const generateBranch = (format: object, parent: string) => {
   const entries = Object.entries(format);
   const name = !parent.includes(`/`) ? parent : parent.split(`/`).at(-1)!;
+  const parseChildren = entries.filter(([key]) => isNaN(Number(key)));
+  const children =
+    parseChildren.length > 1
+      ? parseChildren.map(([key, value]) => {
+          const puncatation = typeof value === "object" ? "/" : "$";
+          const id = `${parent.length > 0 ? parent + puncatation : ""}${key}`;
+          if (typeof value !== "object") {
+            return {
+              id: id,
+              name: isNaN(Number(key)) ? key : `axis ${Number(key) + 1}`,
+            };
+          } else {
+            return generateBranch(value, id);
+          }
+        })
+      : undefined;
 
   const node: Node = {
     id: parent,
     name: isNaN(Number(name)) ? name : `axis ${Number(name) + 1}`,
-    children: [
-      ...entries.map(([key, value]) => {
-        const puncatation = typeof value === "object" ? "/" : "$";
-        const id = `${parent.length > 0 ? parent + puncatation : ""}${key}`;
-        if (typeof value !== "object") {
-          return {
-            id: id,
-            name: isNaN(Number(key)) ? key : `axis ${Number(key) + 1}`,
-          };
-        } else {
-          return generateBranch(value, id);
-        }
-      }),
-    ],
+    children: children,
   };
   return node;
 };
