@@ -47,6 +47,7 @@ import { Portal } from "solid-js/web";
 import { generateTreeCollection, TreeView } from "~/components/TreeView";
 import { GetFromPortButton } from "./ConfigForm/GetFromPortButton";
 import { SaveToPort } from "./ConfigForm/SaveToPort";
+import { DriverStatus } from "./ConfigForm/DriverStatus";
 
 export type ConfigTabPage = {
   filePath?: string;
@@ -646,8 +647,8 @@ export function ConfigTabContent() {
           <div
             ref={scrollContainer}
             style={{
-              width: "100%",
-              height: `calc(100% - 2.5rem)`,
+              width: `100%`,
+              height: `calc(100% - 2rem)`,
               "border-top-width": "1px",
             }}
           >
@@ -665,6 +666,9 @@ export function ConfigTabContent() {
             />
           </div>
         </Show>
+      </div>
+      <div style={{ width: "30rem", height: "100%" }}>
+        <DriverStatus driverStatus={getConfigForm()!.state} />
       </div>
     </div>
   );
