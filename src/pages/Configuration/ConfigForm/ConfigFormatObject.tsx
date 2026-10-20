@@ -116,6 +116,7 @@ export const ConfigFormatObject = (props: ConfigFormatObjectProps) => {
             : props.description
         }
         accordionStatuses={props.accordionStatuses}
+        changeUnit={props.changeUnit}
       />
     );
   }
@@ -302,6 +303,7 @@ export const ConfigFormatObject = (props: ConfigFormatObjectProps) => {
                     format={value}
                     description={description ? description[0] : description}
                     accordionStatuses={props.accordionStatuses}
+                    changeUnit={props.changeUnit}
                   />
                 );
               } else {
