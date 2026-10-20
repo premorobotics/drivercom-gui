@@ -211,6 +211,7 @@ export const FormNumberInput = (props: FormNumberInputProps) => {
               display="flex"
               alignItems="center"
               gap="0.4rem"
+              fontFamily={"body"}
             >
               <Show when={errorInputValue() || prevValue() !== inputValue()}>
                 <div
@@ -449,7 +450,13 @@ export const FormNumberInput = (props: FormNumberInputProps) => {
                   props.changeUnits ?? false,
                 )}
               >
-                <Text opacity="0.5" marginLeft="0.2em" fontSize="xs">
+                <Text
+                  opacity="0.5"
+                  marginLeft="0.2em"
+                  fontSize="xs"
+                  fontFamily="body"
+                  paddingTop="0.2rem"
+                >
                   {parseUnit(
                     changeUnitShort(
                       props.desc![
@@ -486,6 +493,7 @@ export const FormNumberInput = (props: FormNumberInputProps) => {
               width="100%"
               textAlign="right"
               marginRight={`calc(100% - 15rem)`}
+              fontFamily="body"
             >
               {`Invalid ${typeof props.inputValue}.`}
             </Text>

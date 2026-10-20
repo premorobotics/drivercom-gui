@@ -97,6 +97,7 @@ const TreeNode = (props: ArkTreeView.NodeProviderProps<Node>) => {
                     alignItems: "center",
                     gap: "0.5rem",
                     width: "100%",
+                    fontFamily: "body",
                   })}
                 >
                   <Dynamic

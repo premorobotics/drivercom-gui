@@ -7,13 +7,13 @@ export const textStyles = defineTextStyles({
   lg: { value: { fontSize: "lg", lineHeight: "1.75rem", fontFamily: "body" } },
   xl: { value: { fontSize: "xl", lineHeight: "1.875rem", fontFamily: "body" } },
   "2xl": {
-    value: { fontSize: "2xl", lineHeight: "2rem", fontFamily: "-apple-system" },
+    value: { fontSize: "2xl", lineHeight: "2rem", fontFamily: "body" },
   },
   "3xl": {
     value: {
       fontSize: "3xl",
       lineHeight: "2.375rem",
-      fontFamily: "-apple-system",
+      fontFamily: "body",
     },
   },
   "4xl": {
@@ -21,7 +21,7 @@ export const textStyles = defineTextStyles({
       fontSize: "4xl",
       lineHeight: "2.75rem",
       letterSpacing: "-0.02em",
-      fontFamily: "-apple-system",
+      fontFamily: "body",
     },
   },
   "5xl": {
@@ -29,7 +29,7 @@ export const textStyles = defineTextStyles({
       fontSize: "5xl",
       lineHeight: "3.75rem",
       letterSpacing: "-0.02em",
-      fontFamily: "-apple-system",
+      fontFamily: "body",
     },
   },
   "6xl": {
@@ -37,7 +37,7 @@ export const textStyles = defineTextStyles({
       fontSize: "6xl",
       lineHeight: "4.5rem",
       letterSpacing: "-0.02em",
-      fontFamily: "-apple-system",
+      fontFamily: "body",
     },
   },
   "7xl": {
@@ -45,7 +45,7 @@ export const textStyles = defineTextStyles({
       fontSize: "7xl",
       lineHeight: "5.75rem",
       letterSpacing: "-0.02em",
-      fontFamily: "-apple-system",
+      fontFamily: "body",
     },
   },
 
@@ -54,13 +54,7 @@ export const textStyles = defineTextStyles({
       fontSize: "sm",
       lineHeight: "1.25rem",
       fontWeight: "medium",
-      fontFamily: "-apple-system",
-    },
-  },
-  body: {
-    value: {
-      fontFamily:
-        "'Pretendard Variable', Pretendard, -apple-system, 'Segoe UI', 'Malgun Gothic', sans-serif",
+      fontFamily: "body",
     },
   },
 });
