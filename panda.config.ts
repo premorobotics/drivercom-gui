@@ -41,6 +41,11 @@ export default defineConfig({
         colors: colors,
         durations: durations,
         zIndex: zIndex,
+        fonts: {
+          body: {
+            value: "'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Malgun Gothic', sans-serif",
+          },
+        },
       },
 
       semanticTokens: {

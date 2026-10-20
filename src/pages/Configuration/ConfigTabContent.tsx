@@ -464,6 +464,7 @@ export function ConfigTabContent() {
             alignItems="center"
             margin="0"
             textAlign="center"
+            fontFamily="body"
           >
             <IconButton
               size="xs"

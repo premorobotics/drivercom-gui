@@ -58,13 +58,14 @@ export const FormCheckBox = (props: FormCheckBoxProps) => {
         <div>
           <Text
             fontSize="sm"
-            fontWeight="medium"
+            fontWeight="none"
             userSelect="none"
             width="min-content"
             display="flex"
             flexDirection="row"
             alignItems="center"
             gap="0.4rem"
+            fontFamily={"body"}
           >
             <Show when={props.originalValue !== props.checked}>
               <div
@@ -73,7 +74,6 @@ export const FormCheckBox = (props: FormCheckBoxProps) => {
                   width: "0.5rem",
                   height: "0.5rem",
                   borderRadius: "1rem",
-                  marginTop: "0.1rem",
                 })}
               />
             </Show>
@@ -82,6 +82,7 @@ export const FormCheckBox = (props: FormCheckBoxProps) => {
                 background: props.isFocus ? "accent.7" : "transparent",
                 display: "flex",
                 whiteSpace: "nowrap",
+                paddingTop: "0.2rem",
               })}
             >
               {key.replaceAll("_", " ")}

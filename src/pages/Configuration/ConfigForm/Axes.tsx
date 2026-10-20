@@ -52,12 +52,14 @@ export function Axes(props: AxesTableProps) {
               <>
                 <Text
                   background={"gray.2"}
-                  fontSize="sm"
+                  fontSize="xs"
                   gridColumn={columnId}
                   gridRow={rowNumber}
                   borderLeftWidth="1px"
                   paddingLeft="0.2rem"
                   textAlign="center"
+                  fontFamily={"body"}
+                  paddingTop="0.2rem"
                 >
                   {`Axis ${axisId}`}
                 </Text>
@@ -146,6 +148,7 @@ export function AxesTable(props: AxesTableProps) {
                     borderTopWidth={"1px"}
                     display={"flex"}
                     background={"gray.2"}
+                    fontFamily={"body"}
                   >
                     {key.replaceAll("_", " ")}
                     <Show when={descriptionText}>
@@ -230,14 +233,14 @@ export function AxesTable(props: AxesTableProps) {
                   <Accordion.ItemTrigger
                     style={{ "padding-left": `${paddingLeft}rem` }}
                     fontSize="xs"
-                    fontWeight="light"
+                    fontWeight="medium"
                     background={"gray.2"}
                     borderTopWidth="1px"
                     borderRadius="0"
                     padding={"0 0 0 0.2rem"}
                     gap="0"
                   >
-                    <Text>
+                    <Text fontFamily={"body"}>
                       {objectKey[0].toUpperCase() +
                         objectKey.slice(1, objectKey.length)}
                     </Text>
@@ -313,6 +316,7 @@ function ComlumnInput(props: ComlumnInputProps) {
             outline: "none",
             flex: 1,
             width: "100%",
+            fontSize: "sm",
           })}
           value={errorInput() ?? inputValue()}
           onFocus={() => {
@@ -346,9 +350,11 @@ function ComlumnInput(props: ComlumnInputProps) {
           <Tooltip disabled={!props.unitLong} content={props.unitLong}>
             <Text
               color={"fg.subtle"}
-              fontSize="sm"
+              fontSize="xs"
               width="fit-content"
               flex="none"
+              fontFamily="body"
+              paddingTop="0.2rem"
             >
               {props.unitShort}
             </Text>
