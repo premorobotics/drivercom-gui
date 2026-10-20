@@ -19,7 +19,7 @@ type AxesTableProps = {
   format: object[];
   description?: object;
   accordionStatuses?: AccordionStates;
-  paddingLeft?: number
+  paddingLeft?: number;
 };
 
 export function Axes(props: AxesTableProps) {
@@ -57,7 +57,7 @@ export function Axes(props: AxesTableProps) {
                   gridRow={rowNumber}
                   borderLeftWidth="1px"
                   paddingLeft="0.2rem"
-                  textAlign = "center"
+                  textAlign="center"
                 >
                   {`Axis ${axisId}`}
                 </Text>
@@ -100,7 +100,7 @@ export function AxesTable(props: AxesTableProps) {
     (_, i) => i,
   );
 
-  const paddingLeft = props.paddingLeft ?? 0.2
+  const paddingLeft = props.paddingLeft ?? 0.2;
 
   return (
     <div style={{ width: "100%", height: "fit-content" }}>
@@ -138,7 +138,7 @@ export function AxesTable(props: AxesTableProps) {
                 <>
                   <Text
                     style={{
-                      "padding-left" : `${paddingLeft}rem`
+                      "padding-left": `${paddingLeft}rem`,
                     }}
                     fontSize="sm"
                     gridColumn={"1"}
@@ -174,7 +174,7 @@ export function AxesTable(props: AxesTableProps) {
                           value={
                             config[configIndex][
                               key as keyof (typeof config)[number]
-                              ]
+                            ]
                           }
                           onChange={(value: number) => {
                             setConfigWithIndex(configIndex, key, value);
@@ -213,7 +213,7 @@ export function AxesTable(props: AxesTableProps) {
             return (
               <Accordion.Root
                 width={"100%"}
-                borderWidth = "0"
+                borderWidth="0"
                 multiple
                 defaultValue={
                   props.accordionStatuses
@@ -226,18 +226,21 @@ export function AxesTable(props: AxesTableProps) {
                   }
                 }}
               >
-                <Accordion.Item value={accordionItemValue} borderWidth = "0">
+                <Accordion.Item value={accordionItemValue} borderWidth="0">
                   <Accordion.ItemTrigger
-                    style = {{"padding-left" : `${paddingLeft}rem`}}
+                    style={{ "padding-left": `${paddingLeft}rem` }}
                     fontSize="xs"
                     fontWeight="light"
                     background={"gray.2"}
-                    borderTopWidth = "1px"
+                    borderTopWidth="1px"
                     borderRadius="0"
                     padding={"0 0 0 0.2rem"}
                     gap="0"
                   >
-                    <Text>{objectKey[0].toUpperCase() + objectKey.slice(1, objectKey.length)}</Text>
+                    <Text>
+                      {objectKey[0].toUpperCase() +
+                        objectKey.slice(1, objectKey.length)}
+                    </Text>
                     <Accordion.ItemIndicator fontSize={"sm"}>
                       <IconChevronDown />
                     </Accordion.ItemIndicator>
@@ -249,7 +252,11 @@ export function AxesTable(props: AxesTableProps) {
                       config={innerConfig}
                       description={description}
                       accordionStatuses={props.accordionStatuses}
-                      paddingLeft={typeof props.paddingLeft === "number" ? props.paddingLeft + 0.5 : props.paddingLeft}
+                      paddingLeft={
+                        typeof props.paddingLeft === "number"
+                          ? props.paddingLeft + 0.5
+                          : props.paddingLeft
+                      }
                     />
                   </Accordion.ItemContent>
                 </Accordion.Item>
@@ -274,7 +281,10 @@ function ComlumnInput(props: ComlumnInputProps) {
   const [errorInput, setErrorInput] = createSignal<string | null>(null);
   let container: HTMLDivElement | undefined;
 
-  const inputValue = () => Number.isInteger(props.value) ? props.value : Number(props.value.toFixed(7).toString());
+  const inputValue = () =>
+    Number.isInteger(props.value)
+      ? props.value
+      : Number(props.value.toFixed(7).toString());
 
   return (
     <div {...res}>
