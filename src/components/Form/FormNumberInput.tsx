@@ -170,7 +170,17 @@ export const FormNumberInput = (props: FormNumberInputProps) => {
     }
   };
 
-  const inputValue = () => props.inputValue;
+  const inputValue = () =>
+    Number.isInteger(props.inputValue)
+      ? props.inputValue
+      : parseToSevenDecimalPoint(props.inputValue);
+  const prevValue = () =>
+    !props.originalValue || Number.isInteger(props.originalValue)
+      ? props.originalValue
+      : parseToSevenDecimalPoint(props.originalValue);
+
+  const parseToSevenDecimalPoint = (decimalNumber: number) =>
+    Number(decimalNumber.toFixed(7).toString());
 
   const [errorInputValue, setErrorInputValue] = createSignal<string | null>(
     null,
@@ -202,9 +212,7 @@ export const FormNumberInput = (props: FormNumberInputProps) => {
               alignItems="center"
               gap="0.4rem"
             >
-              <Show
-                when={errorInputValue() || props.originalValue !== inputValue()}
-              >
+              <Show when={errorInputValue() || prevValue() !== inputValue()}>
                 <div
                   class={css({
                     background:
