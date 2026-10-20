@@ -79,8 +79,6 @@ export const FormNumberInput = (props: FormNumberInputProps) => {
     if (isMillimeter) {
       if (parseUnit === "m") {
         return "mm";
-      } else if (parseUnit === "dag") {
-        return "kg";
       } else if (parseUnit === "m/s") {
         return "mm/s";
       } else if (parseUnit === "m/s²") {
@@ -102,8 +100,6 @@ export const FormNumberInput = (props: FormNumberInputProps) => {
     if (isMillimeter) {
       if (parseUnit === "meter") {
         return "Millimeter";
-      } else if (parseUnit === "decagram") {
-        return "Killogram";
       } else if (parseUnit === "meters per second") {
         return "Millimeters Per Second";
       } else if (parseUnit === "meters per second squared") {

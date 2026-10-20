@@ -20,6 +20,7 @@ type AxesTableProps = {
   description?: object;
   accordionStatuses?: AccordionStates;
   paddingLeft?: number;
+  changeUnit?: boolean;
 };
 
 export function Axes(props: AxesTableProps) {
@@ -76,6 +77,7 @@ export function Axes(props: AxesTableProps) {
         format={props.format}
         accordionStatuses={props.accordionStatuses}
         paddingLeft={0}
+        changeUnit={props.changeUnit}
       />
     </div>
   );
@@ -184,6 +186,7 @@ export function AxesTable(props: AxesTableProps) {
                           }}
                           unitShort={unitShort}
                           unitLong={unitLong}
+                          changeUnit={props.changeUnit}
                         />
                       );
                     }}
@@ -260,6 +263,7 @@ export function AxesTable(props: AxesTableProps) {
                           ? props.paddingLeft + 0.5
                           : props.paddingLeft
                       }
+                      changeUnit={props.changeUnit}
                     />
                   </Accordion.ItemContent>
                 </Accordion.Item>
@@ -277,6 +281,7 @@ type ComlumnInputProps = {
   unitShort?: string;
   unitLong?: string;
   onChange?: (value: number) => void;
+  changeUnit?: boolean;
 } & Omit<JSX.HTMLAttributes<HTMLDivElement>, "onChange">;
 
 function ComlumnInput(props: ComlumnInputProps) {
@@ -284,10 +289,109 @@ function ComlumnInput(props: ComlumnInputProps) {
   const [errorInput, setErrorInput] = createSignal<string | null>(null);
   let container: HTMLDivElement | undefined;
 
+  const parseValue = (value: number) =>
+    Number.isInteger(value) ? value : Number(value.toFixed(7).toString());
+
   const inputValue = () =>
-    Number.isInteger(props.value)
-      ? props.value
-      : Number(props.value.toFixed(7).toString());
+    props.unitShort
+      ? changeValue(
+          props.unitShort,
+          parseValue(props.value),
+          props.changeUnit ?? false,
+        )
+      : parseValue(props.value);
+
+  const changeUnitShort = (unitShort: string, isMillimeter: boolean) => {
+    const parseUnit = unitShort.toLowerCase();
+    if (isMillimeter) {
+      if (parseUnit === "m") {
+        return "mm";
+      } else if (parseUnit === "m/s") {
+        return "mm/s";
+      } else if (parseUnit === "m/s²") {
+        return "mm/s²";
+      } else {
+        return unitShort;
+      }
+    } else {
+      if (parseUnit === "mm") {
+        return "m";
+      } else {
+        return unitShort;
+      }
+    }
+  };
+
+  const changeUnitLong = (unitLong: string, isMillimeter: boolean) => {
+    const parseUnit = unitLong.toLowerCase();
+    if (isMillimeter) {
+      if (parseUnit === "meter") {
+        return "Millimeter";
+      } else if (parseUnit === "meters per second") {
+        return "Millimeters Per Second";
+      } else if (parseUnit === "meters per second squared") {
+        return "Millimeters per Second squared";
+      } else {
+        return unitLong;
+      }
+    } else {
+      if (parseUnit === "millimeter") {
+        return "meter";
+      } else {
+        return unitLong;
+      }
+    }
+  };
+
+  const changeValue = (
+    unitShort: string,
+    value: number,
+    isMillimeter: boolean,
+  ) => {
+    const parseUnit = unitShort.toLowerCase();
+    if (isMillimeter) {
+      if (parseUnit === "m") {
+        return value * 1000;
+      } else if (parseUnit === "m/s") {
+        return value * 1000;
+      } else if (parseUnit === "m/s²") {
+        return value * 1000;
+      } else {
+        return value;
+      }
+    } else {
+      if (parseUnit === "mm") {
+        return value * 0.001;
+      } else {
+        return value;
+      }
+    }
+  };
+
+  const setChangedValue = (
+    unitShort: string,
+    value: number,
+    isMillimeter: boolean,
+  ) => {
+    const parseUnit = unitShort.toLowerCase();
+    if (isMillimeter) {
+      if (parseUnit === "m") {
+        return value * 0.001;
+      } else if (parseUnit === "m/s") {
+        return value * 0.001;
+      } else if (parseUnit === "m/s²") {
+        return value * 0.001;
+      } else {
+        return value;
+      }
+    } else {
+      if (parseUnit === "mm") {
+        return value * 100;
+      } else {
+        return value;
+      }
+    }
+  };
 
   return (
     <div {...res}>
@@ -335,19 +439,33 @@ function ComlumnInput(props: ComlumnInputProps) {
           }}
           onChange={(e) => {
             const value = e.target.value;
-            const parseValue = Number(value);
-            if (isNaN(Number(parseValue))) {
+            let changeValueToNumber = Number(value);
+            if (isNaN(Number(changeValueToNumber))) {
               setErrorInput(value);
             } else {
               if (errorInput()) {
                 setErrorInput(null);
               }
-              props.onChange?.(parseValue);
+              if (props.unitShort) {
+                changeValueToNumber = setChangedValue(
+                  props.unitShort,
+                  changeValueToNumber,
+                  props.changeUnit ?? false,
+                );
+              }
+              props.onChange?.(changeValueToNumber);
             }
           }}
         />
         <Show when={props.unitShort}>
-          <Tooltip disabled={!props.unitLong} content={props.unitLong}>
+          <Tooltip
+            disabled={!props.unitLong}
+            content={
+              props.unitLong
+                ? changeUnitLong(props.unitLong, props.changeUnit ?? false)
+                : props.unitLong
+            }
+          >
             <Text
               color={"fg.subtle"}
               fontSize="xs"
@@ -356,7 +474,9 @@ function ComlumnInput(props: ComlumnInputProps) {
               fontFamily="body"
               paddingTop="0.2rem"
             >
-              {props.unitShort}
+              {props.unitShort
+                ? changeUnitShort(props.unitShort, props.changeUnit ?? false)
+                : props.unitShort}
             </Text>
           </Tooltip>
         </Show>
