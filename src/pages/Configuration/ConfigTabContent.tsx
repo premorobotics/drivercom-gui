@@ -454,7 +454,7 @@ export function ConfigTabContent() {
           width="100%"
           height={topBarHeight}
           gap="0"
-          background={"bg.muted"}
+          background={"gray.2"}
           display={"grid"}
           gridTemplateColumns={`minmax(0, 1fr) repeat(5, 2rem)`}
         >
@@ -466,6 +466,7 @@ export function ConfigTabContent() {
             margin="0"
             textAlign="center"
             fontFamily="body"
+            fontWeight="bold"
           >
             <IconButton
               size="xs"
@@ -656,7 +657,7 @@ export function ConfigTabContent() {
               id={getTabId()}
               description={configDescription()}
               originalFile={getOriginalFile()}
-              changeUnits={getChangeUnit() ? getChangeUnit() : undefined}
+              changeUnits={getChangeUnit()}
               focusedObjectKey={getFocusedTab()}
               config={getConfigForm()!}
               linkedStatuses={getLinkedStatuses()!}
@@ -668,7 +669,12 @@ export function ConfigTabContent() {
         </Show>
       </div>
       <div style={{ width: "30rem", height: "100%" }}>
-        <DriverStatus driverStatus={getConfigForm()!.state} />
+        <DriverStatus
+          id={getTabId() + "." + "driverStatus"}
+          driverStatus={getConfigForm()!.state}
+          accordionStatuses={getAccordionStatuses()!}
+          description={configDescription()}
+        />
       </div>
     </div>
   );

@@ -22,7 +22,7 @@ export const TreeView = (props: ArkTreeView.RootProps<Node>) => {
         gap: "0.5rem",
         width: "100%",
         height: "100%",
-        background: "gray.1",
+        background: "gray.3",
         overflowY: "auto",
         borderRightWidth: "1px",
         fontSize: "sm",
@@ -65,9 +65,9 @@ const TreeNode = (props: ArkTreeView.NodeProviderProps<Node>) => {
                   },
                   _focus: {
                     _hover: {
-                      background: "gray.5",
+                      background: "gray.2",
                     },
-                    background: "gray.5",
+                    background: "gray.2",
                     color: "fg.default",
                   },
                 })}
@@ -162,9 +162,9 @@ const TreeNode = (props: ArkTreeView.NodeProviderProps<Node>) => {
                 },
                 _focus: {
                   _hover: {
-                    background: "gray.5",
+                    background: "gray.2",
                   },
-                  background: "gray.5",
+                  background: "gray.2",
                   color: "fg.default",
                 },
               })}
