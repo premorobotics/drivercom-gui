@@ -1,13 +1,17 @@
 import { For, Show } from "solid-js";
 import { StateType } from "src-tauri/generated/config/ConfigType";
-import { css, cx } from "styled-system/css";
+import { css } from "styled-system/css";
 import { Text } from "~/components/ui/text";
-import { prettierLabel } from "~/utils/PrettierLabel";
 import { AccordionStates } from "./ConfigForm";
 import * as Accordion from "../../../components/ui/accordion";
-import { IconChevronDown, IconHelp } from "@tabler/icons-solidjs";
+import { IconChevronDown, IconHelp, IconRefresh } from "@tabler/icons-solidjs";
 import { Tooltip } from "~/components/ui/tooltip";
 import { IconButton } from "~/components/ui/icon-button";
+import { Badge } from "~/components/ui/badge";
+import { Button } from "~/components/ui/button";
+import { DrivercomCommandButton } from "./DrivercomCommandButton";
+import { getConfigFromPort, toggleServo } from "~/services/PortService";
+import { createStore } from "solid-js/store";
 
 type DriverStatusProps = {
   id: string;
@@ -18,6 +22,20 @@ type DriverStatusProps = {
 
 // Since the Driver status is immutable, It has a seperate components.
 export function DriverStatus(props: DriverStatusProps) {
+  const [driverStatus, setDriverStatus] = createStore<StateType>(
+    props.driverStatus,
+  );
+  const stateDecription = props.description
+    ? props.description["state" as keyof typeof props.description]
+    : props.description;
+
+  const servoDescription = stateDecription
+    ? stateDecription["__servo_enabled" as keyof typeof stateDecription]
+    : stateDecription;
+  const servoDescriptionText = servoDescription
+    ? servoDescription[`description` as keyof typeof servoDescription]
+    : servoDescription;
+
   return (
     <div
       class={css({
@@ -40,11 +58,49 @@ export function DriverStatus(props: DriverStatusProps) {
           display: "flex",
           "align-items": "center",
           "padding-left": "0.4rem",
+          gap: "0.2rem",
         }}
       >
         <Text fontSize="sm" fontFamily="body" fontWeight={"bold"}>
           {"Driver status"}
         </Text>
+
+        <Tooltip
+          disabled={!servoDescriptionText}
+          content={servoDescriptionText}
+        >
+          <Badge
+            variant={props.driverStatus.servo_enabled ? "solid" : "subtle"}
+            margin="0"
+          >
+            {"Servo"}
+          </Badge>
+        </Tooltip>
+        <DrivercomCommandButton
+          onRunCommand={async (port) => {
+            await toggleServo(port);
+            const config = await getConfigFromPort(port);
+            setDriverStatus(config.state);
+          }}
+          tooltipContent={"Toggle servo status"}
+        >
+          <Button variant="plain" size="2xs" fontWeight="normal">
+            {"Toggle servo"}
+          </Button>
+        </DrivercomCommandButton>
+
+        <DrivercomCommandButton
+          onRunCommand={async (port) => {
+            const config = await getConfigFromPort(port);
+            const newDriverStatus = config.state;
+            setDriverStatus(newDriverStatus);
+          }}
+          tooltipContent={"Refresh Driver status"}
+        >
+          <IconButton variat="plain" size="2xs" variant="plain">
+            <IconRefresh />
+          </IconButton>
+        </DrivercomCommandButton>
       </div>
       <div
         class={css({})}
@@ -60,14 +116,10 @@ export function DriverStatus(props: DriverStatusProps) {
         <div style={{ "border-width": "1px" }}>
           <DriverStatusTable
             id={props.id}
-            branch={props.driverStatus}
+            branch={driverStatus}
             accordionStatus={props.accordionStatuses}
             paddingLeft={0}
-            description={
-              props.description
-                ? props.description["state" as keyof typeof props.description]
-                : props.description
-            }
+            description={stateDecription}
           />
         </div>
       </div>
@@ -104,6 +156,7 @@ const DriverStatusTable = (props: {
         >
           <For each={noneObjectEntries}>
             {([key, value], index) => {
+              if (key === "servo_enabled") return;
               const rowNumber = index() + 1;
               const description = props.description
                 ? props.description[
@@ -128,7 +181,7 @@ const DriverStatusTable = (props: {
                     fontFamily={"body"}
                     fontSize="sm"
                     borderWidth={"0 1px 1px 0"}
-                    background="gray.1"
+                    background="gray.2"
                     style={{
                       "padding-left": props.paddingLeft
                         ? `${props.paddingLeft}rem`
@@ -137,7 +190,6 @@ const DriverStatusTable = (props: {
                     }}
                     display="flex"
                     alignItems="center"
-                    gap="0"
                   >
                     {key.replaceAll("_", " ")}
                     <Show when={descriptionText}>
@@ -182,10 +234,13 @@ const DriverStatusTable = (props: {
       </Show>
       <Show when={objectEntries.length > 0}>
         <For each={objectEntries}>
-          {([key, value], index) => {
+          {([key, value]) => {
             const id = props.id + "." + key;
-            const label = key.replaceAll("_", " ");
-            const accordionValue = label + "." + key;
+            const label = !isNaN(Number(key))
+              ? `Axis ${Number(key) + 1}`
+              : key[0].toUpperCase() +
+                key.slice(1, key.length).replaceAll("_", " ");
+            const accordionValue = props.id.split(".").pop() + key;
             const description = props.description
               ? props.description[`${key}` as keyof typeof props.description]
               : props.description;
@@ -222,11 +277,11 @@ const DriverStatusTable = (props: {
                 >
                   <Accordion.ItemTrigger
                     borderBottomWidth="1px"
-                    background="gray.1"
+                    background="gray.2"
                     style={{
                       padding:
                         typeof props.paddingLeft === "number"
-                          ? `0 0 0 ${props.paddingLeft}rem`
+                          ? `0 0 0 ${props.paddingLeft === 0 ? 0.2 : props.paddingLeft}rem`
                           : `0 0 0 0.2rem`,
                     }}
                   >
