@@ -70,11 +70,9 @@ export const Toaster = () => {
                 {(action) => <ActionTrigger>{action().label}</ActionTrigger>}
               </Show>
             </Stack>
-            <Show when={toast().closable}>
               <CloseTrigger>
                 <CloseButton size="sm" />
               </CloseTrigger>
-            </Show>
           </Root>
         )}
       </StyledToaster>
