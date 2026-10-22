@@ -96,9 +96,9 @@ export function DriverStatus(props: DriverStatusProps) {
         <DrivercomCommandButton
           onRunCommand={async (port) => {
             try {
-              await toggleServo(port);
-              const config = await getConfigFromPort(port);
-              setDriverStatus(reconcile(config.state));
+              await toggleServo(port, driverStatus.servo_enabled);
+              const newConfig = await getConfigFromPort(port);
+              setDriverStatus(reconcile(newConfig.state));
             } catch (e) {
               toaster.create({
                 title: "Toggle Servo Error",

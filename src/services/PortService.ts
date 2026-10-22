@@ -119,6 +119,11 @@ export async function getConfigFromPort(portId: string): Promise<ConfigType> {
   });
 }
 
-export async function toggleServo(portId: string) {
-  return await sendDrivercomCommand(["config.toggle_servo", "--port", portId]);
+export async function toggleServo(portId: string, servoState: boolean) {
+  return await sendDrivercomCommand([
+    "config.toggle_servo",
+    "--port",
+    portId,
+    servoState ? "off" : "on",
+  ]);
 }
