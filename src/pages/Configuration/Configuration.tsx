@@ -83,6 +83,7 @@ function Configuration() {
           focusedTab: `system`,
           showTreeView: true,
           treeViewExpandedValue: [] as string[],
+          showDriverStatus: true,
         },
       },
     } as TabContext;
