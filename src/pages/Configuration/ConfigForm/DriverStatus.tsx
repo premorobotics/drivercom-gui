@@ -112,6 +112,7 @@ export function DriverStatus(props: DriverStatusProps) {
                 type: "success",
               });
             } catch (e) {
+              setIsToggleButtonLoading(false);
               toaster.create({
                 title: "Toggle Servo Error",
                 description: e as string,
@@ -145,6 +146,7 @@ export function DriverStatus(props: DriverStatusProps) {
                 type: "error",
               });
             } catch (e) {
+              setIsReseting(false);
               toaster.create({
                 title: "Refresh Driver status Error",
                 description: e as string,
