@@ -1,4 +1,11 @@
-import { createMemo, createSignal, For, on, Show } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  For,
+  on,
+  Show,
+} from "solid-js";
 import { StateType } from "src-tauri/generated/config/ConfigType";
 import { css } from "styled-system/css";
 import { Text } from "~/components/ui/text";
@@ -31,25 +38,30 @@ export function DriverStatus(props: DriverStatusProps) {
     ? props.description["state" as keyof typeof props.description]
     : props.description;
 
-  const servoDescription = stateDecription
-    ? stateDecription["__servo_enabled" as keyof typeof stateDecription]
-    : stateDecription;
-  const servoDescriptionText = servoDescription
-    ? servoDescription[`description` as keyof typeof servoDescription]
-    : servoDescription;
+  createEffect(
+    on(
+      () => trackStore(props.driverStatus),
+      () => {
+        setDriverStatus(props.driverStatus);
+      },
+      { defer: true },
+    ),
+  );
 
   const DriverStatusReactiveTable = createMemo(
     on(
-      () => trackStore(driverStatus),
-      () => (
-        <DriverStatusTable
-          id={props.id}
-          branch={driverStatus}
-          accordionStatus={props.accordionStatuses}
-          paddingLeft={0}
-          description={stateDecription}
-        />
-      ),
+      () => [trackStore(driverStatus)],
+      () => {
+        return (
+          <DriverStatusTable
+            id={props.id}
+            branch={driverStatus}
+            accordionStatus={props.accordionStatuses}
+            paddingLeft={0}
+            description={stateDecription}
+          />
+        );
+      },
     ),
   );
 
@@ -87,8 +99,9 @@ export function DriverStatus(props: DriverStatusProps) {
         </Text>
 
         <Tooltip
-          disabled={!servoDescriptionText}
-          content={servoDescriptionText}
+          content={
+            driverStatus.servo_enabled ? "Servo enabled" : "Servo disabled"
+          }
         >
           <Badge
             variant={driverStatus.servo_enabled ? "solid" : "subtle"}
@@ -98,16 +111,16 @@ export function DriverStatus(props: DriverStatusProps) {
           </Badge>
         </Tooltip>
         <DrivercomCommandButton
-          onRunCommand={async (port) => {
+          onRunCommand={async (port, version) => {
             if (isToggleButtonLoading()) return;
             try {
               setIsToggleButtonLoading(true);
               await toggleServo(port, driverStatus.servo_enabled);
-              const newConfig = await getConfigFromPort(port);
+              const newConfig = await getConfigFromPort(port, version);
               setDriverStatus(reconcile(newConfig.state));
               setIsToggleButtonLoading(false);
               toaster.create({
-                title: "Toggle Servo Error",
+                title: "Toggle Servo",
                 description: "The servo toggled successfully.",
                 type: "success",
               });
@@ -120,30 +133,30 @@ export function DriverStatus(props: DriverStatusProps) {
               });
             }
           }}
-          tooltipContent={"Toggle servo status"}
+          tooltipContent={"Enable or disable the servo."}
         >
           <Button
-            variant="plain"
+            variant={driverStatus.servo_enabled ? "plain" : "solid"}
             size="2xs"
             fontWeight="normal"
             loading={isToggleButtonLoading()}
           >
-            {"Toggle servo"}
+            {driverStatus.servo_enabled ? "Disable servo" : "Enable servo"}
           </Button>
         </DrivercomCommandButton>
 
         <DrivercomCommandButton
-          onRunCommand={async (port) => {
+          onRunCommand={async (port, version) => {
             if (isReseting()) return;
             try {
               setIsReseting(true);
-              const config = await getConfigFromPort(port);
-              setDriverStatus(reconcile(config.state));
+              const newConfig = await getConfigFromPort(port, version);
+              setDriverStatus(reconcile(newConfig.state));
               setIsReseting(false);
               toaster.create({
                 title: "ResetDriver status",
-                description: "The driver status reset successfully.",
-                type: "error",
+                description: "The driver status refreshed successfully.",
+                type: "success",
               });
             } catch (e) {
               setIsReseting(false);
