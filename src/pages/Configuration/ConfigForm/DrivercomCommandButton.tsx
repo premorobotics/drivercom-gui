@@ -9,7 +9,7 @@ import { Port } from "~/store/GlobalState";
 
 export function DrivercomCommandButton(
   props: {
-    onRunCommand?: (portId: string) => void;
+    onRunCommand?: (portId: string, version: string) => void;
     tooltipContent?: string;
   } & JSX.HTMLAttributes<HTMLDivElement>,
 ) {
@@ -24,7 +24,7 @@ export function DrivercomCommandButton(
           const detectedPorts = await detectPort();
           setPorts(detectedPorts);
           if (ports().length === 1) {
-            props.onRunCommand?.(ports()[0].id);
+            props.onRunCommand?.(ports()[0].id, ports()[0].version);
           } else if (ports().length === 0) {
             toaster.create({
               title: "Invalid Port",
@@ -49,7 +49,9 @@ export function DrivercomCommandButton(
                 {(port) => {
                   return (
                     <Menu.Item
-                      onClick={() => props.onRunCommand?.(port.id)}
+                      onClick={() =>
+                        props.onRunCommand?.(port.id, port.version)
+                      }
                       value={port.id}
                       display={"flex"}
                       flexDir={"column"}
