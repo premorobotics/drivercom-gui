@@ -5,6 +5,7 @@ import {
   IconListDetailsFilled,
   IconRuler2,
   IconRuler2Off,
+  IconTableFilled,
 } from "@tabler/icons-solidjs";
 import {
   createEffect,
@@ -63,6 +64,7 @@ export type ConfigTabPage = {
   changeUnit?: boolean;
   showTreeView?: boolean;
   treeViewExpandedValue?: string[];
+  showDriverStatus?: boolean;
 };
 
 // A custom tab page component for the configuration page.
@@ -239,6 +241,22 @@ export function ConfigTabContent() {
       "configTabPage",
       "treeViewExpandedValue",
       treeViewExpandedValue,
+    );
+  };
+
+  const getShowDriverStatus = () => {
+    return tabStore.get(configTabProps.key)![0].tabContext[getTabIndex()]
+      .tabPage!.configTabPage!.showDriverStatus;
+  };
+
+  const setShowDriverStatus = (showDriverStatus: boolean) => {
+    return tabStore.get(configTabProps.key)![1](
+      "tabContext",
+      getTabIndex(),
+      "tabPage",
+      "configTabPage",
+      "showDriverStatus",
+      showDriverStatus,
     );
   };
 
@@ -442,7 +460,7 @@ export function ConfigTabContent() {
           gap="0"
           background={"gray.2"}
           display={"grid"}
-          gridTemplateColumns={`minmax(0, 1fr) repeat(5, 2rem)`}
+          gridTemplateColumns={`minmax(0, 1fr) repeat(6, 2rem)`}
         >
           <Text
             fontSize="sm"
@@ -454,14 +472,18 @@ export function ConfigTabContent() {
             fontFamily="body"
             fontWeight="bold"
           >
-            <IconButton
-              size="xs"
-              variant={"plain"}
-              color={getShowTreeView() ? "accent.9" : "fg.subtle"}
-              onClick={() => setShowTreeView(!getShowTreeView())}
+            <Tooltip
+              content={getShowTreeView() ? "Close left dock" : "Open left dock"}
             >
-              <IconListDetailsFilled />
-            </IconButton>
+              <IconButton
+                size="xs"
+                variant={"plain"}
+                color={getShowTreeView() ? "accent.9" : "fg.subtle"}
+                onClick={() => setShowTreeView(!getShowTreeView())}
+              >
+                <IconListDetailsFilled />
+              </IconButton>
+            </Tooltip>
             {getFocusedTab()
               ?.replaceAll("/", " > ")
               .replaceAll(`$`, " > ")
@@ -580,6 +602,24 @@ export function ConfigTabContent() {
           <SaveToPort
             onSaveToPort={async (portId) => await saveToPort(portId)}
           />
+          <div style={{ "border-left-width": "1px" }}>
+            <Tooltip
+              content={
+                getShowDriverStatus()
+                  ? "Hide Driver status table"
+                  : "Show Driver status table"
+              }
+            >
+              <IconButton
+                onClick={() => setShowDriverStatus(!getShowDriverStatus())}
+                size={"xs"}
+                variant={"plain"}
+                color={getShowDriverStatus() ? "accent.9" : "fg.subtle"}
+              >
+                <IconTableFilled />
+              </IconButton>
+            </Tooltip>
+          </div>
         </Stack>
         <Show
           when={render()}
@@ -656,14 +696,16 @@ export function ConfigTabContent() {
           </div>
         </Show>
       </div>
-      <div style={{ width: "30rem", height: "100%" }}>
-        <DriverStatus
-          id={getTabId() + "." + "driverStatus"}
-          driverStatus={getConfigForm()!.state}
-          accordionStatuses={getAccordionStatuses()!}
-          description={configDescription()}
-        />
-      </div>
+      <Show when={getShowDriverStatus()}>
+        <div style={{ width: "30rem", height: "100%" }}>
+          <DriverStatus
+            id={getTabId() + "." + "driverStatus"}
+            driverStatus={getConfigForm()!.state}
+            accordionStatuses={getAccordionStatuses()!}
+            description={configDescription()}
+          />
+        </div>
+      </Show>
     </div>
   );
 }
