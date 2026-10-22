@@ -1,4 +1,4 @@
-import { createMemo, For, on, Show } from "solid-js";
+import { createMemo, createSignal, For, on, Show } from "solid-js";
 import { StateType } from "src-tauri/generated/config/ConfigType";
 import { css } from "styled-system/css";
 import { Text } from "~/components/ui/text";
@@ -53,6 +53,10 @@ export function DriverStatus(props: DriverStatusProps) {
     ),
   );
 
+  const [isToggleButtonLoading, setIsToggleButtonLoading] =
+    createSignal<boolean>(false);
+  const [isReseting, setIsReseting] = createSignal<boolean>(false);
+
   return (
     <div
       class={css({
@@ -95,10 +99,18 @@ export function DriverStatus(props: DriverStatusProps) {
         </Tooltip>
         <DrivercomCommandButton
           onRunCommand={async (port) => {
+            if (isToggleButtonLoading()) return;
             try {
+              setIsToggleButtonLoading(true);
               await toggleServo(port, driverStatus.servo_enabled);
               const newConfig = await getConfigFromPort(port);
               setDriverStatus(reconcile(newConfig.state));
+              setIsToggleButtonLoading(false);
+              toaster.create({
+                title: "Toggle Servo Error",
+                description: "The servo toggled successfully.",
+                type: "success",
+              });
             } catch (e) {
               toaster.create({
                 title: "Toggle Servo Error",
@@ -109,16 +121,29 @@ export function DriverStatus(props: DriverStatusProps) {
           }}
           tooltipContent={"Toggle servo status"}
         >
-          <Button variant="plain" size="2xs" fontWeight="normal">
+          <Button
+            variant="plain"
+            size="2xs"
+            fontWeight="normal"
+            loading={isToggleButtonLoading()}
+          >
             {"Toggle servo"}
           </Button>
         </DrivercomCommandButton>
 
         <DrivercomCommandButton
           onRunCommand={async (port) => {
+            if (isReseting()) return;
             try {
+              setIsReseting(true);
               const config = await getConfigFromPort(port);
               setDriverStatus(reconcile(config.state));
+              setIsReseting(false);
+              toaster.create({
+                title: "ResetDriver status",
+                description: "The driver status reset successfully.",
+                type: "error",
+              });
             } catch (e) {
               toaster.create({
                 title: "Refresh Driver status Error",
@@ -129,7 +154,7 @@ export function DriverStatus(props: DriverStatusProps) {
           }}
           tooltipContent={"Refresh Driver status"}
         >
-          <IconButton variant="plain" size="2xs">
+          <IconButton variant="plain" size="2xs" loading={isReseting()}>
             <IconRefresh />
           </IconButton>
         </DrivercomCommandButton>
