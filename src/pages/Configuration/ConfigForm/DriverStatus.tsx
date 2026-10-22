@@ -1,4 +1,4 @@
-import { For, Show } from "solid-js";
+import { createMemo, For, on, Show } from "solid-js";
 import { StateType } from "src-tauri/generated/config/ConfigType";
 import { css } from "styled-system/css";
 import { Text } from "~/components/ui/text";
@@ -11,7 +11,9 @@ import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
 import { DrivercomCommandButton } from "./DrivercomCommandButton";
 import { getConfigFromPort, toggleServo } from "~/services/PortService";
-import { createStore } from "solid-js/store";
+import { createStore, reconcile } from "solid-js/store";
+import { toaster } from "~/components/ui/toast";
+import { trackStore } from "@solid-primitives/deep";
 
 type DriverStatusProps = {
   id: string;
@@ -35,6 +37,21 @@ export function DriverStatus(props: DriverStatusProps) {
   const servoDescriptionText = servoDescription
     ? servoDescription[`description` as keyof typeof servoDescription]
     : servoDescription;
+
+  const DriverStatusReactiveTable = createMemo(
+    on(
+      () => trackStore(driverStatus),
+      () => (
+        <DriverStatusTable
+          id={props.id}
+          branch={driverStatus}
+          accordionStatus={props.accordionStatuses}
+          paddingLeft={0}
+          description={stateDecription}
+        />
+      ),
+    ),
+  );
 
   return (
     <div
@@ -70,7 +87,7 @@ export function DriverStatus(props: DriverStatusProps) {
           content={servoDescriptionText}
         >
           <Badge
-            variant={props.driverStatus.servo_enabled ? "solid" : "subtle"}
+            variant={driverStatus.servo_enabled ? "solid" : "subtle"}
             margin="0"
           >
             {"Servo"}
@@ -78,9 +95,17 @@ export function DriverStatus(props: DriverStatusProps) {
         </Tooltip>
         <DrivercomCommandButton
           onRunCommand={async (port) => {
-            await toggleServo(port);
-            const config = await getConfigFromPort(port);
-            setDriverStatus(config.state);
+            try {
+              await toggleServo(port);
+              const config = await getConfigFromPort(port);
+              setDriverStatus(reconcile(config.state));
+            } catch (e) {
+              toaster.create({
+                title: "Toggle Servo Error",
+                description: e as string,
+                type: "error",
+              });
+            }
           }}
           tooltipContent={"Toggle servo status"}
         >
@@ -91,19 +116,25 @@ export function DriverStatus(props: DriverStatusProps) {
 
         <DrivercomCommandButton
           onRunCommand={async (port) => {
-            const config = await getConfigFromPort(port);
-            const newDriverStatus = config.state;
-            setDriverStatus(newDriverStatus);
+            try {
+              const config = await getConfigFromPort(port);
+              setDriverStatus(reconcile(config.state));
+            } catch (e) {
+              toaster.create({
+                title: "Refresh Driver status Error",
+                description: e as string,
+                type: "error",
+              });
+            }
           }}
           tooltipContent={"Refresh Driver status"}
         >
-          <IconButton variat="plain" size="2xs" variant="plain">
+          <IconButton variant="plain" size="2xs">
             <IconRefresh />
           </IconButton>
         </DrivercomCommandButton>
       </div>
       <div
-        class={css({})}
         style={{
           width: "100%",
           height: "100%",
@@ -114,13 +145,7 @@ export function DriverStatus(props: DriverStatusProps) {
         }}
       >
         <div style={{ "border-width": "1px" }}>
-          <DriverStatusTable
-            id={props.id}
-            branch={driverStatus}
-            accordionStatus={props.accordionStatuses}
-            paddingLeft={0}
-            description={stateDecription}
-          />
+          {DriverStatusReactiveTable()}
         </div>
       </div>
     </div>
@@ -139,7 +164,7 @@ const DriverStatusTable = (props: {
     ([, value]) => typeof value === "object",
   );
   const noneObjectEntries = entries.filter(
-    ([, value]) => typeof value !== "object",
+    ([key, value]) => typeof value !== "object" && key !== "servo_enabled",
   );
 
   return (
@@ -156,7 +181,6 @@ const DriverStatusTable = (props: {
         >
           <For each={noneObjectEntries}>
             {([key, value], index) => {
-              if (key === "servo_enabled") return;
               const rowNumber = index() + 1;
               const description = props.description
                 ? props.description[
