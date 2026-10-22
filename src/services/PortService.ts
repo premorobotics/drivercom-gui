@@ -86,37 +86,13 @@ export const checkAvailablePort = (portId: string): boolean => {
 };
 
 export async function getConfigFromPort(portId: string): Promise<ConfigType> {
-  const configGet = Command.sidecar("binaries/drivercom", [
+  const getConfig = await sendDrivercomCommand([
     `--port`,
     portId,
     `config.get`,
-  ]);
-
-  let stdout = "";
-  configGet.stdout.on("data", (data) => {
-    stdout = stdout + data;
-  });
-
-  let stderr = "";
-  configGet.stderr.on("data", (data) => {
-    stderr = stderr + data;
-  });
-
-  const child = await configGet.spawn();
-  const pid = child.pid;
-  portCommands.set(pid, { port: portId, child: child });
-
-  return new Promise((resolve, reject) => {
-    configGet.on("close", () => {
-      portCommands.delete(pid);
-      return resolve(JSON5.parse(stdout));
-    });
-
-    configGet.on("error", () => {
-      portCommands.delete(pid);
-      return reject(stderr);
-    });
-  });
+  ])
+  const config: ConfigType = JSON5.parse(getConfig)
+  return config
 }
 
 export async function toggleServo(portId: string, servoState: boolean) {
