@@ -6,7 +6,6 @@ import {
   IconRuler2,
   IconRuler2Off,
 } from "@tabler/icons-solidjs";
-import { Command } from "@tauri-apps/plugin-shell";
 import {
   createEffect,
   createSignal,
@@ -42,12 +41,13 @@ import { toaster } from "~/components/ui/toast.tsx";
 import * as Menu from "~/components/ui/menu";
 import { ConfigType } from "src-tauri/generated/config/ConfigType";
 import { css } from "styled-system/css";
-import { getConfigFromPort } from "~/services/PortService";
+import { getConfigFromPort, saveConfigToPort } from "~/services/PortService";
 import { Portal } from "solid-js/web";
 import { generateTreeCollection, TreeView } from "~/components/TreeView";
 import { GetFromPortButton } from "./ConfigForm/GetFromPortButton";
 import { SaveToPort } from "./ConfigForm/SaveToPort";
 import { DriverStatus } from "./ConfigForm/DriverStatus";
+import { reconcile } from "solid-js/store";
 
 export type ConfigTabPage = {
   filePath?: string;
@@ -84,14 +84,14 @@ export function ConfigTabContent() {
       .tabPage!.configTabPage!.configForm!;
   };
 
-  const setConfigForm = (config: object) => {
+  const setConfigForm = (config: ConfigType) => {
     return tabStore.get(configTabProps.key)![1](
       "tabContext",
       getTabIndex(),
       "tabPage",
       "configTabPage",
       "configForm",
-      config,
+      reconcile(config),
     );
   };
 
@@ -259,21 +259,6 @@ export function ConfigTabContent() {
     setOriginalFile(JSON5.parse(JSON5.stringify(data)));
   }
 
-  async function saveConfigToPort(
-    config: object,
-    portId: string,
-  ): Promise<string> {
-    const json_str = JSON.stringify(config, null, "  ");
-    const saveConfig = Command.sidecar("binaries/drivercom", [
-      `--port`,
-      portId,
-      `config.set`,
-      json_str,
-    ]);
-    const output = await saveConfig.execute();
-    return output.stderr;
-  }
-
   let scrollContainer: HTMLDivElement | undefined;
   const scrollToWrongField = (scrollContainer: HTMLDivElement) => {
     const top = Array.from(
@@ -348,24 +333,25 @@ export function ConfigTabContent() {
       });
       return;
     }
-    const outputError = await saveConfigToPort(getConfigForm(), portId);
-    if (outputError.length !== 0) {
+
+    try {
+      await saveConfigToPort(getConfigForm(), portId);
+      if (getPortId() && getPortId() === portId) {
+        setOriginalFile(JSON5.parse(JSON5.stringify(getConfigForm())));
+      }
+      toaster.create({
+        title: "Communication Success",
+        description: "Configuration saved to port successfully.",
+        type: "success",
+      });
+    } catch (error) {
       toaster.create({
         title: "Communication Error",
-        description: outputError,
+        description: error as string,
         type: "error",
       });
       return;
     }
-
-    if (getPortId() && getPortId() === portId) {
-      setOriginalFile(JSON5.parse(JSON5.stringify(getConfigForm())));
-    }
-    toaster.create({
-      title: "Communication Success",
-      description: "Configuration saved to port successfully.",
-      type: "success",
-    });
   };
 
   const getConfigFromFile = async (path: string) => {
@@ -395,10 +381,10 @@ export function ConfigTabContent() {
     }
   };
 
-  const getFromPort = async (portId: string) => {
+  const getFromPort = async (portId: string, version: string) => {
     try {
       setRender(false);
-      const config = await getConfigFromPort(portId);
+      const config = await getConfigFromPort(portId, version);
       setConfigForm(config);
       setFilePath("");
       setTabName(portId);
@@ -586,7 +572,9 @@ export function ConfigTabContent() {
           </Tooltip>
           {/*Get from port */}
           <GetFromPortButton
-            onGetFromPort={async (portId) => await getFromPort(portId)}
+            onGetFromPort={async (portId, version) =>
+              await getFromPort(portId, version)
+            }
           />
           {/* Save to port */}
           <SaveToPort
