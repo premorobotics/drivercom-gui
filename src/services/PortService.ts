@@ -85,19 +85,40 @@ export const checkAvailablePort = (portId: string): boolean => {
   return true;
 };
 
-export async function getConfigFromPort(portId: string): Promise<ConfigType> {
+export async function getConfigFromPort(
+  portId: string,
+  version?: string,
+): Promise<ConfigType> {
   const getConfig = await sendDrivercomCommand([
     `--port`,
     portId,
     `config.get`,
-  ])
-  const config: ConfigType = JSON5.parse(getConfig)
-  return config
+  ]);
+  const config: ConfigType = JSON5.parse(getConfig);
+  if (typeof version === "string") {
+    config.state.sys_version = Number(version);
+  }
+  return config;
+}
+
+export async function saveConfigToPort(
+  config: object,
+  portId: string,
+): Promise<string> {
+  const json_str = JSON5.stringify(config, null, "  ").replaceAll("'", '"');
+  return await sendDrivercomCommand([
+    `--port`,
+    portId,
+    `config.set`,
+    json_str,
+    `--timeout`,
+    `10000`,
+  ]);
 }
 
 export async function toggleServo(portId: string, servoState: boolean) {
   return await sendDrivercomCommand([
-    "config.toggle_servo",
+    "toggle_servo",
     "--port",
     portId,
     servoState ? "off" : "on",
