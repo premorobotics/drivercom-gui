@@ -9,6 +9,19 @@ export type Port = {
   version: string;
 };
 
+async function sendDrivercomCommand(args: string[]): Promise<string> {
+  try {
+    const drivercom = Command.sidecar("binaries/drivercom", args);
+    const output = await drivercom.execute();
+    if (output.stderr.length > 0) {
+      throw output.stderr;
+    }
+    return output.stdout;
+  } catch (e) {
+    throw e as string;
+  }
+}
+
 export async function detectPort(): Promise<Port[]> {
   const drivercom = Command.sidecar("binaries/drivercom", ["port.detect"]);
   const output = await drivercom.execute();
@@ -104,4 +117,8 @@ export async function getConfigFromPort(portId: string): Promise<ConfigType> {
       return reject(stderr);
     });
   });
+}
+
+export async function toggleServo(portId: string) {
+  return await sendDrivercomCommand(["config.toggle_servo", "--port", portId]);
 }
