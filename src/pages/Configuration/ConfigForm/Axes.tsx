@@ -12,6 +12,7 @@ import {
 } from "@tabler/icons-solidjs";
 import { Dynamic } from "solid-js/web";
 import * as Accordion from "../../../components/ui/accordion";
+import { getComputedCSSVariableValue } from "~/utils/GetComputedCssVariableValue";
 
 type AxesTableProps = {
   id: string;
@@ -114,7 +115,7 @@ export function AxesTable(props: AxesTableProps) {
           height: "fit-content",
           display: "grid",
           gridTemplateColumns: `repeat(4, 25%)`,
-          gridAutoRows: "1.5rem",
+          gridAutoRows: "1.8rem",
           borderRadius: "0.2rem",
           gap: "0",
         })}
@@ -142,7 +143,7 @@ export function AxesTable(props: AxesTableProps) {
                 <>
                   <Text
                     style={{
-                      "padding-left": `${paddingLeft}rem`,
+                      "padding-left": `${typeof paddingLeft === "number" && paddingLeft > 0 ? paddingLeft : 0.2}rem`,
                     }}
                     fontSize="sm"
                     gridColumn={"1"}
@@ -151,6 +152,7 @@ export function AxesTable(props: AxesTableProps) {
                     display={"flex"}
                     background={"gray.2"}
                     fontFamily={"body"}
+                    alignItems="center"
                   >
                     {key.replaceAll("_", " ")}
                     <Show when={descriptionText}>
@@ -175,6 +177,7 @@ export function AxesTable(props: AxesTableProps) {
                             "grid-row": rowNumber,
                             "border-top-width": "1px",
                             "border-left-width": "1px",
+                            padding: "0.2rem",
                           }}
                           value={
                             config[configIndex][
@@ -234,7 +237,9 @@ export function AxesTable(props: AxesTableProps) {
               >
                 <Accordion.Item value={accordionItemValue} borderWidth="0">
                   <Accordion.ItemTrigger
-                    style={{ "padding-left": `${paddingLeft}rem` }}
+                    style={{
+                      "padding-left": `${typeof paddingLeft === "number" && paddingLeft > 0 ? paddingLeft : 0.2}rem`,
+                    }}
                     fontSize="xs"
                     fontWeight="medium"
                     background={"gray.2"}
@@ -405,10 +410,11 @@ function ComlumnInput(props: ComlumnInputProps) {
           width: "100%",
           height: "100%",
           outlineStyle: "solid",
+
           outlineColor:
-            errorInput() || !Number.isFinite(props.value) ? "red" : "accent.7",
-          outlineWidth:
-            errorInput() || !Number.isFinite(props.value) ? "1px" : "0px",
+            errorInput() || !Number.isFinite(props.value) ? "red" : "gray.7",
+          outlineWidth: "1px",
+          borderRadius: "0.1rem",
           position: "relative",
           zIndex: "1",
           alignItems: "center",
@@ -426,15 +432,21 @@ function ComlumnInput(props: ComlumnInputProps) {
           onFocus={() => {
             if (container) {
               container.style.outlineWidth = "2px";
+              container.style.outlineColor =
+                typeof errorInput() === "string" ||
+                !Number.isFinite(Number(inputValue()))
+                  ? "red"
+                  : getComputedCSSVariableValue("--colors-accent-9");
             }
           }}
           onFocusOut={() => {
             if (container) {
-              if (errorInput() || !Number.isFinite(props.value)) {
-                container.style.outlineWidth = "1px";
-                return;
-              }
-              container.style.outlineWidth = "0px";
+              container.style.outlineWidth = "1px";
+              container.style.outlineColor =
+                typeof errorInput() === "string" ||
+                !Number.isFinite(Number(inputValue()))
+                  ? "red"
+                  : getComputedCSSVariableValue("--colors-gray-7");
             }
           }}
           onChange={(e) => {

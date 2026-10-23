@@ -177,7 +177,6 @@ export const ConfigFormatObject = (props: ConfigFormatObjectProps) => {
                       class={css({ borderColor: "gray.4" })}
                     >
                       <FormNumberInput
-                        background={"gray.2"}
                         id={id + "." + key}
                         label={label}
                         originalValue={originalFile}
