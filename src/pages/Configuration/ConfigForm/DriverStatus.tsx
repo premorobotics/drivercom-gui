@@ -73,7 +73,7 @@ export function DriverStatus(props: DriverStatusProps) {
     <div
       class={css({
         display: "grid",
-        gridTemplateRows: `2rem minmax(0, 1fr)`,
+        gridTemplateRows: `2rem 2.5rem minmax(0, 1fr)`,
         width: "100%",
         height: "100%",
         borderLeftWidth: "1px",
@@ -86,101 +86,156 @@ export function DriverStatus(props: DriverStatusProps) {
         })}
         style={{
           width: "100%",
-          height: "100%",
+          height: "2rem",
           "grid-row": 1,
-          display: "flex",
+          display: "grid",
           "align-items": "center",
           "padding-left": "0.4rem",
-          gap: "0.2rem",
+          "grid-template-columns": "5.4rem minmax(0,1fr)",
         }}
       >
         <Text fontSize="sm" fontFamily="body" fontWeight={"bold"}>
           {"Driver status"}
         </Text>
 
-        <Tooltip
-          content={
-            driverStatus.servo_enabled ? "Servo enabled" : "Servo disabled"
-          }
-        >
-          <Badge
-            variant={driverStatus.servo_enabled ? "solid" : "subtle"}
-            margin="0"
-          >
-            {"Servo"}
-          </Badge>
-        </Tooltip>
-        <DrivercomCommandButton
-          onRunCommand={async (port, version) => {
-            if (isToggleButtonLoading()) return;
-            try {
-              setIsToggleButtonLoading(true);
-              await toggleServo(port, driverStatus.servo_enabled);
-              const newConfig = await getConfigFromPort(port, version);
-              setDriverStatus(reconcile(newConfig.state));
-              setIsToggleButtonLoading(false);
-              toaster.create({
-                title: "Toggle Servo",
-                description: "The servo toggled successfully.",
-                type: "success",
-              });
-            } catch (e) {
-              setIsToggleButtonLoading(false);
-              toaster.create({
-                title: "Toggle Servo Error",
-                description: e as string,
-                type: "error",
-              });
-            }
+        <div
+          style={{
+            width: `calc()`,
+            display: "flex",
+            "justify-content": "right",
           }}
-          tooltipContent={"Enable or disable the servo."}
         >
-          <Button
-            variant={driverStatus.servo_enabled ? "plain" : "solid"}
-            size="2xs"
-            fontWeight="normal"
-            loading={isToggleButtonLoading()}
+          <DrivercomCommandButton
+            onRunCommand={async (port, version) => {
+              if (isToggleButtonLoading()) return;
+              try {
+                setIsToggleButtonLoading(true);
+                await toggleServo(port, driverStatus.servo_enabled);
+                const newConfig = await getConfigFromPort(port, version);
+                setDriverStatus(reconcile(newConfig.state));
+                setIsToggleButtonLoading(false);
+              } catch (e) {
+                setIsToggleButtonLoading(false);
+                toaster.create({
+                  title: "Toggle Servo Error",
+                  description: e as string,
+                  type: "error",
+                });
+              }
+            }}
+            tooltipContent={"Enable or disable the servo."}
           >
-            {driverStatus.servo_enabled ? "Disable servo" : "Enable servo"}
-          </Button>
-        </DrivercomCommandButton>
-
-        <DrivercomCommandButton
-          onRunCommand={async (port, version) => {
-            if (isReseting()) return;
-            try {
-              setIsReseting(true);
-              const newConfig = await getConfigFromPort(port, version);
-              setDriverStatus(reconcile(newConfig.state));
-              setIsReseting(false);
-              toaster.create({
-                title: "ResetDriver status",
-                description: "The driver status refreshed successfully.",
-                type: "success",
-              });
-            } catch (e) {
-              setIsReseting(false);
-              toaster.create({
-                title: "Refresh Driver status Error",
-                description: e as string,
-                type: "error",
-              });
-            }
-          }}
-          tooltipContent={"Refresh Driver status"}
-        >
-          <IconButton variant="plain" size="2xs" loading={isReseting()}>
-            <IconRefresh />
-          </IconButton>
-        </DrivercomCommandButton>
+            <Button
+              variant={"outline"}
+              size="2xs"
+              fontWeight="normal"
+              loading={isToggleButtonLoading()}
+            >
+              {driverStatus.servo_enabled ? "Disable servo" : "Enable servo"}
+            </Button>
+          </DrivercomCommandButton>
+          <DrivercomCommandButton
+            onRunCommand={async (port, version) => {
+              if (isReseting()) return;
+              try {
+                setIsReseting(true);
+                const newConfig = await getConfigFromPort(port, version);
+                setDriverStatus(reconcile(newConfig.state));
+                setIsReseting(false);
+              } catch (e) {
+                setIsReseting(false);
+                toaster.create({
+                  title: "Refresh Driver status Error",
+                  description: e as string,
+                  type: "error",
+                });
+              }
+            }}
+            tooltipContent={"Refresh Driver status"}
+          >
+            <IconButton variant="plain" size="2xs" loading={isReseting()}>
+              <IconRefresh />
+            </IconButton>
+          </DrivercomCommandButton>
+        </div>
       </div>
       <div
         style={{
           width: "100%",
           height: "100%",
           "grid-row": 2,
+          padding: "0.4rem",
           "border-top-width": "1px",
+          display: "grid",
+          "grid-template-columns": `repeat(2, calc(100% / 3)) minmax(0,1fr)`,
+          gap: "0.2rem",
+        }}
+      >
+        <Badge
+          size="2xl"
+          gridRow="1"
+          gridColumn="1"
+          display="flex"
+          fontSize="sm"
+          paddingLeft="0.2rem"
+          paddingRight="0.2rem"
+          variant="outline"
+          background="accent.3"
+          borderColor="accent.7"
+          color="accent.11"
+        >
+          {"Firmware"}
+          <Text textAlign="right" fontWeight="bold" width="100%">
+            {`v${driverStatus.sys_version}`}
+          </Text>
+        </Badge>
+        <Badge
+          size="2xl"
+          gridRow="1"
+          gridColumn="2"
+          display="flex"
+          fontSize="sm"
+          paddingLeft="0.2rem"
+          paddingRight="0.2rem"
+          variant="outline"
+          background={driverStatus.cc_link_enabled ? "accent.3" : "accent.1"}
+          borderColor={driverStatus.cc_link_enabled ? "accent.7" : "accent.3"}
+          color={driverStatus.cc_link_enabled ? "accent.11" : "accent.7"}
+        >
+          {`CC Link`}
+          <Text textAlign="right" fontWeight="bold" width="100%">
+            {`${driverStatus.cc_link_enabled ? "on" : "off"}`}
+          </Text>
+        </Badge>
+
+        <Badge
+          margin="0"
+          size="2xl"
+          gridRow="1"
+          gridColumn="3"
+          display="flex"
+          fontSize="sm"
+          paddingLeft="0.2rem"
+          paddingRight="0.2rem"
+          variant="outline"
+          background={driverStatus.servo_enabled ? "accent.3" : "accent.1"}
+          borderColor={driverStatus.servo_enabled ? "accent.7" : "accent.3"}
+          color={driverStatus.servo_enabled ? "accent.11" : "accent.7"}
+        >
+          {`Servo`}
+          <Text textAlign="right" fontWeight="bold" width="100%">
+            {`${driverStatus.servo_enabled ? "on" : "off"}`}
+          </Text>
+        </Badge>
+      </div>
+      <div
+        style={{
+          width: "100%",
+          height: "100%",
+          "grid-row": 3,
+          //"border-top-width": "1px",
           padding: "0.5rem",
+          "padding-top": "0",
           "overflow-y": "auto",
         }}
       >
@@ -200,11 +255,13 @@ const DriverStatusTable = (props: {
   description?: object;
 }) => {
   const entries = Object.entries(props.branch);
+  const notIncludedKeys = ["servo_enabled", "cc_link_enabled", "sys_version"];
   const objectEntries = entries.filter(
     ([, value]) => typeof value === "object",
   );
   const noneObjectEntries = entries.filter(
-    ([key, value]) => typeof value !== "object" && key !== "servo_enabled",
+    ([key, value]) =>
+      typeof value !== "object" && !notIncludedKeys.includes(key),
   );
 
   return (
