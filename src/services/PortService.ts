@@ -95,8 +95,9 @@ export async function getConfigFromPort(
     `config.get`,
   ]);
   const config: ConfigType = JSON5.parse(getConfig);
-  if (typeof version === "string") {
-    config.state.sys_version = Number(version);
+  if (version) {
+    const parseVersion = Number(version);
+    config.state.sys_version = parseVersion;
   }
   return config;
 }
@@ -105,7 +106,10 @@ export async function saveConfigToPort(
   config: object,
   portId: string,
 ): Promise<string> {
-  const json_str = JSON5.stringify(config, null, "  ").replaceAll("'", '"');
+  const json_str = JSON5.stringify(config, { space: 2, quote: '"' }).replaceAll(
+    "'",
+    '"',
+  );
   return await sendDrivercomCommand([
     `--port`,
     portId,
