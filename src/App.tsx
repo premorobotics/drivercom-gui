@@ -726,7 +726,7 @@ function App(props: RouteSectionProps) {
         onDrop={(e) => e.stopPropagation()}
       >
         <div
-          class={css({ background: "gray.2" })}
+          class={css({ background: "gray.3", borderBottomColor: "gray.5" })}
           style={{
             width: "100vw",
             height: navbarHeight,
@@ -769,7 +769,7 @@ function App(props: RouteSectionProps) {
                 >
                   <Text
                     textStyle="sm"
-                    opacity={page().toString() === val() ? "1" : "0.6"}
+                    opacity={page().toString() === val() ? "1" : "0.3"}
                   >
                     {pages[val()].label}
                   </Text>

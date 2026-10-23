@@ -32,7 +32,13 @@ export function CcLinkSpeedSelection(props: CcLinkSpeedSelectionProps) {
         "align-items": "center",
       }}
     >
-      <Text display="flex" alignItems="center" gap="0.4rem" fontSize="sm">
+      <Text
+        display="flex"
+        alignItems="center"
+        gap="0"
+        fontSize="sm"
+        fontFamily="body"
+      >
         <Show when={props.originalFile !== props.value}>
           <div
             class={css({
@@ -85,7 +91,7 @@ export function CcLinkSpeedSelection(props: CcLinkSpeedSelectionProps) {
       >
         <Select.Control>
           <Select.Trigger
-            borderColor={"gray.5"}
+            borderColor={"gray.7"}
             padding={"0"}
             height={"1.5rem"}
           >

@@ -151,7 +151,7 @@ export function Tab(props: TabProps) {
       height="2rem"
       gap="0"
       width={`100%`}
-      background="gray.2"
+      background="gray.3"
       style={{ padding: "0" }}
       onKeyUp={(e) => {
         if (e.key === "Escape") {
@@ -257,10 +257,10 @@ export function Tab(props: TabProps) {
                       : "0px 1px 0px 0px"
                   }
                   borderColor={"bg.disabled"}
-                  background="gray.2"
+                  background="transparent"
                   opacity="0.7"
                   _selected={{
-                    background: "gray.1",
+                    background: "gray.2",
                     opacity: "1",
                   }}
                   _hover={{

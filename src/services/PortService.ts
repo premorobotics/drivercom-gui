@@ -9,6 +9,19 @@ export type Port = {
   version: string;
 };
 
+async function sendDrivercomCommand(args: string[]): Promise<string> {
+  try {
+    const drivercom = Command.sidecar("binaries/drivercom", args);
+    const output = await drivercom.execute();
+    if (output.stderr.length > 0) {
+      throw output.stderr;
+    }
+    return output.stdout;
+  } catch (e) {
+    throw e as string;
+  }
+}
+
 export async function detectPort(): Promise<Port[]> {
   const drivercom = Command.sidecar("binaries/drivercom", ["port.detect"]);
   const output = await drivercom.execute();
@@ -72,36 +85,46 @@ export const checkAvailablePort = (portId: string): boolean => {
   return true;
 };
 
-export async function getConfigFromPort(portId: string): Promise<ConfigType> {
-  const configGet = Command.sidecar("binaries/drivercom", [
+export async function getConfigFromPort(
+  portId: string,
+  version?: string,
+): Promise<ConfigType> {
+  const getConfig = await sendDrivercomCommand([
     `--port`,
     portId,
     `config.get`,
   ]);
+  const config: ConfigType = JSON5.parse(getConfig);
+  if (version) {
+    const parseVersion = Number(version);
+    config.state.sys_version = parseVersion;
+  }
+  return config;
+}
 
-  let stdout = "";
-  configGet.stdout.on("data", (data) => {
-    stdout = stdout + data;
-  });
+export async function saveConfigToPort(
+  config: object,
+  portId: string,
+): Promise<string> {
+  const json_str = JSON5.stringify(config, { space: 2, quote: '"' }).replaceAll(
+    "'",
+    '"',
+  );
+  return await sendDrivercomCommand([
+    `--port`,
+    portId,
+    `config.set`,
+    json_str,
+    `--timeout`,
+    `10000`,
+  ]);
+}
 
-  let stderr = "";
-  configGet.stderr.on("data", (data) => {
-    stderr = stderr + data;
-  });
-
-  const child = await configGet.spawn();
-  const pid = child.pid;
-  portCommands.set(pid, { port: portId, child: child });
-
-  return new Promise((resolve, reject) => {
-    configGet.on("close", () => {
-      portCommands.delete(pid);
-      return resolve(JSON5.parse(stdout));
-    });
-
-    configGet.on("error", () => {
-      portCommands.delete(pid);
-      return reject(stderr);
-    });
-  });
+export async function toggleServo(portId: string, servoState: boolean) {
+  return await sendDrivercomCommand([
+    "toggle_servo",
+    "--port",
+    portId,
+    servoState ? "off" : "on",
+  ]);
 }

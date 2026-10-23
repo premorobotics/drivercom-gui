@@ -5,8 +5,8 @@ import {
   IconListDetailsFilled,
   IconRuler2,
   IconRuler2Off,
+  IconTableFilled,
 } from "@tabler/icons-solidjs";
-import { Command } from "@tauri-apps/plugin-shell";
 import {
   createEffect,
   createSignal,
@@ -42,11 +42,13 @@ import { toaster } from "~/components/ui/toast.tsx";
 import * as Menu from "~/components/ui/menu";
 import { ConfigType } from "src-tauri/generated/config/ConfigType";
 import { css } from "styled-system/css";
-import { getConfigFromPort } from "~/services/PortService";
+import { getConfigFromPort, saveConfigToPort } from "~/services/PortService";
 import { Portal } from "solid-js/web";
 import { generateTreeCollection, TreeView } from "~/components/TreeView";
 import { GetFromPortButton } from "./ConfigForm/GetFromPortButton";
 import { SaveToPort } from "./ConfigForm/SaveToPort";
+import { DriverStatus } from "./ConfigForm/DriverStatus";
+import { reconcile } from "solid-js/store";
 
 export type ConfigTabPage = {
   filePath?: string;
@@ -62,6 +64,7 @@ export type ConfigTabPage = {
   changeUnit?: boolean;
   showTreeView?: boolean;
   treeViewExpandedValue?: string[];
+  showDriverStatus?: boolean;
 };
 
 // A custom tab page component for the configuration page.
@@ -83,14 +86,14 @@ export function ConfigTabContent() {
       .tabPage!.configTabPage!.configForm!;
   };
 
-  const setConfigForm = (config: object) => {
+  const setConfigForm = (config: ConfigType) => {
     return tabStore.get(configTabProps.key)![1](
       "tabContext",
       getTabIndex(),
       "tabPage",
       "configTabPage",
       "configForm",
-      config,
+      reconcile(config),
     );
   };
 
@@ -241,6 +244,22 @@ export function ConfigTabContent() {
     );
   };
 
+  const getShowDriverStatus = () => {
+    return tabStore.get(configTabProps.key)![0].tabContext[getTabIndex()]
+      .tabPage!.configTabPage!.showDriverStatus;
+  };
+
+  const setShowDriverStatus = (showDriverStatus: boolean) => {
+    return tabStore.get(configTabProps.key)![1](
+      "tabContext",
+      getTabIndex(),
+      "tabPage",
+      "configTabPage",
+      "showDriverStatus",
+      showDriverStatus,
+    );
+  };
+
   const [render, setRender] = createSignal<boolean>(true);
 
   const fileHandler = new FileHandler();
@@ -256,21 +275,6 @@ export function ConfigTabContent() {
       return [path, ...newRecentFiles];
     });
     setOriginalFile(JSON5.parse(JSON5.stringify(data)));
-  }
-
-  async function saveConfigToPort(
-    config: object,
-    portId: string,
-  ): Promise<string> {
-    const json_str = JSON.stringify(config, null, "  ");
-    const saveConfig = Command.sidecar("binaries/drivercom", [
-      `--port`,
-      portId,
-      `config.set`,
-      json_str,
-    ]);
-    const output = await saveConfig.execute();
-    return output.stderr;
   }
 
   let scrollContainer: HTMLDivElement | undefined;
@@ -347,24 +351,25 @@ export function ConfigTabContent() {
       });
       return;
     }
-    const outputError = await saveConfigToPort(getConfigForm(), portId);
-    if (outputError.length !== 0) {
+
+    try {
+      await saveConfigToPort(getConfigForm(), portId);
+      if (getPortId() && getPortId() === portId) {
+        setOriginalFile(JSON5.parse(JSON5.stringify(getConfigForm())));
+      }
+      toaster.create({
+        title: "Communication Success",
+        description: "Configuration saved to port successfully.",
+        type: "success",
+      });
+    } catch (error) {
       toaster.create({
         title: "Communication Error",
-        description: outputError,
+        description: error as string,
         type: "error",
       });
       return;
     }
-
-    if (getPortId() && getPortId() === portId) {
-      setOriginalFile(JSON5.parse(JSON5.stringify(getConfigForm())));
-    }
-    toaster.create({
-      title: "Communication Success",
-      description: "Configuration saved to port successfully.",
-      type: "success",
-    });
   };
 
   const getConfigFromFile = async (path: string) => {
@@ -394,10 +399,10 @@ export function ConfigTabContent() {
     }
   };
 
-  const getFromPort = async (portId: string) => {
+  const getFromPort = async (portId: string, version: string) => {
     try {
       setRender(false);
-      const config = await getConfigFromPort(portId);
+      const config = await getConfigFromPort(portId, version);
       setConfigForm(config);
       setFilePath("");
       setTabName(portId);
@@ -453,9 +458,9 @@ export function ConfigTabContent() {
           width="100%"
           height={topBarHeight}
           gap="0"
-          background={"bg.muted"}
+          background={"gray.2"}
           display={"grid"}
-          gridTemplateColumns={`minmax(0, 1fr) repeat(5, 2rem)`}
+          gridTemplateColumns={`minmax(0, 1fr) repeat(6, 2rem)`}
         >
           <Text
             fontSize="sm"
@@ -465,15 +470,20 @@ export function ConfigTabContent() {
             margin="0"
             textAlign="center"
             fontFamily="body"
+            fontWeight="bold"
           >
-            <IconButton
-              size="xs"
-              variant={"plain"}
-              color={getShowTreeView() ? "accent.9" : "fg.subtle"}
-              onClick={() => setShowTreeView(!getShowTreeView())}
+            <Tooltip
+              content={getShowTreeView() ? "Close left dock" : "Open left dock"}
             >
-              <IconListDetailsFilled />
-            </IconButton>
+              <IconButton
+                size="xs"
+                variant={"plain"}
+                color={getShowTreeView() ? "accent.9" : "fg.subtle"}
+                onClick={() => setShowTreeView(!getShowTreeView())}
+              >
+                <IconListDetailsFilled />
+              </IconButton>
+            </Tooltip>
             {getFocusedTab()
               ?.replaceAll("/", " > ")
               .replaceAll(`$`, " > ")
@@ -584,12 +594,32 @@ export function ConfigTabContent() {
           </Tooltip>
           {/*Get from port */}
           <GetFromPortButton
-            onGetFromPort={async (portId) => await getFromPort(portId)}
+            onGetFromPort={async (portId, version) =>
+              await getFromPort(portId, version)
+            }
           />
           {/* Save to port */}
           <SaveToPort
             onSaveToPort={async (portId) => await saveToPort(portId)}
           />
+          <div style={{ "border-left-width": "1px" }}>
+            <Tooltip
+              content={
+                getShowDriverStatus()
+                  ? "Hide Driver status table"
+                  : "Show Driver status table"
+              }
+            >
+              <IconButton
+                onClick={() => setShowDriverStatus(!getShowDriverStatus())}
+                size={"xs"}
+                variant={"plain"}
+                color={getShowDriverStatus() ? "accent.9" : "fg.subtle"}
+              >
+                <IconTableFilled />
+              </IconButton>
+            </Tooltip>
+          </div>
         </Stack>
         <Show
           when={render()}
@@ -646,8 +676,8 @@ export function ConfigTabContent() {
           <div
             ref={scrollContainer}
             style={{
-              width: "100%",
-              height: `calc(100% - 2.5rem)`,
+              width: `100%`,
+              height: `calc(100% - 2rem)`,
               "border-top-width": "1px",
             }}
           >
@@ -655,7 +685,7 @@ export function ConfigTabContent() {
               id={getTabId()}
               description={configDescription()}
               originalFile={getOriginalFile()}
-              changeUnits={getChangeUnit() ? getChangeUnit() : undefined}
+              changeUnits={getChangeUnit()}
               focusedObjectKey={getFocusedTab()}
               config={getConfigForm()!}
               linkedStatuses={getLinkedStatuses()!}
@@ -666,6 +696,16 @@ export function ConfigTabContent() {
           </div>
         </Show>
       </div>
+      <Show when={getShowDriverStatus()}>
+        <div style={{ width: "30rem", height: "100%" }}>
+          <DriverStatus
+            id={getTabId() + "." + "driverStatus"}
+            driverStatus={getConfigForm()!.state}
+            accordionStatuses={getAccordionStatuses()!}
+            description={configDescription()}
+          />
+        </div>
+      </Show>
     </div>
   );
 }
