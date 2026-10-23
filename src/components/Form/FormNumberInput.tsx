@@ -199,10 +199,12 @@ export const FormNumberInput = (props: FormNumberInputProps) => {
           "align-items": "center",
         }}
       >
-        <div style={{ width: "100%", display: "flex" }}>
+        <div
+          style={{ width: "100%", display: "flex", "align-items": "center" }}
+        >
           <div style={{ width: `calc(100% - 0.5rem)` }}>
             <Text
-              height="1.5em"
+              height="100%"
               width="min-content"
               display="flex"
               alignItems="center"
@@ -228,8 +230,9 @@ export const FormNumberInput = (props: FormNumberInputProps) => {
                 class={css({
                   background: props.isFocus ? "accent.7" : "transparent",
                   width: `max-content`,
-                  minWidth: "1rem",
                   fontSize: "sm",
+                  display: "flex",
+                  alignItems: "center",
                 })}
               >
                 {props.label.replaceAll("_", " ")}
@@ -348,7 +351,7 @@ export const FormNumberInput = (props: FormNumberInputProps) => {
             borderColor={
               typeof errorInputValue() === "string" ||
               Number.isFinite(Number(inputValue()))
-                ? "gray.5"
+                ? "gray.7"
                 : "red"
             }
             direction="row"
@@ -383,7 +386,7 @@ export const FormNumberInput = (props: FormNumberInputProps) => {
                   typeof errorInputValue() === "string" ||
                   !Number.isFinite(Number(inputValue()))
                     ? "red"
-                    : getComputedCSSVariableValue("--colors-accent-7");
+                    : getComputedCSSVariableValue("--colors-accent-9");
               }}
               onFocusOut={(e) => {
                 divRef!.style.borderWidth = "1px";

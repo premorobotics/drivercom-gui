@@ -78,12 +78,10 @@ export function DriverStatus(props: DriverStatusProps) {
         height: "100%",
         borderLeftWidth: "1px",
         minWidth: "22rem",
+        background: "gray.2",
       })}
     >
       <div
-        class={css({
-          background: "gray.2",
-        })}
         style={{
           width: "100%",
           height: "2rem",
@@ -91,12 +89,14 @@ export function DriverStatus(props: DriverStatusProps) {
           display: "grid",
           "align-items": "center",
           "padding-left": "0.4rem",
-          "grid-template-columns": "5.4rem minmax(0,1fr)",
+          "grid-template-columns": "5.4rem 4rem minmax(0,1fr)",
         }}
       >
         <Text fontSize="sm" fontFamily="body" fontWeight={"bold"}>
           {"Driver status"}
         </Text>
+
+        <Badge size="sm">{"Read only"}</Badge>
 
         <div
           style={{
@@ -199,8 +199,8 @@ export function DriverStatus(props: DriverStatusProps) {
           paddingRight="0.2rem"
           variant="outline"
           background={driverStatus.cc_link_enabled ? "accent.3" : "accent.1"}
-          borderColor={driverStatus.cc_link_enabled ? "accent.7" : "accent.3"}
-          color={driverStatus.cc_link_enabled ? "accent.11" : "accent.7"}
+          borderColor={driverStatus.cc_link_enabled ? "accent.7" : "border"}
+          color={driverStatus.cc_link_enabled ? "accent.11" : "fg.muted"}
         >
           {`CC Link`}
           <Text textAlign="right" fontWeight="bold" width="100%">
@@ -219,8 +219,8 @@ export function DriverStatus(props: DriverStatusProps) {
           paddingRight="0.2rem"
           variant="outline"
           background={driverStatus.servo_enabled ? "accent.3" : "accent.1"}
-          borderColor={driverStatus.servo_enabled ? "accent.7" : "accent.3"}
-          color={driverStatus.servo_enabled ? "accent.11" : "accent.7"}
+          borderColor={driverStatus.servo_enabled ? "accent.7" : "border"}
+          color={driverStatus.servo_enabled ? "accent.11" : "fg.muted"}
         >
           {`Servo`}
           <Text textAlign="right" fontWeight="bold" width="100%">
@@ -233,7 +233,6 @@ export function DriverStatus(props: DriverStatusProps) {
           width: "100%",
           height: "100%",
           "grid-row": 3,
-          //"border-top-width": "1px",
           padding: "0.5rem",
           "padding-top": "0",
           "overflow-y": "auto",
@@ -301,8 +300,7 @@ const DriverStatusTable = (props: {
                     gridRow={rowNumber}
                     fontFamily={"body"}
                     fontSize="sm"
-                    borderWidth={"0 1px 1px 0"}
-                    background="gray.2"
+                    borderWidth={"0 0px 1px 0"}
                     style={{
                       "padding-left": props.paddingLeft
                         ? `${props.paddingLeft}rem`
@@ -410,7 +408,7 @@ const DriverStatusTable = (props: {
                       class={css({
                         fontFamily: "body",
                         fontSize: "sm",
-                        fontWeight: "normal",
+                        fontWeight: "medium",
                         alignItems: "center",
                       })}
                     >
