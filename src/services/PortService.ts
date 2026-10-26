@@ -106,10 +106,7 @@ export async function saveConfigToPort(
   config: object,
   portId: string,
 ): Promise<string> {
-  const json_str = JSON5.stringify(config, { space: 2, quote: '"' }).replaceAll(
-    "'",
-    '"',
-  );
+  const json_str = JSON5.stringify(config, { space: 2, quote: '"' });
   return await sendDrivercomCommand([
     `--port`,
     portId,

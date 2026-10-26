@@ -14,7 +14,6 @@ export function DriverStatusSectionCount(props: DriverStatusSectionCountProps) {
     props.sectionCount.activate_primary.left.forward,
   );
 
-  console.log(props.description);
   return (
     <>
       <For each={Object.entries(props.sectionCount)}>
