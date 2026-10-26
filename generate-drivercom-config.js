@@ -28,14 +28,6 @@ const binaryName = path.resolve(
 );
 
 try {
-  const logConfigInfo = execSync(`"${binaryName}" log.config.empty`);
-  const logConfigSchema = generateZodSchema(JSON5.parse(logConfigInfo), "");
-  const logConfigFile = generateFileContent(logConfigSchema, "logConfig");
-  writeFileSync(
-    "./src-tauri/generated/config/LogConfigType.tsx",
-    logConfigFile,
-  );
-
   const configInfo = execSync(`"${binaryName}" config.empty`);
   const configSchema = generateZodSchema(JSON5.parse(configInfo), "");
   const configFile = generateFileContent(configSchema, "config");
