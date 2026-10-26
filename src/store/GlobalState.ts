@@ -4,7 +4,6 @@ import { PanelSizeContext } from "~/components/Panel/PanelLayout.tsx";
 import { TabListContext } from "~/components/Tab/TabList.tsx";
 import { Child } from "@tauri-apps/plugin-shell";
 import { DownloadStates } from "~/components/DownloadList.tsx";
-import { IpAddress } from "~/pages/Monitoring/System/IpHistory.tsx";
 import {
   ConfigType,
   configDefaultValues,
@@ -109,9 +108,6 @@ export const [configDescription, setConfigDescription] = createSignal<object>(
 export const [logConfigDescription, setLogConfigDescription] =
   createSignal<object>({});
 
-export const [detectedServer, setDetectedServer] = createSignal<IpAddress[]>(
-  [],
-);
 export const [configTabForm, setConfigTabForm] = createSignal<ConfigFormatType>(
   {
     tune: configTuneDefaultValues,
@@ -119,9 +115,5 @@ export const [configTabForm, setConfigTabForm] = createSignal<ConfigFormatType>(
     calibration: configCalibrationDefaultValues,
   },
 );
-
-export const tcpClientIds: string[] = [];
-
-export const [ipHistory, setIpHistory] = createSignal<IpAddress[]>([]);
 
 export const [cclinkSpeed, setCclinkSpeed] = createSignal<string[]>([]);

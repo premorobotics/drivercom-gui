@@ -16,7 +16,6 @@ import { useNavigate } from "@solidjs/router";
 
 import {
   IconDeviceAnalytics,
-  IconDeviceDesktopSearch,
   IconFileSettings,
   IconGraph,
   IconInfoCircle,
@@ -47,7 +46,6 @@ import {
   apiVersion,
   setRecentConfigFilePaths,
   setRecentLogFilePaths,
-  setIpHistory,
   panelStore,
   pageKeys,
   tabStore,
@@ -64,7 +62,6 @@ import { DownloadList } from "./components/DownloadList.tsx";
 import api from "src-tauri/generated/api.json";
 import JSON5 from "json5";
 import { load } from "@tauri-apps/plugin-store";
-import { IpAddress } from "./pages/Monitoring/System/IpHistory.tsx";
 import { ConfigTuneType } from "src-tauri/generated/config/ConfigTune.tsx";
 import { ConfigCalibrationType } from "src-tauri/generated/config/ConfigCalibration.tsx";
 import { ConfigSystemType } from "src-tauri/generated/config/ConfigSystem.tsx";
@@ -293,11 +290,6 @@ function App(props: RouteSectionProps) {
         "logFilePath",
       )) as string[];
       setRecentLogFilePaths(getRecentLogs);
-    }
-    const hasIpHistory = await store.has("ipHistory");
-    if (hasIpHistory) {
-      const getIpHistory = (await store.get("ipHistory")) as IpAddress[];
-      setIpHistory(getIpHistory);
     }
   }
 
@@ -676,11 +668,6 @@ function App(props: RouteSectionProps) {
     logViewer: {
       icon: IconDeviceAnalytics,
       label: "Log Viewer",
-      disabled: false,
-    },
-    monitoring: {
-      icon: IconDeviceDesktopSearch,
-      label: "Monitoring",
       disabled: false,
     },
   };

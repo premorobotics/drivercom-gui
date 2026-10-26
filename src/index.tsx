@@ -11,7 +11,6 @@ const Configuration = lazy(
 );
 const LogViewer = lazy(() => import("./pages/LogViewer/LogViewer.tsx"));
 const Logging = lazy(() => import("./pages/Logging/Logging.tsx"));
-const Monitoring = lazy(() => import("./pages/Monitoring/Monitoring.tsx"));
 
 render(
   () => (
@@ -19,7 +18,6 @@ render(
       <Route path="/configuration" component={Configuration} />
       <Route path="/logviewer" component={LogViewer} />
       <Route path="/logging" component={Logging} />
-      <Route path="/monitoring" component={Monitoring} />
     </Router>
   ),
   document.getElementById("root") as HTMLElement,
