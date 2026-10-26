@@ -21,6 +21,8 @@ import { getConfigFromPort, toggleServo } from "~/services/PortService";
 import { createStore, reconcile } from "solid-js/store";
 import { toaster } from "~/components/ui/toast";
 import { trackStore } from "@solid-primitives/deep";
+import { DriverStatusAxes } from "./DriverStatusAxes";
+import { DriverStatusSectionCount } from "./DrivreStatusSectionCount";
 
 type DriverStatusProps = {
   id: string;
@@ -73,12 +75,12 @@ export function DriverStatus(props: DriverStatusProps) {
     <div
       class={css({
         display: "grid",
-        gridTemplateRows: `2rem 2.5rem minmax(0, 1fr)`,
+        gridTemplateRows: `2rem 3.2rem minmax(0, 1fr)`,
         width: "100%",
         height: "100%",
         borderLeftWidth: "1px",
-        minWidth: "22rem",
         background: "gray.2",
+        minWidth: "30rem",
       })}
     >
       <div
@@ -100,7 +102,6 @@ export function DriverStatus(props: DriverStatusProps) {
 
         <div
           style={{
-            width: `calc()`,
             display: "flex",
             "justify-content": "right",
           }}
@@ -160,80 +161,96 @@ export function DriverStatus(props: DriverStatusProps) {
         </div>
       </div>
       <div
-        style={{
+        class={css({
           width: "100%",
           height: "100%",
+        })}
+        style={{
           "grid-row": 2,
           padding: "0.4rem",
           "border-top-width": "1px",
-          display: "grid",
-          "grid-template-columns": `repeat(2, calc(100% / 3)) minmax(0,1fr)`,
-          gap: "0.2rem",
         }}
       >
-        <Badge
-          size="2xl"
-          gridRow="1"
-          gridColumn="1"
-          display="flex"
-          fontSize="sm"
-          paddingLeft="0.2rem"
-          paddingRight="0.2rem"
-          variant="outline"
-          background="accent.3"
-          borderColor="accent.7"
-          color="accent.11"
+        <div
+          class={css({
+            background: "Canvas",
+            borderRadius: "0.25rem",
+            boxShadow: "sm",
+          })}
+          style={{
+            width: "100%",
+            height: "100%",
+            padding: "0.2rem",
+            display: "grid",
+            "grid-template-columns": `repeat(2, calc(100% / 3)) minmax(0,1fr)`,
+            gap: "0.2rem",
+            "border-width": "1px",
+          }}
         >
-          {"Firmware"}
-          <Text textAlign="right" fontWeight="bold" width="100%">
-            {`v${driverStatus.sys_version}`}
-          </Text>
-        </Badge>
-        <Badge
-          size="2xl"
-          gridRow="1"
-          gridColumn="2"
-          display="flex"
-          fontSize="sm"
-          paddingLeft="0.2rem"
-          paddingRight="0.2rem"
-          variant="outline"
-          background={driverStatus.cc_link_enabled ? "accent.3" : "accent.1"}
-          borderColor={driverStatus.cc_link_enabled ? "accent.7" : "border"}
-          color={driverStatus.cc_link_enabled ? "accent.11" : "fg.muted"}
-        >
-          {`CC Link`}
-          <Text textAlign="right" fontWeight="bold" width="100%">
-            {`${driverStatus.cc_link_enabled ? "on" : "off"}`}
-          </Text>
-        </Badge>
+          <Badge
+            size="2xl"
+            gridRow="1"
+            gridColumn="1"
+            display="flex"
+            fontSize="sm"
+            paddingLeft="0.2rem"
+            paddingRight="0.2rem"
+            variant="outline"
+            background="accent.3"
+            borderColor="accent.7"
+            color="accent.11"
+          >
+            {"Firmware"}
+            <Text textAlign="right" fontWeight="bold" width="100%">
+              {`v${driverStatus.sys_version}`}
+            </Text>
+          </Badge>
+          <Badge
+            size="2xl"
+            gridRow="1"
+            gridColumn="2"
+            display="flex"
+            fontSize="sm"
+            paddingLeft="0.2rem"
+            paddingRight="0.2rem"
+            variant="outline"
+            background={driverStatus.cc_link_enabled ? "accent.3" : "accent.1"}
+            borderColor={driverStatus.cc_link_enabled ? "accent.7" : "border"}
+            color={driverStatus.cc_link_enabled ? "accent.11" : "fg.muted"}
+          >
+            {`CC Link`}
+            <Text textAlign="right" fontWeight="bold" width="100%">
+              {`${driverStatus.cc_link_enabled ? "on" : "off"}`}
+            </Text>
+          </Badge>
 
-        <Badge
-          margin="0"
-          size="2xl"
-          gridRow="1"
-          gridColumn="3"
-          display="flex"
-          fontSize="sm"
-          paddingLeft="0.2rem"
-          paddingRight="0.2rem"
-          variant="outline"
-          background={driverStatus.servo_enabled ? "accent.3" : "accent.1"}
-          borderColor={driverStatus.servo_enabled ? "accent.7" : "border"}
-          color={driverStatus.servo_enabled ? "accent.11" : "fg.muted"}
-        >
-          {`Servo`}
-          <Text textAlign="right" fontWeight="bold" width="100%">
-            {`${driverStatus.servo_enabled ? "on" : "off"}`}
-          </Text>
-        </Badge>
+          <Badge
+            margin="0"
+            size="2xl"
+            gridRow="1"
+            gridColumn="3"
+            display="flex"
+            fontSize="sm"
+            paddingLeft="0.2rem"
+            paddingRight="0.2rem"
+            variant="outline"
+            background={driverStatus.servo_enabled ? "accent.3" : "accent.1"}
+            borderColor={driverStatus.servo_enabled ? "accent.7" : "border"}
+            color={driverStatus.servo_enabled ? "accent.11" : "fg.muted"}
+          >
+            {`Servo`}
+            <Text textAlign="right" fontWeight="bold" width="100%">
+              {`${driverStatus.servo_enabled ? "on" : "off"}`}
+            </Text>
+          </Badge>
+        </div>
       </div>
       <div
         style={{
           width: "100%",
           height: "100%",
           "grid-row": 3,
-          padding: "0.5rem",
+          padding: "0 0.5rem 0.2rem 0.5rem",
           "padding-top": "0",
           "overflow-y": "auto",
         }}
@@ -271,7 +288,7 @@ const DriverStatusTable = (props: {
             width: "100%",
             height: "fit-content",
             display: "grid",
-            "grid-template-columns": "50% minmax(0,1fr)",
+            "grid-template-columns": "25% 25% 25% minmax(0,1fr)",
             "grid-auto-rows": "1.5rem",
           }}
         >
@@ -296,7 +313,7 @@ const DriverStatusTable = (props: {
               return (
                 <>
                   <Text
-                    gridColumn={1}
+                    gridColumn={"span 1"}
                     gridRow={rowNumber}
                     fontFamily={"body"}
                     fontSize="sm"
@@ -324,10 +341,11 @@ const DriverStatusTable = (props: {
                     </Show>
                   </Text>
                   <Text
-                    gridColumn={2}
+                    gridColumn={"span 1"}
                     gridRow={rowNumber}
                     fontFamily={"body"}
                     fontSize="sm"
+                    borderRightWidth={index() % 2 === 0 ? "1px" : "0"}
                     borderBottomWidth="1px"
                     paddingRight="0.4rem"
                     textAlign={"right"}
@@ -431,17 +449,37 @@ const DriverStatusTable = (props: {
                     </Accordion.ItemIndicator>
                   </Accordion.ItemTrigger>
                   <Accordion.ItemContent>
-                    <DriverStatusTable
-                      id={id}
-                      branch={value}
-                      paddingLeft={
-                        typeof props.paddingLeft === "number"
-                          ? props.paddingLeft + 0.5
-                          : props.paddingLeft
+                    <Show
+                      when={key !== "section_count" && key !== "axes"}
+                      fallback={
+                        <Show
+                          when={key === "section_count"}
+                          fallback={
+                            <DriverStatusAxes
+                              axes={value}
+                              description={description}
+                            />
+                          }
+                        >
+                          <DriverStatusSectionCount
+                            sectionCount={value}
+                            description={description}
+                          />
+                        </Show>
                       }
-                      accordionStatus={props.accordionStatus}
-                      description={description}
-                    />
+                    >
+                      <DriverStatusTable
+                        id={id}
+                        branch={value}
+                        paddingLeft={
+                          typeof props.paddingLeft === "number"
+                            ? props.paddingLeft + 0.5
+                            : props.paddingLeft
+                        }
+                        accordionStatus={props.accordionStatus}
+                        description={description}
+                      />
+                    </Show>
                   </Accordion.ItemContent>
                 </Accordion.Item>
               </Accordion.Root>

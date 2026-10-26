@@ -697,7 +697,7 @@ export function ConfigTabContent() {
         </Show>
       </div>
       <Show when={getShowDriverStatus()}>
-        <div style={{ width: "30rem", height: "100%" }}>
+        <div style={{ width: "35rem", height: "100%" }}>
           <DriverStatus
             id={getTabId() + "." + "driverStatus"}
             driverStatus={getConfigForm()!.state}
