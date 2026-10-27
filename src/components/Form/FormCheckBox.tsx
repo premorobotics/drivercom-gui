@@ -32,7 +32,7 @@ export const FormCheckBox = (props: FormCheckBoxProps) => {
         display: "flex",
         width: "100%",
         "align-items": "center",
-        height: "max-content",
+        height: "100%",
       }}
     >
       <Checkbox.Root
@@ -65,7 +65,6 @@ export const FormCheckBox = (props: FormCheckBoxProps) => {
             flexDirection="row"
             alignItems="center"
             gap="0.4rem"
-            fontFamily={"body"}
           >
             <Show when={props.originalValue !== props.checked}>
               <div
