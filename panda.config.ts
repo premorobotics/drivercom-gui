@@ -126,8 +126,8 @@ export default defineConfig({
 
           border: {
             value: {
-              _light: "{colors.gray.4}",
-              _dark: "{colors.gray.4}",
+              _light: "{colors.gray.6}",
+              _dark: "{colors.gray.6}",
             },
           },
 
