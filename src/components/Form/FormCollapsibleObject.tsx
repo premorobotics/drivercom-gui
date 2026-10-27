@@ -24,20 +24,23 @@ export const FormCollapsibleObject = (props: FormCollapsibleObjectProps) => {
 
   return (
     <Accordion.Root
-      borderWidth="0"
       value={accordionValue()}
       onValueChange={(details) => {
         setAccordionValue(details.value);
       }}
       multiple
+      padding="0.2rem"
+      outlineWidth="1px"
+      borderWidth="1px"
+      borderRadius="0.2rem"
     >
-      <Accordion.Item value={itemId}>
-        <Accordion.ItemTrigger borderBottomWidth={"1px"}>
+      <Accordion.Item value={itemId} borderWidth="0" padding="0">
+        <Accordion.ItemTrigger padding="0">
           <Stack gap="0" alignItems={"center"}>
             <Text
               fontWeight="bold"
               color="fg.default"
-              textStyle="sm"
+              textStyle="xs"
               width="100%"
             >
               {`${key[0].toUpperCase()}${Array.from(key.slice(1, key.length))
@@ -65,11 +68,7 @@ export const FormCollapsibleObject = (props: FormCollapsibleObjectProps) => {
           </Accordion.ItemIndicator>
         </Accordion.ItemTrigger>
 
-        <Accordion.ItemContent
-          borderWidth={"0px 1px 1px 1px"}
-          padding="0 0.5rem 0.5rem 0.5rem"
-          borderRadius={"0.2em"}
-        >
+        <Accordion.ItemContent>
           <Form
             value={value}
             id={`${props.id}.${key}`}

@@ -72,246 +72,310 @@ export function Form(props: FormProps) {
     } else return false;
   };
 
+  const objectEntries = Object.entries(props.format ?? object).filter(
+    ([, value]) => typeof value === "object",
+  );
+  const noneObjectEntries = Object.entries(props.format ?? object)
+    .filter(([, value]) => typeof value !== "object")
+    .sort(([a], [b]) => a.localeCompare(b));
+
   return (
-    <div>
-      <For each={Object.entries(props.format ? props.format : object)}>
-        {(entry, index) => {
-          const key = entry[0];
-          const format = entry[1];
+    <div
+      style={{
+        display: "flex",
+        "flex-direction": "column",
+        "row-gap": "0.2rem",
+      }}
+    >
+      <Show when={noneObjectEntries.length > 0}>
+        <div
+          style={{
+            display: "grid",
+            "grid-template-columns": `50% minmax(0,1fr) `,
+            "grid-auto-rows": "1.8rem",
+            "column-gap": "0.4rem",
+          }}
+        >
+          <For each={noneObjectEntries}>
+            {(entry, index) => {
+              const key = entry[0];
+              const format = entry[1];
 
-          const hasDesc = checkDesc(`__${key}`);
-          const description = hasDesc
-            ? (props.description![
-                `__${key}` as keyof typeof props.description
-              ] as object)
-            : undefined;
-          if (
-            description &&
-            description["hidden" as keyof typeof description] === true
-          ) {
-            return;
-          }
-
-          if (typeof format === "object") {
-            if (checkDesc(key)) {
-              const desc =
-                props.description![key as keyof typeof props.description];
-              if (typeof desc === "object") {
-                const entry = Object.entries(desc);
-                const onlyDesc = entry.filter((entry) =>
-                  entry[0].startsWith("__"),
-                );
-                if (onlyDesc.length > 0) {
-                  const descValues = onlyDesc
-                    .filter((desc) =>
-                      Object.keys(format).includes(desc[0].replace(`__`, "")),
-                    )
-                    .map((desc) => desc[1]);
-                  const findHidden = descValues
-                    .map((desc) => {
-                      if (
-                        typeof desc == "object" &&
-                        desc &&
-                        "hidden" in desc &&
-                        typeof desc.hidden === "boolean"
-                      ) {
-                        return desc.hidden;
-                      } else {
-                        return false;
+              const hasDesc = checkDesc(`__${key}`);
+              const description = hasDesc
+                ? (props.description![
+                    `__${key}` as keyof typeof props.description
+                  ] as object)
+                : undefined;
+              if (
+                description &&
+                description["hidden" as keyof typeof description] === true
+              ) {
+                return;
+              }
+              if (typeof format === "boolean") {
+                const label = !isNaN(Number(key))
+                  ? `${props.id.split(`.`).pop()} ${Number(key) + 1}`
+                  : key;
+                return (
+                  <div
+                    style={{
+                      "border-bottom-width":
+                        index() >=
+                        noneObjectEntries.length -
+                          (noneObjectEntries.length % 2 == 0 ? 2 : 1)
+                          ? "0px"
+                          : "1px",
+                    }}
+                  >
+                    <FormCheckBox
+                      id={`${props.id}.${key}`}
+                      label={label}
+                      desc={description}
+                      originalValue={
+                        props.originalFile
+                          ? props.originalFile[
+                              key as keyof typeof props.originalFile
+                            ]
+                          : undefined
                       }
-                    })
-                    .filter((hidden) => hidden);
+                      checked={object[key as keyof typeof object]}
+                      onCheckedChange={(checked) =>
+                        setObject(
+                          key as keyof typeof object,
+                          // @ts-ignore: TSC unable to handle generic object type
+                          // in store
+                          checked,
+                        )
+                      }
+                      onClick={() => {
+                        setPrevCheckBoxIndex(index());
+                      }}
+                      onShiftClick={() => {
+                        if (typeof prevCheckBoxIndex() === "number") {
+                          checkBoxShiftClick(
+                            prevCheckBoxIndex()!,
+                            index(),
+                            object,
+                          );
+                          setPrevCheckBoxIndex(null);
+                        }
+                      }}
+                    />
+                  </div>
+                );
+              }
+              if (typeof format === "number") {
+                if (key === "_") return;
+                const label = !isNaN(Number(key))
+                  ? `${props.id.split(`.`).pop()} ${Number(key) + 1}`
+                  : key;
 
-                  if (
-                    findHidden.length === descValues.length &&
-                    findHidden.length > 0
-                  ) {
-                    return;
+                return (
+                  <FormNumberInput
+                    id={`${props.id}.${key}`}
+                    label={label}
+                    desc={description}
+                    originalValue={
+                      props.originalFile
+                        ? props.originalFile![
+                            key as keyof typeof props.originalFile
+                          ]
+                        : undefined
+                    }
+                    changeUnits={props.changeUnits}
+                    inputValue={object[key as keyof typeof object]}
+                    onInputChange={(value) => {
+                      setObject(
+                        key as keyof typeof object,
+                        // @ts-ignore: TSC unable to handle generic object type
+                        // in store
+                        value,
+                      );
+                    }}
+                  />
+                );
+              }
+
+              if (
+                typeof format == "string" &&
+                props.logStartConditions &&
+                props.logStartCombinators
+              ) {
+                const description = props.description
+                  ? props.description[
+                      `__${key}` as keyof typeof props.description
+                    ]
+                  : undefined;
+                return (
+                  <>
+                    <div
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        "align-items": "center",
+                      }}
+                    >
+                      <Text
+                        marginTop="0.5rem"
+                        marginLeft="0.2rem"
+                        userSelect="none"
+                        marginBottom="0.5rem"
+                        marginRight="0.5rem"
+                      >
+                        {`${key[0].toUpperCase()}${key.slice(1, key.length)}`}
+                      </Text>
+                      <Show when={description}>
+                        <Tooltip
+                          content={
+                            description![
+                              "description" as keyof typeof description
+                            ]
+                          }
+                        >
+                          <IconHelp size="1em" opacity={0.5} />
+                        </Tooltip>
+                      </Show>
+                    </div>
+
+                    <Select.Root
+                      positioning={{ sameWidth: true }}
+                      width="2xs"
+                      collection={
+                        key === "kind"
+                          ? props.logStartConditions
+                          : props.logStartCombinators
+                      }
+                      defaultValue={[format.toString()]}
+                      onValueChange={(v) => {
+                        setObject(key as keyof typeof object, v.items[0].label);
+                      }}
+                    >
+                      <Select.Control>
+                        <Select.Trigger>
+                          <Select.ValueText placeholder={`Select ${key}`} />
+                        </Select.Trigger>
+                      </Select.Control>
+                      <Select.Positioner>
+                        <Select.Content>
+                          <For
+                            each={
+                              key === "kind"
+                                ? props.logStartConditions.items
+                                : props.logStartCombinators.items
+                            }
+                          >
+                            {(item) => (
+                              <Select.Item item={item}>
+                                <Select.ItemText>{item.label}</Select.ItemText>
+                                <Select.ItemIndicator></Select.ItemIndicator>
+                              </Select.Item>
+                            )}
+                          </For>
+                        </Select.Content>
+                      </Select.Positioner>
+                    </Select.Root>
+                  </>
+                );
+              }
+            }}
+          </For>
+        </div>
+      </Show>
+      <Show when={objectEntries.length > 0}>
+        <For each={Object.entries(props.format ? props.format : object)}>
+          {(entry) => {
+            const key = entry[0];
+            const format = entry[1];
+
+            const hasDesc = checkDesc(`__${key}`);
+            const description = hasDesc
+              ? (props.description![
+                  `__${key}` as keyof typeof props.description
+                ] as object)
+              : undefined;
+            if (
+              description &&
+              description["hidden" as keyof typeof description] === true
+            ) {
+              return;
+            }
+
+            if (typeof format === "object") {
+              if (checkDesc(key)) {
+                const desc =
+                  props.description![key as keyof typeof props.description];
+                if (typeof desc === "object") {
+                  const entry = Object.entries(desc);
+                  const onlyDesc = entry.filter((entry) =>
+                    entry[0].startsWith("__"),
+                  );
+                  if (onlyDesc.length > 0) {
+                    const descValues = onlyDesc
+                      .filter((desc) =>
+                        Object.keys(format).includes(desc[0].replace(`__`, "")),
+                      )
+                      .map((desc) => desc[1]);
+                    const findHidden = descValues
+                      .map((desc) => {
+                        if (
+                          typeof desc == "object" &&
+                          desc &&
+                          "hidden" in desc &&
+                          typeof desc.hidden === "boolean"
+                        ) {
+                          return desc.hidden;
+                        } else {
+                          return false;
+                        }
+                      })
+                      .filter((hidden) => hidden);
+
+                    if (
+                      findHidden.length === descValues.length &&
+                      findHidden.length > 0
+                    ) {
+                      return;
+                    }
                   }
                 }
               }
-            }
 
-            return (
-              <FormCollapsibleObject
-                id={props.id}
-                key={
-                  isNaN(Number(key))
-                    ? key
-                    : `${props.id.split(".").pop()} ${Number(key) + 1}`
-                }
-                description={
-                  checkDesc(key)
-                    ? props.description![key as keyof typeof props.description]
-                    : undefined
-                }
-                originalFile={
-                  props.originalFile && key in props.originalFile
-                    ? props.originalFile![
-                        key as keyof typeof props.originalFile
-                      ]
-                    : undefined
-                }
-                changeUnits={props.changeUnits}
-                triggerDescription={description}
-                format={props.format ? format : undefined}
-                value={object[key as keyof typeof object]}
-                accordionStates={props.accordionStates}
-                logStartCombinators={props.logStartCombinators}
-                logStartConditions={props.logStartConditions}
-              />
-            );
-          }
-          if (typeof format === "boolean") {
-            const label = !isNaN(Number(key))
-              ? `${props.id.split(`.`).pop()} ${Number(key) + 1}`
-              : key;
-            return (
-              <div style={{ "margin-bottom": "0.5em" }}>
-                <FormCheckBox
-                  id={`${props.id}.${key}`}
-                  label={label}
-                  desc={description}
-                  originalValue={
-                    props.originalFile
-                      ? props.originalFile[
+              return (
+                <FormCollapsibleObject
+                  id={props.id}
+                  key={
+                    isNaN(Number(key))
+                      ? key
+                      : `${props.id.split(".").pop()} ${Number(key) + 1}`
+                  }
+                  description={
+                    checkDesc(key)
+                      ? props.description![
+                          key as keyof typeof props.description
+                        ]
+                      : undefined
+                  }
+                  originalFile={
+                    props.originalFile && key in props.originalFile
+                      ? props.originalFile![
                           key as keyof typeof props.originalFile
                         ]
                       : undefined
                   }
-                  checked={object[key as keyof typeof object]}
-                  onCheckedChange={(checked) =>
-                    setObject(
-                      key as keyof typeof object,
-                      // @ts-ignore: TSC unable to handle generic object type
-                      // in store
-                      checked,
-                    )
-                  }
-                  onClick={() => {
-                    setPrevCheckBoxIndex(index());
-                  }}
-                  onShiftClick={() => {
-                    if (typeof prevCheckBoxIndex() === "number") {
-                      checkBoxShiftClick(prevCheckBoxIndex()!, index(), object);
-                      setPrevCheckBoxIndex(null);
-                    }
-                  }}
+                  changeUnits={props.changeUnits}
+                  triggerDescription={description}
+                  format={props.format ? format : undefined}
+                  value={object[key as keyof typeof object]}
+                  accordionStates={props.accordionStates}
+                  logStartCombinators={props.logStartCombinators}
+                  logStartConditions={props.logStartConditions}
                 />
-              </div>
-            );
-          }
-          if (typeof format === "number") {
-            if (key === "_") return;
-            const label = !isNaN(Number(key))
-              ? `${props.id.split(`.`).pop()} ${Number(key) + 1}`
-              : key;
-
-            return (
-              <FormNumberInput
-                id={`${props.id}.${key}`}
-                label={label}
-                desc={description}
-                originalValue={
-                  props.originalFile
-                    ? props.originalFile![
-                        key as keyof typeof props.originalFile
-                      ]
-                    : undefined
-                }
-                changeUnits={props.changeUnits}
-                inputValue={object[key as keyof typeof object]}
-                onInputChange={(value) => {
-                  setObject(
-                    key as keyof typeof object,
-                    // @ts-ignore: TSC unable to handle generic object type
-                    // in store
-                    value,
-                  );
-                }}
-              />
-            );
-          }
-
-          if (
-            typeof format == "string" &&
-            props.logStartConditions &&
-            props.logStartCombinators
-          ) {
-            const description = props.description
-              ? props.description[`__${key}` as keyof typeof props.description]
-              : undefined;
-            return (
-              <>
-                <div
-                  style={{
-                    width: "100%",
-                    display: "flex",
-                    "align-items": "center",
-                  }}
-                >
-                  <Text
-                    marginTop="0.5rem"
-                    marginLeft="0.2rem"
-                    userSelect="none"
-                    marginBottom="0.5rem"
-                    marginRight="0.5rem"
-                  >
-                    {`${key[0].toUpperCase()}${key.slice(1, key.length)}`}
-                  </Text>
-                  <Show when={description}>
-                    <Tooltip
-                      content={
-                        description!["description" as keyof typeof description]
-                      }
-                    >
-                      <IconHelp size="1em" opacity={0.5} />
-                    </Tooltip>
-                  </Show>
-                </div>
-
-                <Select.Root
-                  positioning={{ sameWidth: true }}
-                  width="2xs"
-                  collection={
-                    key === "kind"
-                      ? props.logStartConditions
-                      : props.logStartCombinators
-                  }
-                  defaultValue={[format.toString()]}
-                  onValueChange={(v) => {
-                    setObject(key as keyof typeof object, v.items[0].label);
-                  }}
-                >
-                  <Select.Control>
-                    <Select.Trigger>
-                      <Select.ValueText placeholder={`Select ${key}`} />
-                    </Select.Trigger>
-                  </Select.Control>
-                  <Select.Positioner>
-                    <Select.Content>
-                      <For
-                        each={
-                          key === "kind"
-                            ? props.logStartConditions.items
-                            : props.logStartCombinators.items
-                        }
-                      >
-                        {(item) => (
-                          <Select.Item item={item}>
-                            <Select.ItemText>{item.label}</Select.ItemText>
-                            <Select.ItemIndicator></Select.ItemIndicator>
-                          </Select.Item>
-                        )}
-                      </For>
-                    </Select.Content>
-                  </Select.Positioner>
-                </Select.Root>
-              </>
-            );
-          }
-        }}
-      </For>
+              );
+            }
+          }}
+        </For>
+      </Show>
     </div>
   );
 }
