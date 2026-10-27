@@ -13,13 +13,11 @@ import {
   tabStore,
 } from "~/store/GlobalState.ts";
 import { Command } from "@tauri-apps/plugin-shell";
-import { createSignal, For, Show, useContext } from "solid-js";
+import { createSignal, Show, useContext } from "solid-js";
 import { LoggingForm } from "./LoggingForm.tsx";
 import {
-  IconChevronRight,
   IconDeviceFloppy,
   IconFileDownload,
-  IconFileImport,
   IconPlayerPlay,
   IconPlayerStop,
   IconReload,
@@ -36,10 +34,9 @@ import { DownloadStates, DownloadStatus } from "~/components/DownloadList.tsx";
 import JSON5 from "json5";
 import { toaster } from "~/components/ui/toast.tsx";
 import { TabPageContext } from "~/components/Tab/TabList.tsx";
-import * as Menu from "~/components/ui/menu.tsx";
 import { ConnectButton } from "~/components/Connect/ConnectButton.tsx";
 import { getConfigFromPort } from "~/services/PortService.ts";
-import { Portal } from "solid-js/web";
+import { FileImportButton } from "./LoggingForm/FileImportButton.tsx";
 
 enum LogButton {
   Start,
@@ -715,251 +712,148 @@ export function LoggingTabContent() {
       <div
         id={pageKeys.get(Pages.Logging)}
         style={{
-          "padding-top": "0.5rem",
-          "padding-bottom": "0.5rem",
           height: "100%",
           width: `100% `,
-          "justify-content": "center",
-          display: "flex",
+          display: "grid",
+          "grid-auto-rows": `2rem calc(100% - 2rem)`,
         }}
       >
-        <Stack
-          style={{
-            width: "50%",
-            height: "100%",
-            "min-width": "35rem",
-            "border-width": "1px",
-          }}
-          borderColor="bg.muted"
-          backgroundColor="bg.default"
-          gap="0"
-          borderRadius={"0.2rem"}
-        >
-          <Show when={renderLoggingForm()}>
-            <Stack
-              direction="row"
-              width="100%"
-              gap="0"
-              height={"2.5rem"}
-              borderBottomWidth={"1px"}
-              alignItems={"center"}
+        <Show when={renderLoggingForm()}>
+          <Stack
+            direction="row"
+            width="100%"
+            gap="0"
+            height={"2rem"}
+            borderBottomWidth={"1px"}
+            alignItems={"center"}
+          >
+            <Text
+              style={{
+                width: `calc(100% - 12rem)`,
+                "padding-left": "0.5rem",
+              }}
             >
-              <Text
-                style={{
-                  width: `calc(100% - 12rem)`,
-                  "padding-left": "0.5rem",
-                }}
-              >
-                {getTitle()}
-              </Text>
-              {/*Open file button */}
-              <Menu.Root>
-                <Menu.Trigger>
-                  <Tooltip content={"Import File"}>
-                    <IconButton variant={"plain"}>
-                      <IconFileImport />
-                    </IconButton>
-                  </Tooltip>
-                </Menu.Trigger>
-                <Menu.Positioner>
-                  <Menu.Content>
-                    <Menu.Item
-                      value={`${getTabId()}.openFile`}
-                      onClick={async () => {
-                        try {
-                          const path = await openFileDialog();
-                          await readLogFile(path);
-                        } catch {
-                          toaster.create({
-                            title: "Invalid File Path",
-                            description: "The file path is invalid.",
-                            type: "error",
-                          });
-                          return;
-                        }
-                      }}
-                    >
-                      {"Open File..."}
-                    </Menu.Item>
-                    <Show when={recentLogFilePaths().length >= 1}>
-                      <Menu.Root positioning={{ placement: "right-end" }}>
-                        <Menu.TriggerItem>
-                          <Text width={`calc(100% - 0.5rem)`}>
-                            {"Open Recent Files..."}
-                          </Text>
-                          <IconChevronRight />
-                        </Menu.TriggerItem>
-                        <Show when={recentLogFilePaths().length >= 1}>
-                          <Portal>
-                            <Menu.Positioner>
-                              <Menu.Content>
-                                <For each={recentLogFilePaths()}>
-                                  {(filePath) => {
-                                    if (filePath.length < 1) return;
-                                    const parseFilePath = filePath
-                                      .replaceAll("\\", "/")
-                                      .split("/");
-                                    const fileName = parseFilePath.pop();
-                                    const restFilePath = parseFilePath
-                                      .slice(0 - 1)
-                                      .join("/");
-                                    return (
-                                      <Menu.Item
-                                        value={filePath}
-                                        onClick={async () =>
-                                          await readLogFile(filePath)
-                                        }
-                                      >
-                                        <div>
-                                          <Text>{fileName}</Text>
-                                          <Text
-                                            textStyle="xs"
-                                            fontWeight="light"
-                                          >
-                                            {restFilePath}
-                                          </Text>
-                                        </div>
-                                      </Menu.Item>
-                                    );
-                                  }}
-                                </For>
-                              </Menu.Content>
-                            </Menu.Positioner>
-                          </Portal>
-                        </Show>
-                      </Menu.Root>
-                    </Show>
-                  </Menu.Content>
-                </Menu.Positioner>
-              </Menu.Root>
-
-              <Tooltip content={"Save as file"}>
-                <IconButton
-                  variant={"plain"}
-                  onClick={async () => await saveAsFile()}
-                >
-                  <IconDeviceFloppy />
-                </IconButton>
-              </Tooltip>
-
-              <ConnectButton
-                buttonProps={{ variant: "plain" }}
-                portId={getPortId()}
-                onPortIdChange={async (portId) => {
-                  setPortId(portId);
-
-                  if (portId.length === 0) {
-                    setTitle("No port");
-                    return;
-                  }
-                  try {
-                    const config = await getConfigFromPort(portId);
-                    setTitle(`Driver ${config.id} Station ${config.station}`);
-                  } catch {
-                    toaster.create({
-                      title: "Invalid Port",
-                      description: "Port is Invalid",
-                      type: "error",
-                    });
-                  }
-                }}
-              />
-              {/*Get from port */}
-              <Tooltip content={"Get from port"}>
-                <IconButton
-                  variant={"plain"}
-                  disabled={!getPortId() || getPortId().length === 0}
-                  onClick={async () => {
-                    if (!getPortId() || getPortId().length === 0) return;
-                    await getFromPort(getPortId());
-                  }}
-                >
-                  <IconFileDownload />
-                </IconButton>
-              </Tooltip>
-
-              {/* Save to port */}
-              <Tooltip content={"Save to port"}>
-                <IconButton
-                  variant={"plain"}
-                  disabled={!getPortId() || getPortId().length === 0}
-                  onClick={async () => {
-                    if (!getPortId() || getPortId().length === 0) return;
-                    await saveToPort(getPortId());
-                  }}
-                >
-                  <IconSettingsShare />
-                </IconButton>
-              </Tooltip>
-
-              <Show
-                when={currentLogStatus() === ".started"}
-                fallback={
-                  <Tooltip content={"Start logging"}>
-                    <IconButton
-                      disabled={
-                        disableBtn() === LogButton.Start ||
-                        getPortId().length === 0 ||
-                        currentLogStatus() === ".invalid" ||
-                        currentLogStatus() === ".started" ||
-                        currentLogStatus() === ".waiting" ||
-                        csvFileDownloads.some(
-                          (file) => file.status === DownloadStatus.Progressing,
-                        )
-                      }
-                      onClick={async () => {
-                        try {
-                          if (!checkAvailablePort(getPortId())) return;
-                          setDisableBtn(LogButton.Start);
-                          await startLogging(getPortId());
-
-                          const csvFileDownloadIndex =
-                            csvFileDownloads.findIndex(
-                              (download) => download.port === getPortId(),
-                            );
-                          if (
-                            csvFileDownloadIndex > -1 &&
-                            csvFileDownloads[csvFileDownloadIndex].status ===
-                              DownloadStatus.Paused
-                          ) {
-                            setCsvFileDownloads(
-                              csvFileDownloadIndex,
-                              "status",
-                              DownloadStatus.Cancel,
-                            );
-                          }
-
-                          const logState =
-                            await getCurrentLogStatus(getPortId());
-                          setCurrentLogStatus(logState.logStatus);
-                          setCyclesCompleted(logState.cycle);
-                          setDisableBtn(LogButton.None);
-                        } catch (e) {
-                          setDisableBtn(LogButton.None);
-                          toaster.create({
-                            title: "Communication Error",
-                            description: e as string,
-                            type: "error",
-                          });
-                          return;
-                        }
-                      }}
-                      size="sm"
-                      variant="plain"
-                    >
-                      <IconPlayerPlay />
-                    </IconButton>
-                  </Tooltip>
+              {getTitle()}
+            </Text>
+            {/*Open file button */}
+            <FileImportButton
+              tabId={getTabId()}
+              onOpenFile={async () => {
+                try {
+                  const path = await openFileDialog();
+                  await readLogFile(path);
+                } catch {
+                  toaster.create({
+                    title: "Invalid File Path",
+                    description: "The file path is invalid.",
+                    type: "error",
+                  });
+                  return;
                 }
+              }}
+              onOpenRecentFile={async (filePath) => {
+                await readLogFile(filePath);
+              }}
+            />
+
+            <Tooltip content={"Save as file"}>
+              <IconButton
+                variant={"plain"}
+                onClick={async () => await saveAsFile()}
+                size="xs"
               >
-                <Tooltip content={"Stop logging"}>
+                <IconDeviceFloppy />
+              </IconButton>
+            </Tooltip>
+
+            <ConnectButton
+              buttonProps={{ variant: "plain", size: "xs" }}
+              portId={getPortId()}
+              onPortIdChange={async (portId) => {
+                setPortId(portId);
+
+                if (portId.length === 0) {
+                  setTitle("No port");
+                  return;
+                }
+                try {
+                  const config = await getConfigFromPort(portId);
+                  setTitle(`Driver ${config.id} Station ${config.station}`);
+                } catch {
+                  toaster.create({
+                    title: "Invalid Port",
+                    description: "Port is Invalid",
+                    type: "error",
+                  });
+                }
+              }}
+            />
+            {/*Get from port */}
+            <Tooltip content={"Get from port"}>
+              <IconButton
+                variant={"plain"}
+                size="xs"
+                disabled={!getPortId() || getPortId().length === 0}
+                onClick={async () => {
+                  if (!getPortId() || getPortId().length === 0) return;
+                  await getFromPort(getPortId());
+                }}
+              >
+                <IconFileDownload />
+              </IconButton>
+            </Tooltip>
+
+            {/* Save to port */}
+            <Tooltip content={"Save to port"}>
+              <IconButton
+                variant={"plain"}
+                size="xs"
+                disabled={!getPortId() || getPortId().length === 0}
+                onClick={async () => {
+                  if (!getPortId() || getPortId().length === 0) return;
+                  await saveToPort(getPortId());
+                }}
+              >
+                <IconSettingsShare />
+              </IconButton>
+            </Tooltip>
+
+            <Show
+              when={currentLogStatus() === ".started"}
+              fallback={
+                <Tooltip content={"Start logging"}>
                   <IconButton
-                    disabled={disableBtn() === LogButton.Stop}
+                    disabled={
+                      disableBtn() === LogButton.Start ||
+                      getPortId().length === 0 ||
+                      currentLogStatus() === ".invalid" ||
+                      currentLogStatus() === ".started" ||
+                      currentLogStatus() === ".waiting" ||
+                      csvFileDownloads.some(
+                        (file) => file.status === DownloadStatus.Progressing,
+                      )
+                    }
                     onClick={async () => {
                       try {
                         if (!checkAvailablePort(getPortId())) return;
-                        setDisableBtn(LogButton.Stop);
-                        await stopLogging(getPortId());
+                        setDisableBtn(LogButton.Start);
+                        await startLogging(getPortId());
+
+                        const csvFileDownloadIndex = csvFileDownloads.findIndex(
+                          (download) => download.port === getPortId(),
+                        );
+                        if (
+                          csvFileDownloadIndex > -1 &&
+                          csvFileDownloads[csvFileDownloadIndex].status ===
+                            DownloadStatus.Paused
+                        ) {
+                          setCsvFileDownloads(
+                            csvFileDownloadIndex,
+                            "status",
+                            DownloadStatus.Cancel,
+                          );
+                        }
+
                         const logState = await getCurrentLogStatus(getPortId());
                         setCurrentLogStatus(logState.logStatus);
                         setCyclesCompleted(logState.cycle);
@@ -977,88 +871,126 @@ export function LoggingTabContent() {
                     size="sm"
                     variant="plain"
                   >
-                    <IconPlayerStop />
+                    <IconPlayerPlay />
                   </IconButton>
                 </Tooltip>
-              </Show>
+              }
+            >
+              <Tooltip content={"Stop logging"}>
+                <IconButton
+                  disabled={disableBtn() === LogButton.Stop}
+                  onClick={async () => {
+                    try {
+                      if (!checkAvailablePort(getPortId())) return;
+                      setDisableBtn(LogButton.Stop);
+                      await stopLogging(getPortId());
+                      const logState = await getCurrentLogStatus(getPortId());
+                      setCurrentLogStatus(logState.logStatus);
+                      setCyclesCompleted(logState.cycle);
+                      setDisableBtn(LogButton.None);
+                    } catch (e) {
+                      setDisableBtn(LogButton.None);
+                      toaster.create({
+                        title: "Communication Error",
+                        description: e as string,
+                        type: "error",
+                      });
+                      return;
+                    }
+                  }}
+                  size="sm"
+                  variant="plain"
+                >
+                  <IconPlayerStop />
+                </IconButton>
+              </Tooltip>
+            </Show>
 
-              <Show
-                when={
-                  currentLogStatus() !== ".stopped" ||
-                  currentLogStatus() === ".invalid" ||
-                  cyclesCompleted() === 0
-                }
-                fallback={
-                  <Tooltip content={"Get Log"}>
-                    <Button
-                      disabled={disableBtn() === LogButton.Download}
-                      loading={csvFileDownloads.some(
-                        (file) => file.status === DownloadStatus.Progressing,
-                      )}
-                      onClick={async () => {
-                        if (getPortId().length === 0) return;
-                        try {
-                          if (!checkAvailablePort(getPortId())) return;
-                          setDisableBtn(LogButton.Download);
-
-                          const date = getCurrentDateWithTime();
-                          const path = await fileHandler.saveFileDialog(
-                            "csv",
-                            getFilePath(),
-                            getTitle() + " " + date,
-                          );
-                          setDisableBtn(LogButton.None);
-                          await saveLogCsvFile(
-                            path,
-                            getPortId(),
-                            cyclesCompleted()!,
-                          );
-                        } catch {
-                          setDisableBtn(LogButton.None);
-                          toaster.create({
-                            title: "Invalid File",
-                            description: "The file is invalid.",
-                            type: "error",
-                          });
-                        }
-                      }}
-                      variant="plain"
-                      userSelect="none"
-                      size="sm"
-                    >
-                      <IconFileDownload />
-                    </Button>
-                  </Tooltip>
-                }
-              >
-                {/* Refresh Log Status btn */}
-                <Tooltip content={"Refresh log status"}>
-                  <IconButton
-                    disabled={getPortId().length === 0}
+            <Show
+              when={
+                currentLogStatus() !== ".stopped" ||
+                currentLogStatus() === ".invalid" ||
+                cyclesCompleted() === 0
+              }
+              fallback={
+                <Tooltip content={"Get Log"}>
+                  <Button
+                    disabled={disableBtn() === LogButton.Download}
+                    loading={csvFileDownloads.some(
+                      (file) => file.status === DownloadStatus.Progressing,
+                    )}
                     onClick={async () => {
+                      if (getPortId().length === 0) return;
                       try {
                         if (!checkAvailablePort(getPortId())) return;
-                        setDisableBtn(LogButton.Refresh);
-                        const logState = await getCurrentLogStatus(getPortId());
-                        setCurrentLogStatus(logState.logStatus);
-                        setCyclesCompleted(logState.cycle);
+                        setDisableBtn(LogButton.Download);
+
+                        const date = getCurrentDateWithTime();
+                        const path = await fileHandler.saveFileDialog(
+                          "csv",
+                          getFilePath(),
+                          getTitle() + " " + date,
+                        );
                         setDisableBtn(LogButton.None);
+                        await saveLogCsvFile(
+                          path,
+                          getPortId(),
+                          cyclesCompleted()!,
+                        );
                       } catch {
                         setDisableBtn(LogButton.None);
-                        setCurrentLogStatus(null);
-                        setCyclesCompleted(null);
+                        toaster.create({
+                          title: "Invalid File",
+                          description: "The file is invalid.",
+                          type: "error",
+                        });
                       }
                     }}
                     variant="plain"
+                    userSelect="none"
                     size="sm"
                   >
-                    <IconReload />
-                  </IconButton>
+                    <IconFileDownload />
+                  </Button>
                 </Tooltip>
-              </Show>
-              {/* Get Log button need to add tooltip */}
-            </Stack>
+              }
+            >
+              {/* Refresh Log Status btn */}
+              <Tooltip content={"Refresh log status"}>
+                <IconButton
+                  disabled={getPortId().length === 0}
+                  onClick={async () => {
+                    try {
+                      if (!checkAvailablePort(getPortId())) return;
+                      setDisableBtn(LogButton.Refresh);
+                      const logState = await getCurrentLogStatus(getPortId());
+                      setCurrentLogStatus(logState.logStatus);
+                      setCyclesCompleted(logState.cycle);
+                      setDisableBtn(LogButton.None);
+                    } catch {
+                      setDisableBtn(LogButton.None);
+                      setCurrentLogStatus(null);
+                      setCyclesCompleted(null);
+                    }
+                  }}
+                  variant="plain"
+                  size="sm"
+                >
+                  <IconReload />
+                </IconButton>
+              </Tooltip>
+            </Show>
+            {/* Get Log button need to add tooltip */}
+          </Stack>
 
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              "overflow-y": "auto",
+              padding: "0.2rem",
+            }}
+          >
             <LoggingForm
               id={getTabId()}
               formData={getLoggingConfig()}
@@ -1067,8 +999,8 @@ export function LoggingTabContent() {
               ref={scrollContainer}
               description={logConfigDescription()}
             />
-          </Show>
-        </Stack>
+          </div>
+        </Show>
       </div>
     </Show>
   );
