@@ -8,12 +8,12 @@ export const globalCss = {
     },
     html: {
       colorPalette: "gray",
-      fontFamily: 'body',
+      fontFamily: "body",
     },
     body: {
       background: "canvas",
       color: "fg.default",
-      fontFamily: 'body',
+      fontFamily: "body",
     },
   },
 };
