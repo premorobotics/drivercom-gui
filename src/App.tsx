@@ -42,8 +42,6 @@ import {
   setConfigDescription,
   setConfigTabForm,
   setLogConfigDescription,
-  setApiVersion,
-  apiVersion,
   setRecentConfigFilePaths,
   setRecentLogFilePaths,
   panelStore,
@@ -58,8 +56,6 @@ import { Text } from "~/components/ui/text.tsx";
 
 import { Command } from "@tauri-apps/plugin-shell";
 import { DownloadList } from "./components/DownloadList.tsx";
-//@ts-ignore This file is generate after run compiler.
-import api from "src-tauri/generated/api.json";
 import JSON5 from "json5";
 import { load } from "@tauri-apps/plugin-store";
 import { ConfigTuneType } from "src-tauri/generated/config/ConfigTune.tsx";
@@ -112,7 +108,6 @@ function App(props: RouteSectionProps) {
     document.documentElement.dataset.theme = theme_str;
     setGlobalState("theme", theme_str);
 
-    detectApiVersion();
     buildEmptyLogConfiguration();
     buildEmptyDriverConfiguration();
 
@@ -149,22 +144,6 @@ function App(props: RouteSectionProps) {
 
   function buildEmptyDriverConfiguration() {
     setConfigFormFileFormat(configDefaultValues);
-  }
-
-  function detectApiVersion() {
-    const findApi = /protobuf-api-/;
-    const findApiIndex = api.findIndex(
-      (version: object) =>
-        "name" in version &&
-        typeof version.name === "string" &&
-        findApi.test(version.name),
-    );
-
-    const apiRegex = /[0-9]+\.[0-9]+\.[0-9]+$/;
-    const apiVersionNum = api[findApiIndex].name.match(apiRegex);
-    if (apiVersionNum) {
-      setApiVersion(apiVersionNum[0]);
-    }
   }
 
   // Get log start options from the drivercom-CLI Command
@@ -856,26 +835,6 @@ function App(props: RouteSectionProps) {
                       }}
                     >
                       {driverComVersion()}
-                    </Text>
-                    <Text
-                      textStyle="sm"
-                      fontWeight="light"
-                      style={{
-                        "grid-row": 4,
-                        "grid-column": 1,
-                      }}
-                    >
-                      <i>API Version:</i>
-                    </Text>
-                    <Text
-                      textStyle="sm"
-                      fontWeight="light"
-                      style={{
-                        "grid-row": 4,
-                        "grid-column": 2,
-                      }}
-                    >
-                      {apiVersion()}
                     </Text>
                   </div>
                   <Text
