@@ -44,11 +44,6 @@ jobs:
       - name: Check formatting
         run: pnpm fmt-check
 
-      - name: Generate proto files
-        run: pnpm mmc-api
-        env:
-          GH_TOKEN: ${{ secrets.DRIVERCOM_CLI_RELEASE_ACCESS_TOKEN }}
-
       - name: Generate config types
         run: pnpm drivercom
         env:
