@@ -1,9 +1,5 @@
 import { IconButton } from "~/components/ui/icon-button.tsx";
-import {
-  IconPlugConnected,
-  IconPlugConnectedX,
-  IconX,
-} from "@tabler/icons-solidjs";
+import { IconX } from "@tabler/icons-solidjs";
 import * as Popover from "~/components/ui/popover.tsx";
 import { createSignal, Show } from "solid-js";
 import { portList, setPortList } from "../../store/GlobalState.ts";
@@ -91,53 +87,43 @@ export function ConnectButton(props: ConnectButtonProps) {
           disabled={props.portId.length <= 0}
           content={<Show when={props.portId.length > 0}>{props.portId}</Show>}
         >
-          <IconButton
-            {...(props.buttonProps
-              ? props.buttonProps
-              : {
-                  variant: "outline",
-                  borderColor: "bg.diabled",
-                  cursor: "-moz-grab",
-                  opacity: props.portId.length === 0 ? "0.7" : "1",
-                  backgroundColor: "bg.default",
-                })}
+          <Button
+            size="2xs"
+            variant={props.portId.length > 0 ? "plain" : "solid"}
+            padding="0 0.4rem 0 0.4rem"
           >
-            {props.portId.length === 0 ? (
-              <IconPlugConnectedX />
-            ) : (
-              <IconPlugConnected />
-            )}
-          </IconButton>
+            {props.portId.length > 0 ? "Disconnect port" : "Connect port"}
+          </Button>
         </Tooltip>
       </Popover.Trigger>
       <Popover.Positioner>
         <Popover.Content
-          padding="0.5rem"
+          padding="0.2rem"
           width="100%"
           maxHeight="11em"
           minWidth="16em"
           maxWidth="20em"
         >
-          <Stack height="2em" direction="row" width="100%" gap="0">
+          <Stack
+            display="grid"
+            gridTemplateColumns={`minmax(0,1fr) 2.5rem `}
+            width="100%"
+            gap="0"
+            alignItems="center"
+          >
             <Text
-              fontWeight="bold"
-              width={`calc(100% - 3em)`}
-              paddingTop="0.3em"
-              opacity={portList().length === 0 ? "30%" : "100%"}
-              textStyle="md"
+              fontWeight="medium"
+              textStyle="xs"
               textAlign="left"
               textOverflow="ellipsis"
               overflow="hidden"
               whiteSpace=""
-              paddingRight="1em"
             >
-              Ports
+              Driver Ports
             </Text>
 
             <Button
-              size="sm"
-              width="3em"
-              height="2em"
+              size="2xs"
               variant="outline"
               fontWeight="medium"
               loading={isDetecting()}
@@ -199,7 +185,7 @@ export function ConnectButton(props: ConnectButtonProps) {
                             "white-space": "nowrap",
                             "padding-left": "0.5rem",
                           }}
-                          textStyle="sm"
+                          fontSize="sm"
                         >
                           {port.id}
                         </Text>
@@ -222,7 +208,7 @@ export function ConnectButton(props: ConnectButtonProps) {
                             "white-space": "nowrap",
                             opacity: "0.5",
                           }}
-                          textStyle="sm"
+                          fontSize="sm"
                         >
                           {port.version}
                         </Text>
