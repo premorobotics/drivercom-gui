@@ -5,6 +5,8 @@ import { Show } from "solid-js";
 import { Form, FormProps } from "../Form";
 import { createSignal } from "solid-js";
 import { IconChevronDown } from "@tabler/icons-solidjs";
+import { LoggingCommandTable } from "~/pages/Logging/LoggingForm/LoggingCommandTable";
+import { CommandType } from "src-tauri/generated/config/LogConfigType";
 
 export type FormCollapsibleObjectProps = FormProps & {
   key: string;
@@ -69,21 +71,40 @@ export const FormCollapsibleObject = (props: FormCollapsibleObjectProps) => {
         </Accordion.ItemTrigger>
 
         <Accordion.ItemContent>
-          <Form
-            value={value}
-            id={`${props.id}.${key}`}
-            style={{ "padding-left": "1rem" }}
-            format={props.format}
-            description={props.description}
-            originalFile={props.originalFile}
-            changeUnits={props.changeUnits}
-            onItemChange={() => {
-              props.onItemChange?.();
-            }}
-            accordionStates={props.accordionStates}
-            logStartCombinators={props.logStartCombinators}
-            logStartConditions={props.logStartConditions}
-          />
+          <Show
+            when={props.key !== "command"}
+            fallback={
+              <LoggingCommandTable
+                id={`${props.id}.${key}`}
+                config={value as CommandType}
+                defaultValue={Object.keys(value)[0]}
+                format={props.format}
+                description={props.description}
+                originalFile={props.originalFile}
+                changeUnits={props.changeUnits}
+                onItemChange={() => {
+                  props.onItemChange?.();
+                }}
+                accordionStates={props.accordionStates}
+              />
+            }
+          >
+            <Form
+              value={value}
+              id={`${props.id}.${key}`}
+              style={{ "padding-left": "1rem" }}
+              format={props.format}
+              description={props.description}
+              originalFile={props.originalFile}
+              changeUnits={props.changeUnits}
+              onItemChange={() => {
+                props.onItemChange?.();
+              }}
+              accordionStates={props.accordionStates}
+              logStartCombinators={props.logStartCombinators}
+              logStartConditions={props.logStartConditions}
+            />
+          </Show>
         </Accordion.ItemContent>
       </Accordion.Item>
     </Accordion.Root>

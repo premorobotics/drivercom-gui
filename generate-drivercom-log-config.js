@@ -80,7 +80,8 @@ function generateZodSchema(obj, parentKey, schema) {
       const innerKey = Object.keys(value)[0]
       mainSchemaStr += `${key}: ${key}Schema.default(() => ${key[0].toUpperCase() + key.slice(1, key.length)}_${innerKey[0].toUpperCase() + innerKey.slice(1, innerKey.length)}_Schema.parse({}))`
       subSchemaStr += `${schema.sub}`
-      subSchemaStr += `export const ${key}Schema = ${schema.main}`
+      subSchemaStr += `export const ${key}Schema = ${schema.main}\n`
+      subSchemaStr += `export type ${key[0].toUpperCase() + key.slice(1, key.length)}Type = z.infer<typeof ${key}Schema>\n`
       continue;
     }
 
