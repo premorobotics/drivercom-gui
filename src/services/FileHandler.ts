@@ -111,14 +111,10 @@ export class FileHandler implements IFileHandler {
     const format = Object.entries(file)
       .map((entry) => {
         const key = entry[0];
-        const value = entry[1];
-        if (typeof value !== "object") return [key, typeof value];
-        const parseValue = this.checkFormat(value);
-        return [key, parseValue];
+        return [key];
       })
       .sort()
       .toString();
-
     return format;
   }
 
