@@ -283,7 +283,7 @@ export function Form(props: FormProps) {
         </div>
       </Show>
       <Show when={objectEntries.length > 0}>
-        <For each={Object.entries(props.format ? props.format : object)}>
+        <For each={objectEntries}>
           {(entry) => {
             const key = entry[0];
             const format = entry[1];
@@ -340,7 +340,6 @@ export function Form(props: FormProps) {
                   }
                 }
               }
-
               return (
                 <FormCollapsibleObject
                   id={props.id}
