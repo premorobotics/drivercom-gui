@@ -37,6 +37,7 @@ import { TabPageContext } from "~/components/Tab/TabList.tsx";
 import { ConnectButton } from "~/components/Connect/ConnectButton.tsx";
 import { getConfigFromPort } from "~/services/PortService.ts";
 import { FileImportButton } from "./LoggingForm/FileImportButton.tsx";
+import { css } from "styled-system/css/css";
 
 enum LogButton {
   Start,
@@ -716,8 +717,23 @@ export function LoggingTabContent() {
           width: `100% `,
           display: "grid",
           "grid-auto-rows": `2rem calc(100% - 2rem)`,
+          "grid-template-columns": `15rem minmax(0,1fr)`,
         }}
       >
+        <div
+          class={css({
+            borderRightWidth: "1px",
+            background: "gray.2",
+            gridRow: "span 2",
+            gridColumn: "1",
+            padding: "0.4rem",
+          })}
+        >
+          <PortSideBar
+            portId={getPortId()}
+            onPortId={(portId) => setPortId(portId)}
+          />
+        </div>
         <Show when={renderLoggingForm()}>
           <Stack
             direction="row"
@@ -726,6 +742,9 @@ export function LoggingTabContent() {
             height={"2rem"}
             borderBottomWidth={"1px"}
             alignItems={"center"}
+            gridRow="1"
+            gridColumn="2"
+            background="gray.2"
           >
             <Text
               style={{
@@ -989,6 +1008,8 @@ export function LoggingTabContent() {
               height: "100%",
               "overflow-y": "auto",
               padding: "0.2rem",
+              "grid-row": "2",
+              "grid-column": "2",
             }}
           >
             <LoggingForm
@@ -1003,5 +1024,55 @@ export function LoggingTabContent() {
         </Show>
       </div>
     </Show>
+  );
+}
+
+type PortSideBarProps = {
+  portId: string;
+  onPortId?: (portId: string) => void;
+};
+
+function PortSideBar(props: PortSideBarProps) {
+  return (
+    <div style={{ width: "100%", height: "100%" }}>
+      <div
+        style={{
+          "border-bottom-width": "1px",
+          "padding-bottom": "0.8rem",
+          display: "flex",
+          "flex-direction": "column",
+          "row-gap": "0.2rem",
+        }}
+      >
+        <Text fontSize="sm" fontWeight="medium">
+          {"Port"}
+        </Text>
+        <Text
+          display="flex"
+          alignItems="center"
+          columnGap="0.5rem"
+          fontSize="sm"
+          fontWeight="semibold"
+        >
+          <div
+            class={css({
+              width: "0.6rem",
+              height: "0.6rem",
+              background: props.portId.length > 0 ? "accent.9" : "gray.7",
+              borderRadius: "2rem",
+              display: "flex",
+              outlineWidth: "0.15rem",
+              outlineColor: props.portId.length > 0 ? "accent.7" : "gray.5",
+              outlineStyle: "solid",
+            })}
+          ></div>
+          {props.portId.length > 0 ? props.portId : "Not connected"}
+        </Text>
+        <ConnectButton
+          portId={props.portId}
+          onPortIdChange={(portId) => props.onPortId?.(portId)}
+        />
+      </div>
+    </div>
   );
 }
