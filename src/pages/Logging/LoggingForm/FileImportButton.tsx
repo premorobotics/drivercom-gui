@@ -2,10 +2,9 @@ import { Text } from "~/components/ui/text.tsx";
 import { recentLogFilePaths } from "~/store/GlobalState.ts";
 import { For, Show } from "solid-js";
 import { IconChevronRight, IconFileImport } from "@tabler/icons-solidjs";
-import { IconButton } from "~/components/ui/icon-button.tsx";
-import { Tooltip } from "~/components/ui/tooltip.tsx";
 import * as Menu from "~/components/ui/menu.tsx";
 import { Portal } from "solid-js/web";
+import { Button } from "~/components/ui/button";
 
 type FileImportButtonProps = {
   tabId: string;
@@ -17,11 +16,10 @@ export function FileImportButton(props: FileImportButtonProps) {
   return (
     <Menu.Root>
       <Menu.Trigger>
-        <Tooltip content={"Import File"}>
-          <IconButton variant={"plain"} size={"xs"}>
-            <IconFileImport />
-          </IconButton>
-        </Tooltip>
+        <Button size="xs" variant="plain">
+          <IconFileImport />
+          {"Open file"}
+        </Button>
       </Menu.Trigger>
       <Menu.Positioner>
         <Menu.Content>
