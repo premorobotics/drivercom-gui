@@ -10,6 +10,7 @@ import {
 } from "src-tauri/generated/config/LogConfigType.tsx";
 import { Text } from "~/components/ui/text";
 import { Form, FormProps } from "~/components/Form";
+import { css } from "styled-system/css";
 
 type LoggingCommandProps = Omit<FormProps, "value"> & {
   config: CommandType;
@@ -51,13 +52,13 @@ export function LoggingCommandTable(props: LoggingCommandProps) {
         height: "100%",
         display: "flex",
         "flex-direction": "column",
-        "row-gap": "0.5rem",
       }}
     >
       <Select.Root
         positioning={{ sameWidth: true }}
         width="2xs"
         size="xs"
+        padding="0"
         collection={commandListCollection}
         defaultValue={Object.keys(props.config)}
         onValueChange={(v) => {
@@ -68,14 +69,17 @@ export function LoggingCommandTable(props: LoggingCommandProps) {
           const defaultValue = commandList[findIndex]
             .defaultValue as CommandType;
           setCommand(reconcile(structuredClone(defaultValue)));
-          setRender(true);
+          const valueLength = Object.keys(
+            defaultValue[
+              Object.keys(defaultValue)[0] as keyof typeof defaultValue
+            ],
+          ).length;
+          if (valueLength > 0) {
+            setRender(true);
+          }
         }}
       >
-        <Select.Control
-          display={"grid"}
-          gridTemplateColumns="50% 50%"
-          alignItems="center"
-        >
+        <Select.Control>
           <Text fontSize="sm">{"Command type"}</Text>
           <Select.Trigger>
             <Select.ValueText placeholder={`Select Command`} />
@@ -95,30 +99,53 @@ export function LoggingCommandTable(props: LoggingCommandProps) {
         </Select.Positioner>
       </Select.Root>
       <Show when={render()}>
-        <Form
-          value={command[Object.keys(command)[0] as keyof typeof command]}
-          id={`${props.id}.${"command"}`}
-          style={{ "padding-left": "1rem" }}
-          format={props.format}
-          description={
-            props.description
-              ? props.description[
-                  Object.keys(command)[0] as keyof typeof command
-                ]
-              : props.description
-          }
-          originalFile={
-            props.originalFile
-              ? props.originalFile[
-                  Object.keys(command)[0] as keyof typeof command
-                ]
-              : props.originalFile
-          }
-          onItemChange={() => {
-            props.onItemChange?.();
+        <div
+          style={{
+            width: "100%",
+            height: "fit-content",
+            "margin-top": "0.2rem",
+            "margin-bottom": "0.2rem",
           }}
-          accordionStates={props.accordionStates}
-        />
+        >
+          <Text>{"Additional Settings"}</Text>
+          <div
+            class={css({
+              width: "100%",
+              height: "fit-content",
+              padding: "0.2rem",
+              outlineStyle: "solid",
+              outlineWidth: "1px",
+              outlineColor: "border",
+              borderRadius: "xs",
+            })}
+          >
+            <Form
+              oneColumn
+              value={command[Object.keys(command)[0] as keyof typeof command]}
+              id={`${props.id}.${"command"}`}
+              style={{ "padding-left": "1rem" }}
+              format={props.format}
+              description={
+                props.description
+                  ? props.description[
+                      Object.keys(command)[0] as keyof typeof command
+                    ]
+                  : props.description
+              }
+              originalFile={
+                props.originalFile
+                  ? props.originalFile[
+                      Object.keys(command)[0] as keyof typeof command
+                    ]
+                  : props.originalFile
+              }
+              onItemChange={() => {
+                props.onItemChange?.();
+              }}
+              accordionStates={props.accordionStates}
+            />
+          </div>
+        </div>
       </Show>
     </div>
   );
