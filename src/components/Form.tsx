@@ -24,6 +24,7 @@ export type LoggingAccordionStates = Map<
 export type FormProps = JSX.HTMLAttributes<HTMLDivElement> & {
   id: string;
   value: object;
+  oneColumn?: boolean;
   format?: object;
   description?: object;
   originalFile?: object;
@@ -91,7 +92,9 @@ export function Form(props: FormProps) {
         <div
           style={{
             display: "grid",
-            "grid-template-columns": `50% minmax(0,1fr) `,
+            "grid-template-columns": props.oneColumn
+              ? undefined
+              : `50% minmax(0,1fr) `,
             "grid-auto-rows": "1.8rem",
             "column-gap": "0.4rem",
           }}
