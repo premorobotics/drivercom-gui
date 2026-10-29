@@ -187,318 +187,308 @@ export const FormNumberInput = (props: FormNumberInputProps) => {
       id={props.id}
       style={{
         width: "100%",
+        display: "grid",
+        "grid-template-columns": `minmax(0,1fr) 40%`,
+        "align-items": "center",
       }}
     >
-      <Stack
-        direction="row"
-        alignItems="center"
-        style={{
-          width: "100%",
-          display: "grid",
-          "grid-template-columns": `minmax(0,1fr) 40%`,
-          "align-items": "center",
-        }}
-      >
-        <div
-          style={{ width: "100%", display: "flex", "align-items": "center" }}
-        >
-          <div style={{ width: `calc(100% - 0.5rem)` }}>
-            <Text
-              height="100%"
-              width="min-content"
-              display="flex"
-              alignItems="center"
-              gap="0.4rem"
-              fontFamily={"body"}
+      <div style={{ width: "100%", display: "flex", "align-items": "center" }}>
+        <div style={{ width: `100%` }}>
+          <Text
+            height="100%"
+            width="min-content"
+            display="flex"
+            alignItems="center"
+            gap="0.4rem"
+            fontFamily={"body"}
+          >
+            <Show
+              when={
+                errorInputValue() ||
+                (typeof prevValue() === "number" &&
+                  prevValue() !== inputValue())
+              }
             >
-              <Show when={errorInputValue() || prevValue() !== inputValue()}>
-                <div
-                  class={css({
-                    background:
-                      errorInputValue() ||
-                      !Number.isFinite(Number(inputValue()))
-                        ? "red"
-                        : "accent.9",
-                    width: "0.5rem",
-                    height: "0.5rem",
-                    borderRadius: "1rem",
-                    marginTop: "0.1rem",
-                  })}
-                />
-              </Show>
               <div
                 class={css({
-                  background: props.isFocus ? "accent.7" : "transparent",
-                  width: `max-content`,
-                  fontSize: "sm",
-                  display: "flex",
-                  alignItems: "center",
+                  background:
+                    errorInputValue() || !Number.isFinite(Number(inputValue()))
+                      ? "red"
+                      : "accent.9",
+                  width: "0.5rem",
+                  height: "0.5rem",
+                  borderRadius: "1rem",
+                  marginTop: "0.1rem",
                 })}
+              />
+            </Show>
+            <div
+              class={css({
+                background: props.isFocus ? "accent.7" : "transparent",
+                width: `max-content`,
+                fontSize: "sm",
+                display: "flex",
+                alignItems: "center",
+              })}
+            >
+              {props.label.replaceAll("_", " ")}
+              <Show
+                when={
+                  props.desc &&
+                  "description" in props.desc &&
+                  typeof props.desc[
+                    "description" as keyof typeof props.desc
+                  ] === "string"
+                }
               >
-                {props.label.replaceAll("_", " ")}
-                <Show
-                  when={
-                    props.desc &&
-                    "description" in props.desc &&
-                    typeof props.desc[
-                      "description" as keyof typeof props.desc
-                    ] === "string"
+                <Tooltip
+                  content={
+                    props.desc!["description" as keyof typeof props.desc]
                   }
                 >
-                  <Tooltip
-                    content={
-                      props.desc!["description" as keyof typeof props.desc]
-                    }
-                  >
-                    <IconButton size="2xs" variant="plain" color="fg.subtle">
-                      <IconHelp />
-                    </IconButton>
-                  </Tooltip>
-                </Show>
-              </div>
-            </Text>
-          </div>
+                  <IconButton size="2xs" variant="plain" color="fg.subtle">
+                    <IconHelp />
+                  </IconButton>
+                </Tooltip>
+              </Show>
+            </div>
+          </Text>
+        </div>
 
-          <Show
-            when={lockStatus && lockStatusKey && lockStatus.has(lockStatusKey)}
-          >
-            <Tooltip content="Lock auto calculation">
-              <IconButton
-                type="button"
-                variant="plain"
-                size="sm"
-                borderRadius="3rem"
-                height="min-content"
-                paddingTop="0.2rem"
-                paddingBottom="0.2rem"
-                opacity={lockStatus!.get(lockStatusKey!)![0]() ? "1" : "0.5"}
-                onClick={() => {
-                  if (!lockStatus) return;
-                  lockStatus.get(lockStatusKey!)![1]((prev) => !prev);
+        <Show
+          when={lockStatus && lockStatusKey && lockStatus.has(lockStatusKey)}
+        >
+          <Tooltip content="Lock auto calculation">
+            <IconButton
+              type="button"
+              variant="plain"
+              size="sm"
+              borderRadius="3rem"
+              height="min-content"
+              paddingTop="0.2rem"
+              paddingBottom="0.2rem"
+              opacity={lockStatus!.get(lockStatusKey!)![0]() ? "1" : "0.5"}
+              onClick={() => {
+                if (!lockStatus) return;
+                lockStatus.get(lockStatusKey!)![1]((prev) => !prev);
 
-                  const gainKey = lockStatusKey!
+                const gainKey = lockStatusKey!
+                  .split(".")
+                  .slice(0, -2)
+                  .join(".");
+                const isCenter = props.id.includes("center");
+                const oppositeDynPos = isCenter ? "between" : "center";
+                const currentDynPos = isCenter ? "center" : "between";
+
+                if (props.lockStatus!.has(gainKey)) {
+                  const updateValue = Array.from(props.lockStatus!.entries())
+                    .filter(
+                      (entry) =>
+                        entry[0] !== gainKey &&
+                        entry[0].includes(currentDynPos),
+                    )
+                    .some((entry) => entry[1][0]() === true);
+                  props.lockStatus!.get(gainKey)![1](updateValue);
+                }
+
+                if (!props.linkStatus) return;
+                const link = props.linkStatus.get("gain")![0]();
+                if (link[0]) {
+                  const endkey = lockStatusKey!.replace(
+                    currentDynPos,
+                    oppositeDynPos,
+                  );
+                  if (props.lockStatus!.has(endkey)) {
+                    props.lockStatus!.get(endkey)![1]((prev) => !prev);
+                  }
+
+                  const oppositeGainKey = endkey
                     .split(".")
                     .slice(0, -2)
                     .join(".");
-                  const isCenter = props.id.includes("center");
-                  const oppositeDynPos = isCenter ? "between" : "center";
-                  const currentDynPos = isCenter ? "center" : "between";
-
-                  if (props.lockStatus!.has(gainKey)) {
+                  if (props.lockStatus!.has(oppositeGainKey)) {
                     const updateValue = Array.from(props.lockStatus!.entries())
                       .filter(
                         (entry) =>
-                          entry[0] !== gainKey &&
-                          entry[0].includes(currentDynPos),
+                          entry[0] !== oppositeGainKey &&
+                          entry[0].includes(oppositeDynPos),
                       )
                       .some((entry) => entry[1][0]() === true);
-                    props.lockStatus!.get(gainKey)![1](updateValue);
+                    props.lockStatus!.get(oppositeGainKey)![1](updateValue);
                   }
-
-                  if (!props.linkStatus) return;
-                  const link = props.linkStatus.get("gain")![0]();
-                  if (link[0]) {
-                    const endkey = lockStatusKey!.replace(
-                      currentDynPos,
-                      oppositeDynPos,
-                    );
-                    if (props.lockStatus!.has(endkey)) {
-                      props.lockStatus!.get(endkey)![1]((prev) => !prev);
-                    }
-
-                    const oppositeGainKey = endkey
-                      .split(".")
-                      .slice(0, -2)
-                      .join(".");
-                    if (props.lockStatus!.has(oppositeGainKey)) {
-                      const updateValue = Array.from(
-                        props.lockStatus!.entries(),
-                      )
-                        .filter(
-                          (entry) =>
-                            entry[0] !== oppositeGainKey &&
-                            entry[0].includes(oppositeDynPos),
-                        )
-                        .some((entry) => entry[1][0]() === true);
-                      props.lockStatus!.get(oppositeGainKey)![1](updateValue);
-                    }
-                  }
-                }}
+                }
+              }}
+            >
+              <Show
+                when={lockStatus && lockStatus.get(lockStatusKey!)![0]()}
+                fallback={<IconLockOff />}
               >
-                <Show
-                  when={lockStatus && lockStatus.get(lockStatusKey!)![0]()}
-                  fallback={<IconLockOff />}
-                >
-                  <IconLock />
-                </Show>
-              </IconButton>
-            </Tooltip>
-          </Show>
-        </div>
-        <div
+                <IconLock />
+              </Show>
+            </IconButton>
+          </Tooltip>
+        </Show>
+      </div>
+      <div
+        style={{
+          width: `100%`,
+        }}
+      >
+        <Stack
+          ref={divRef}
           style={{
-            width: `100%`,
+            width: "100%",
+            "border-radius": "0.2rem",
+            "border-width": "1px",
+            gap: "0",
           }}
+          borderColor={
+            typeof errorInputValue() === "string" ||
+            Number.isFinite(Number(inputValue()))
+              ? "gray.7"
+              : "red"
+          }
+          direction="row"
+          alignItems="center"
+          {...res}
         >
-          <Stack
-            ref={divRef}
+          <input
             style={{
               width: "100%",
-              "border-radius": "0.2rem",
-              "border-width": "1px",
-              gap: "0",
-            }}
-            borderColor={
-              typeof errorInputValue() === "string" ||
-              Number.isFinite(Number(inputValue()))
-                ? "gray.7"
-                : "red"
-            }
-            direction="row"
-            alignItems="center"
-            {...res}
-          >
-            <input
-              style={{
-                width: "100%",
-                outline: "none",
-                opacity:
-                  lockStatus && lockStatusKey && lockStatus.has(lockStatusKey)
-                    ? lockStatus.get(lockStatusKey)![0]()
-                      ? "0.4"
-                      : "1"
-                    : "1",
-                "white-space": "nowrap",
-                "text-overflow": "ellipsis",
-                display: "block",
-                overflow: "hidden",
-                "text-align": "end",
-                "font-size": "14px",
-              }}
-              disabled={
+              outline: "none",
+              opacity:
                 lockStatus && lockStatusKey && lockStatus.has(lockStatusKey)
                   ? lockStatus.get(lockStatusKey)![0]()
-                  : false
-              }
-              onFocusIn={() => {
-                divRef!.style.borderWidth = "2px";
-                divRef!.style.borderColor =
-                  typeof errorInputValue() === "string" ||
-                  !Number.isFinite(Number(inputValue()))
-                    ? "red"
-                    : getComputedCSSVariableValue("--colors-accent-9");
-              }}
-              onFocusOut={(e) => {
-                divRef!.style.borderWidth = "1px";
-                divRef!.style.borderColor = !Number.isFinite(
-                  Number(e.target.value),
-                )
+                    ? "0.4"
+                    : "1"
+                  : "1",
+              "white-space": "nowrap",
+              "text-overflow": "ellipsis",
+              display: "block",
+              overflow: "hidden",
+              "text-align": "end",
+              "font-size": "14px",
+            }}
+            disabled={
+              lockStatus && lockStatusKey && lockStatus.has(lockStatusKey)
+                ? lockStatus.get(lockStatusKey)![0]()
+                : false
+            }
+            onFocusIn={() => {
+              divRef!.style.borderWidth = "2px";
+              divRef!.style.borderColor =
+                typeof errorInputValue() === "string" ||
+                !Number.isFinite(Number(inputValue()))
                   ? "red"
-                  : getComputedCSSVariableValue("--colors-bg-disabled");
-              }}
-              placeholder={props.label}
-              value={
-                typeof errorInputValue() === "string"
-                  ? (errorInputValue() as string)
-                  : props.desc &&
-                      props.desc["unit_short" as keyof typeof props.desc]
-                    ? changeValue(
-                        props.desc[
-                          "unit_short" as keyof typeof props.desc
-                        ] as string,
-                        inputValue(),
-                        props.changeUnits ?? false,
-                      )
-                    : inputValue()
-              }
-              onChange={(e) => {
-                let inputValue = Number(e.target.value);
-                if (isNaN(inputValue)) {
-                  setErrorInputValue(e.target.value);
-                  return;
-                } else {
-                  if (errorInputValue() !== null) {
-                    setErrorInputValue(null);
-                  }
-                }
-                if (
-                  props.desc &&
-                  "unit_short" in props.desc &&
-                  props.changeUnits !== undefined
-                ) {
-                  inputValue = setChangedValue(
-                    props.desc[
-                      "unit_short" as keyof typeof props.desc
-                    ] as string,
-                    inputValue,
-                    props.changeUnits,
-                  );
-                }
-                props.onInputChange?.(inputValue);
-              }}
-            />
-            <Show
-              when={
-                props.desc &&
-                props.desc!["unit_short" as keyof typeof props.desc]
-              }
-            >
-              <Tooltip
-                content={changeUnitLong(
-                  props.desc!["unit_long" as keyof typeof props.desc] as string,
-                  props.changeUnits ?? false,
-                )}
-              >
-                <Text
-                  opacity="0.5"
-                  marginLeft="0.2em"
-                  fontSize="xs"
-                  fontFamily="body"
-                  paddingTop="0.2rem"
-                >
-                  {parseUnit(
-                    changeUnitShort(
-                      props.desc![
+                  : getComputedCSSVariableValue("--colors-accent-9");
+            }}
+            onFocusOut={(e) => {
+              divRef!.style.borderWidth = "1px";
+              divRef!.style.borderColor = !Number.isFinite(
+                Number(e.target.value),
+              )
+                ? "red"
+                : getComputedCSSVariableValue("--colors-bg-disabled");
+            }}
+            placeholder={props.label}
+            value={
+              typeof errorInputValue() === "string"
+                ? (errorInputValue() as string)
+                : props.desc &&
+                    props.desc["unit_short" as keyof typeof props.desc]
+                  ? changeValue(
+                      props.desc[
                         "unit_short" as keyof typeof props.desc
                       ] as string,
+                      inputValue(),
                       props.changeUnits ?? false,
-                    ),
-                  )}
-                </Text>
-              </Tooltip>
-            </Show>
-            <Show
-              when={
-                typeof errorInputValue() === "string" ||
-                !Number.isFinite(props.inputValue)
+                    )
+                  : inputValue()
+            }
+            onChange={(e) => {
+              let inputValue = Number(e.target.value);
+              if (isNaN(inputValue)) {
+                setErrorInputValue(e.target.value);
+                return;
+              } else {
+                if (errorInputValue() !== null) {
+                  setErrorInputValue(null);
+                }
               }
+              if (
+                props.desc &&
+                "unit_short" in props.desc &&
+                props.changeUnits !== undefined
+              ) {
+                inputValue = setChangedValue(
+                  props.desc["unit_short" as keyof typeof props.desc] as string,
+                  inputValue,
+                  props.changeUnits,
+                );
+              }
+              props.onInputChange?.(inputValue);
+            }}
+          />
+          <Show
+            when={
+              props.desc && props.desc!["unit_short" as keyof typeof props.desc]
+            }
+          >
+            <Tooltip
+              content={changeUnitLong(
+                props.desc!["unit_long" as keyof typeof props.desc] as string,
+                props.changeUnits ?? false,
+              )}
             >
-              <IconExclamationCircle
-                size="1rem"
-                color="red"
-                data-name="config_field_error"
-              />
-            </Show>
-          </Stack>
+              <Text
+                opacity="0.5"
+                marginLeft="0.2em"
+                fontSize="xs"
+                fontFamily="body"
+                paddingTop="0.2rem"
+              >
+                {parseUnit(
+                  changeUnitShort(
+                    props.desc![
+                      "unit_short" as keyof typeof props.desc
+                    ] as string,
+                    props.changeUnits ?? false,
+                  ),
+                )}
+              </Text>
+            </Tooltip>
+          </Show>
           <Show
             when={
               typeof errorInputValue() === "string" ||
               !Number.isFinite(props.inputValue)
             }
           >
-            <Text
-              fontSize="xs"
+            <IconExclamationCircle
+              size="1rem"
               color="red"
-              width="100%"
-              textAlign="right"
-              marginRight={`calc(100% - 15rem)`}
-              fontFamily="body"
-            >
-              {`Invalid ${typeof props.inputValue}.`}
-            </Text>
+              data-name="config_field_error"
+            />
           </Show>
-        </div>
-      </Stack>
+        </Stack>
+        <Show
+          when={
+            typeof errorInputValue() === "string" ||
+            !Number.isFinite(props.inputValue)
+          }
+        >
+          <Text
+            fontSize="xs"
+            color="red"
+            width="100%"
+            textAlign="right"
+            marginRight={`calc(100% - 15rem)`}
+            fontFamily="body"
+          >
+            {`Invalid ${typeof props.inputValue}.`}
+          </Text>
+        </Show>
+      </div>
     </div>
   );
 };
