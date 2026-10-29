@@ -24,12 +24,13 @@ import { Panel } from "~/components/Panel/Panel.tsx";
 import { LoggingTabContent } from "./LoggingTabContent.tsx";
 import JSON5 from "json5";
 import { load } from "@tauri-apps/plugin-store";
+import { LogConfigType } from "src-tauri/generated/config/LogConfigType.tsx";
 
 export type LoggingFormType = {
   title: string;
   filePath: string;
   portId: string;
-  logConfig: object;
+  logConfig: LogConfigType;
   accordionStates: LoggingAccordionStates;
   originalFile: object;
 };
