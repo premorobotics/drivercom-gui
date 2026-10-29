@@ -15,37 +15,19 @@ import {
 import { Command } from "@tauri-apps/plugin-shell";
 import { createSignal, Show, useContext } from "solid-js";
 import { LoggingForm } from "./LoggingForm.tsx";
-import {
-  IconDeviceFloppy,
-  IconFileDownload,
-  IconPlayerPlay,
-  IconPlayerStop,
-  IconReload,
-  IconSettingsShare,
-} from "@tabler/icons-solidjs";
-import { IconButton } from "~/components/ui/icon-button.tsx";
-import { onMount } from "solid-js";
-import { Tooltip } from "~/components/ui/tooltip.tsx";
+import { IconDeviceFloppy } from "@tabler/icons-solidjs";
 import { createEffect } from "solid-js";
 import { on } from "solid-js";
 import { Button } from "~/components/ui/button.tsx";
 import { FileHandler } from "../../services/FileHandler.ts";
 import { DownloadStates, DownloadStatus } from "~/components/DownloadList.tsx";
-import JSON5 from "json5";
 import { toaster } from "~/components/ui/toast.tsx";
 import { TabPageContext } from "~/components/Tab/TabList.tsx";
-import { ConnectButton } from "~/components/Connect/ConnectButton.tsx";
-import { getConfigFromPort } from "~/services/PortService.ts";
 import { FileImportButton } from "./LoggingForm/FileImportButton.tsx";
 import { css } from "styled-system/css/css";
-
-enum LogButton {
-  Start,
-  Stop,
-  Refresh,
-  Download,
-  None,
-}
+import { DriverStatus } from "../Configuration/ConfigForm/DriverStatus.tsx";
+import { State_Schema } from "src-tauri/generated/config/ConfigType.tsx";
+import { PortSideBar } from "./LoggingForm/PortSideBar.tsx";
 
 // A custom tab page component for the Logging page.
 export function LoggingTabContent() {
@@ -76,22 +58,6 @@ export function LoggingTabContent() {
     );
   };
 
-  const getPortId = () => {
-    return tabStore.get(loggingTabProps.key)![0].tabContext[getTabIndex()]
-      .tabPage!.loggingTabPage!.portId;
-  };
-
-  const setPortId = (portId: string) => {
-    return tabStore.get(loggingTabProps.key)![1](
-      "tabContext",
-      getTabIndex(),
-      "tabPage",
-      "loggingTabPage",
-      "portId",
-      portId,
-    );
-  };
-
   const getFilePath = () => {
     return tabStore.get(loggingTabProps.key)![0].tabContext[getTabIndex()]
       .tabPage!.loggingTabPage!.filePath;
@@ -113,17 +79,6 @@ export function LoggingTabContent() {
       .tabPage!.loggingTabPage!.title;
   };
 
-  const setTitle = (newTitle: string) => {
-    return tabStore.get(loggingTabProps.key)![1](
-      "tabContext",
-      getTabIndex(),
-      "tabPage",
-      "loggingTabPage",
-      "title",
-      newTitle,
-    );
-  };
-
   const setTabName = (newTabName: string) => {
     return tabStore.get(loggingTabProps.key)![1](
       "tabContext",
@@ -131,22 +86,6 @@ export function LoggingTabContent() {
       "tab",
       "tabName",
       newTabName,
-    );
-  };
-
-  const getOriginalFile = () => {
-    return tabStore.get(loggingTabProps.key)![0].tabContext[getTabIndex()]
-      .tabPage!.loggingTabPage!.originalFile;
-  };
-
-  const setOriginalFile = (newOriginalFile: object) => {
-    return tabStore.get(loggingTabProps.key)![1](
-      "tabContext",
-      getTabIndex(),
-      "tabPage",
-      "loggingTabPage",
-      "originalFile",
-      newOriginalFile,
     );
   };
 
@@ -162,55 +101,6 @@ export function LoggingTabContent() {
 
   // This signal is needed in UI when reload the file or port.
   const [renderLoggingForm, setRenderLoggingForm] = createSignal<boolean>(true);
-
-  onMount(async () => {
-    const portId = getPortId();
-    if (portId.length > 0) {
-      try {
-        if (checkAvailablePort(portId)) return;
-        const logStatus = await getCurrentLogStatus(portId);
-        setCurrentLogStatus(logStatus.logStatus);
-        setCyclesCompleted(logStatus.cycle);
-      } catch {
-        setCurrentLogStatus(null);
-        setCyclesCompleted(null);
-      }
-    }
-  });
-
-  createEffect(
-    on(
-      () =>
-        tabStore.get(loggingTabProps.key)![0].tabContext[getTabIndex()].tabPage!
-          .loggingTabPage!.portId,
-      async () => {
-        const portId = tabStore.get(loggingTabProps.key)![0].tabContext[
-          getTabIndex()
-        ].tabPage!.loggingTabPage!.portId;
-        if (portId.length > 0) {
-          try {
-            if (checkAvailablePort(portId)) return;
-            const logStatus = await getCurrentLogStatus(portId);
-            setCurrentLogStatus(logStatus.logStatus);
-            setCyclesCompleted(logStatus.cycle);
-          } catch {
-            setCurrentLogStatus(null);
-            setCyclesCompleted(null);
-          }
-        }
-
-        if (Array.from(portCommands.values()).length > 0) {
-          Array.from(portCommands.values()).forEach((command) => {
-            if (command.port !== portId) {
-              command.child.kill();
-              portCommands.delete(command.child.pid);
-            }
-          });
-        }
-      },
-      { defer: true },
-    ),
-  );
 
   const checkAvailablePort = (portId: string): boolean => {
     if (portId.length <= 0) {
@@ -231,44 +121,10 @@ export function LoggingTabContent() {
     return true;
   };
 
-  async function getLogConfigFromPort(portId: string): Promise<object> {
-    const sideCommand = Command.sidecar("binaries/drivercom", [
-      `--port`,
-      portId,
-      `log.config.get`,
-    ]);
-
-    let stdout = "";
-    sideCommand.stdout.on("data", (data) => {
-      stdout = stdout + data;
-    });
-
-    let stderr = "";
-    sideCommand.stderr.on("data", (data) => {
-      stderr = stderr + data;
-    });
-    const child = await sideCommand.spawn();
-    const pid = child.pid;
-    portCommands.set(pid, { port: portId, child: child });
-
-    return new Promise((resolve, reject) => {
-      sideCommand.on("close", () => {
-        portCommands.delete(pid);
-        return resolve(JSON5.parse(stdout));
-      });
-
-      sideCommand.on("error", () => {
-        portCommands.delete(pid);
-        return reject(stderr);
-      });
-    });
-  }
-
   function setLogFormData(form: object, path: string) {
     setTabName(path.replaceAll("\\", "/").split("/").pop()!);
     setFilePath(path);
     setLoggingConfig(form);
-    setOriginalFile(JSON5.parse(JSON5.stringify(form)));
   }
 
   createEffect(
@@ -284,82 +140,11 @@ export function LoggingTabContent() {
     ),
   );
 
-  const [cyclesCompleted, setCyclesCompleted] = createSignal<number | null>(0);
-  const [currentLogStatus, setCurrentLogStatus] = createSignal<string | null>(
-    null,
-  );
-  createEffect(
-    on(
-      () => currentLogStatus(),
-      () => {
-        if (currentLogStatus() === "Log.Status.invalid") {
-          toaster.create({
-            title: "Invalid Log",
-            description: "The log is invalid.",
-            type: "error",
-          });
-        }
-      },
-      { defer: true },
-    ),
-  );
-
-  async function getCurrentLogStatus(portId: string): Promise<{
-    logStatus: string;
-    cycle: number;
-  }> {
-    const logStatus = Command.sidecar("binaries/drivercom", [
-      `--port`,
-      portId,
-      `log.status`,
-    ]);
-
-    let stdout = "";
-    logStatus.stdout.on("data", (data) => {
-      stdout = stdout + data;
-    });
-
-    let stderr = "";
-    logStatus.stderr.on("data", (data) => {
-      stderr = stderr + data;
-    });
-
-    const child = await logStatus.spawn();
-    const pid = child.pid;
-    portCommands.set(pid, { port: portId, child: child });
-
-    return new Promise((resolve, reject) => {
-      logStatus.on("close", async () => {
-        portCommands.delete(pid);
-        if (stdout.length < 1) return reject("Invalid log status.");
-        const parseOutput = stdout.replaceAll(" ", "").replaceAll("\n", "");
-        const currentLogStatusList = parseOutput.split(",").map((value) => {
-          return value.split(":");
-        });
-
-        const currentCompletedLogCycle = Number(currentLogStatusList[1][1]);
-        const currentLogState = currentLogStatusList[0][1];
-
-        if (!currentLogState || isNaN(currentCompletedLogCycle))
-          return reject("Invalid log status.");
-        return resolve({
-          logStatus: currentLogState,
-          cycle: currentCompletedLogCycle,
-        });
-      });
-
-      logStatus.on("error", async () => {
-        portCommands.delete(pid);
-        return reject(stderr);
-      });
-    });
-  }
-
   // Save log.csv file && Display `Log Get` button loading while saving log.csv file
   async function saveLogCsvFile(
     filePath: string,
     portId: string,
-    cycle: number,
+    duration: number,
   ) {
     const logGet = Command.sidecar("binaries/drivercom", [
       `--port`,
@@ -383,7 +168,7 @@ export function LoggingTabContent() {
       setCsvFileDownloads(
         index,
         "downloadProgress",
-        Math.floor((logCycles / cycle) * 100),
+        Math.floor((logCycles / duration) * 100),
       );
     });
 
@@ -457,94 +242,6 @@ export function LoggingTabContent() {
     setCsvFileDownloads([newDownload, ...csvFileDownloads]);
   }
 
-  async function startLogging(portId: string): Promise<void> {
-    const logStart = Command.sidecar("binaries/drivercom", [
-      `--port`,
-      portId,
-      `log.start`,
-    ]);
-
-    let stderr = "";
-    logStart.stderr.on("data", (data) => {
-      stderr = stderr + data;
-    });
-
-    const child = await logStart.spawn();
-    const pid = child.pid;
-    portCommands.set(pid, { port: portId, child: child });
-
-    return new Promise((resolve, reject) => {
-      logStart.on("close", () => {
-        portCommands.delete(pid);
-        return resolve();
-      });
-
-      logStart.on("error", () => {
-        portCommands.delete(pid);
-        return reject(stderr);
-      });
-    });
-  }
-
-  async function stopLogging(portId: string): Promise<void> {
-    const logStop = Command.sidecar("binaries/drivercom", [
-      `--port`,
-      portId,
-      `log.stop`,
-    ]);
-
-    let stderr = "";
-    logStop.stderr.on("data", (data) => {
-      stderr = stderr + data;
-    });
-    const child = await logStop.spawn();
-    const pid = child.pid;
-    portCommands.set(pid, { port: portId, child: child });
-
-    return new Promise((resolve, reject) => {
-      logStop.on("close", () => {
-        portCommands.delete(pid);
-        return resolve();
-      });
-
-      logStop.on("error", () => {
-        portCommands.delete(pid);
-        return reject(stderr);
-      });
-    });
-  }
-
-  async function saveLogToPort(log: object, portId: string): Promise<void> {
-    const json_str = JSON.stringify(log, null, "  ");
-    const logSave = Command.sidecar("binaries/drivercom", [
-      `--port`,
-      portId,
-      `log.config.set`,
-      json_str,
-    ]);
-
-    let stderr = "";
-    logSave.stderr.on("data", (data) => {
-      stderr = stderr + data;
-    });
-
-    const child = await logSave.spawn();
-    const pid = child.pid;
-    portCommands.set(pid, { port: portId, child: child });
-
-    return new Promise((resolve, reject) => {
-      logSave.on("close", () => {
-        portCommands.delete(pid);
-        return resolve();
-      });
-
-      logSave.on("error", () => {
-        portCommands.delete(pid);
-        return reject(stderr);
-      });
-    });
-  }
-
   const refresh = () => {
     setRenderLoggingForm(false);
     setRenderLoggingForm(true);
@@ -565,69 +262,6 @@ export function LoggingTabContent() {
       scrollContainer.scrollTo({
         top: top - scrollContainer.offsetTop - one_rem,
       });
-    }
-  };
-
-  const [disableBtn, setDisableBtn] = createSignal<LogButton>(LogButton.None);
-
-  const saveToPort = async (portId: string) => {
-    if (
-      scrollContainer &&
-      document.querySelectorAll(`[data-name*="config_field_error"]`).length > 0
-    ) {
-      scrollToWrongField(scrollContainer);
-      toaster.create({
-        title: "Invalid File",
-        description: "The file is invalid.",
-        type: "error",
-      });
-      return;
-    }
-
-    try {
-      if (!checkAvailablePort(portId)) return;
-      await saveLogToPort(getLoggingConfig(), portId);
-      toaster.create({
-        title: "Communication Success",
-        description: "Log saved to port successfully.",
-        type: "success",
-      });
-      const logStatus = await getCurrentLogStatus(portId);
-      setCurrentLogStatus(logStatus.logStatus);
-      setCyclesCompleted(logStatus.cycle);
-      if (getFilePath().length === 0) {
-        setOriginalFile(JSON5.parse(JSON5.stringify(getLoggingConfig())));
-      }
-    } catch (e) {
-      toaster.create({
-        title: "Communication Error",
-        description: e as string,
-        type: "error",
-      });
-      setCurrentLogStatus(null);
-      setCyclesCompleted(null);
-      return;
-    }
-  };
-
-  const getFromPort = async (portId: string) => {
-    try {
-      if (!checkAvailablePort(portId)) return;
-      const logConfig = await getLogConfigFromPort(getPortId());
-      setTabName(portId);
-      setPortId(portId);
-      setFilePath("");
-      setLoggingConfig(logConfig);
-      setOriginalFile(JSON5.parse(JSON5.stringify(logConfig)));
-    } catch (e) {
-      setPortId("");
-      setTitle("No port");
-      toaster.create({
-        title: "Communication Error",
-        description: e as string,
-        type: "error",
-      });
-      return;
     }
   };
 
@@ -685,9 +319,6 @@ export function LoggingTabContent() {
         getTitle(),
       );
       await fileHandler.writeFile(path, getLoggingConfig());
-      if (getFilePath() === path) {
-        setOriginalFile(JSON5.parse(JSON5.stringify(getLoggingConfig())));
-      }
     } catch {
       toaster.create({
         title: "Invalid File",
@@ -695,17 +326,6 @@ export function LoggingTabContent() {
         type: "error",
       });
     }
-  };
-
-  const getCurrentDateWithTime = () => {
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = String(today.getMonth() + 1).padStart(2, "0");
-    const day = String(today.getDate()).padStart(2, "0");
-    const hours = String(today.getHours()).padStart(2, "0");
-    const minutes = String(today.getMinutes()).padStart(2, "0");
-    const date = `${year}-${month}-${day} ${hours}:${minutes}`;
-    return date;
   };
 
   return (
@@ -716,8 +336,8 @@ export function LoggingTabContent() {
           height: "100%",
           width: `100% `,
           display: "grid",
-          "grid-auto-rows": `2rem calc(100% - 2rem)`,
-          "grid-template-columns": `15rem minmax(0,1fr)`,
+          "grid-auto-rows": `2rem minmax(0,1fr)`,
+          "grid-template-columns": `15rem minmax(0,1fr) 30rem`,
         }}
       >
         <div
@@ -730,13 +350,33 @@ export function LoggingTabContent() {
           })}
         >
           <PortSideBar
-            portId={getPortId()}
-            onPortId={(portId) => setPortId(portId)}
+            id={getTabId()}
+            config={getLoggingConfig()}
+            accordionStates={getAccordionStates()}
+            onStartLogging={async (portId) => {
+              const check = checkAvailablePort(portId);
+              if (!check) {
+                //Add error message
+                return;
+              }
+              // Add port command in here
+              // portCommand.set()
+              try {
+                const filePath = await fileHandler.saveFileDialog("json5", "");
+                await saveLogCsvFile(
+                  filePath,
+                  portId,
+                  getLoggingConfig().duration,
+                );
+              } catch (e) {
+                //Add error message
+                console.error(e);
+              }
+            }}
           />
         </div>
         <Show when={renderLoggingForm()}>
           <Stack
-            direction="row"
             width="100%"
             gap="0"
             height={"2rem"}
@@ -745,14 +385,12 @@ export function LoggingTabContent() {
             gridRow="1"
             gridColumn="2"
             background="gray.2"
+            display={"grid"}
+            gridTemplateColumns={"minmax(0,1fr) 7rem 7rem"}
+            fontSize="sm"
           >
-            <Text
-              style={{
-                width: `calc(100% - 12rem)`,
-                "padding-left": "0.5rem",
-              }}
-            >
-              {getTitle()}
+            <Text paddingLeft="0.4rem" fontWeight="medium">
+              {"Log Config"}
             </Text>
             {/*Open file button */}
             <FileImportButton
@@ -775,231 +413,14 @@ export function LoggingTabContent() {
               }}
             />
 
-            <Tooltip content={"Save as file"}>
-              <IconButton
-                variant={"plain"}
-                onClick={async () => await saveAsFile()}
-                size="xs"
-              >
-                <IconDeviceFloppy />
-              </IconButton>
-            </Tooltip>
-
-            <ConnectButton
-              buttonProps={{ variant: "plain", size: "xs" }}
-              portId={getPortId()}
-              onPortIdChange={async (portId) => {
-                setPortId(portId);
-
-                if (portId.length === 0) {
-                  setTitle("No port");
-                  return;
-                }
-                try {
-                  const config = await getConfigFromPort(portId);
-                  setTitle(`Driver ${config.id} Station ${config.station}`);
-                } catch {
-                  toaster.create({
-                    title: "Invalid Port",
-                    description: "Port is Invalid",
-                    type: "error",
-                  });
-                }
-              }}
-            />
-            {/*Get from port */}
-            <Tooltip content={"Get from port"}>
-              <IconButton
-                variant={"plain"}
-                size="xs"
-                disabled={!getPortId() || getPortId().length === 0}
-                onClick={async () => {
-                  if (!getPortId() || getPortId().length === 0) return;
-                  await getFromPort(getPortId());
-                }}
-              >
-                <IconFileDownload />
-              </IconButton>
-            </Tooltip>
-
-            {/* Save to port */}
-            <Tooltip content={"Save to port"}>
-              <IconButton
-                variant={"plain"}
-                size="xs"
-                disabled={!getPortId() || getPortId().length === 0}
-                onClick={async () => {
-                  if (!getPortId() || getPortId().length === 0) return;
-                  await saveToPort(getPortId());
-                }}
-              >
-                <IconSettingsShare />
-              </IconButton>
-            </Tooltip>
-
-            <Show
-              when={currentLogStatus() === ".started"}
-              fallback={
-                <Tooltip content={"Start logging"}>
-                  <IconButton
-                    disabled={
-                      disableBtn() === LogButton.Start ||
-                      getPortId().length === 0 ||
-                      currentLogStatus() === ".invalid" ||
-                      currentLogStatus() === ".started" ||
-                      currentLogStatus() === ".waiting" ||
-                      csvFileDownloads.some(
-                        (file) => file.status === DownloadStatus.Progressing,
-                      )
-                    }
-                    onClick={async () => {
-                      try {
-                        if (!checkAvailablePort(getPortId())) return;
-                        setDisableBtn(LogButton.Start);
-                        await startLogging(getPortId());
-
-                        const csvFileDownloadIndex = csvFileDownloads.findIndex(
-                          (download) => download.port === getPortId(),
-                        );
-                        if (
-                          csvFileDownloadIndex > -1 &&
-                          csvFileDownloads[csvFileDownloadIndex].status ===
-                            DownloadStatus.Paused
-                        ) {
-                          setCsvFileDownloads(
-                            csvFileDownloadIndex,
-                            "status",
-                            DownloadStatus.Cancel,
-                          );
-                        }
-
-                        const logState = await getCurrentLogStatus(getPortId());
-                        setCurrentLogStatus(logState.logStatus);
-                        setCyclesCompleted(logState.cycle);
-                        setDisableBtn(LogButton.None);
-                      } catch (e) {
-                        setDisableBtn(LogButton.None);
-                        toaster.create({
-                          title: "Communication Error",
-                          description: e as string,
-                          type: "error",
-                        });
-                        return;
-                      }
-                    }}
-                    size="sm"
-                    variant="plain"
-                  >
-                    <IconPlayerPlay />
-                  </IconButton>
-                </Tooltip>
-              }
+            <Button
+              variant={"plain"}
+              onClick={async () => await saveAsFile()}
+              size="xs"
             >
-              <Tooltip content={"Stop logging"}>
-                <IconButton
-                  disabled={disableBtn() === LogButton.Stop}
-                  onClick={async () => {
-                    try {
-                      if (!checkAvailablePort(getPortId())) return;
-                      setDisableBtn(LogButton.Stop);
-                      await stopLogging(getPortId());
-                      const logState = await getCurrentLogStatus(getPortId());
-                      setCurrentLogStatus(logState.logStatus);
-                      setCyclesCompleted(logState.cycle);
-                      setDisableBtn(LogButton.None);
-                    } catch (e) {
-                      setDisableBtn(LogButton.None);
-                      toaster.create({
-                        title: "Communication Error",
-                        description: e as string,
-                        type: "error",
-                      });
-                      return;
-                    }
-                  }}
-                  size="sm"
-                  variant="plain"
-                >
-                  <IconPlayerStop />
-                </IconButton>
-              </Tooltip>
-            </Show>
-
-            <Show
-              when={
-                currentLogStatus() !== ".stopped" ||
-                currentLogStatus() === ".invalid" ||
-                cyclesCompleted() === 0
-              }
-              fallback={
-                <Tooltip content={"Get Log"}>
-                  <Button
-                    disabled={disableBtn() === LogButton.Download}
-                    loading={csvFileDownloads.some(
-                      (file) => file.status === DownloadStatus.Progressing,
-                    )}
-                    onClick={async () => {
-                      if (getPortId().length === 0) return;
-                      try {
-                        if (!checkAvailablePort(getPortId())) return;
-                        setDisableBtn(LogButton.Download);
-
-                        const date = getCurrentDateWithTime();
-                        const path = await fileHandler.saveFileDialog(
-                          "csv",
-                          getFilePath(),
-                          getTitle() + " " + date,
-                        );
-                        setDisableBtn(LogButton.None);
-                        await saveLogCsvFile(
-                          path,
-                          getPortId(),
-                          cyclesCompleted()!,
-                        );
-                      } catch {
-                        setDisableBtn(LogButton.None);
-                        toaster.create({
-                          title: "Invalid File",
-                          description: "The file is invalid.",
-                          type: "error",
-                        });
-                      }
-                    }}
-                    variant="plain"
-                    userSelect="none"
-                    size="sm"
-                  >
-                    <IconFileDownload />
-                  </Button>
-                </Tooltip>
-              }
-            >
-              {/* Refresh Log Status btn */}
-              <Tooltip content={"Refresh log status"}>
-                <IconButton
-                  disabled={getPortId().length === 0}
-                  onClick={async () => {
-                    try {
-                      if (!checkAvailablePort(getPortId())) return;
-                      setDisableBtn(LogButton.Refresh);
-                      const logState = await getCurrentLogStatus(getPortId());
-                      setCurrentLogStatus(logState.logStatus);
-                      setCyclesCompleted(logState.cycle);
-                      setDisableBtn(LogButton.None);
-                    } catch {
-                      setDisableBtn(LogButton.None);
-                      setCurrentLogStatus(null);
-                      setCyclesCompleted(null);
-                    }
-                  }}
-                  variant="plain"
-                  size="sm"
-                >
-                  <IconReload />
-                </IconButton>
-              </Tooltip>
-            </Show>
-            {/* Get Log button need to add tooltip */}
+              <IconDeviceFloppy />
+              {"Save as file"}
+            </Button>
           </Stack>
 
           <div
@@ -1014,65 +435,24 @@ export function LoggingTabContent() {
           >
             <LoggingForm
               id={getTabId()}
-              formData={getLoggingConfig()}
-              originalFile={getOriginalFile()}
+              formData={getLoggingConfig().config}
               accordionStates={getAccordionStates()}
               ref={scrollContainer}
               description={logConfigDescription()}
             />
           </div>
         </Show>
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            "grid-row": "span 2",
+            "grid-column": 3,
+          }}
+        >
+          <DriverStatus id={getTabId()} driverStatus={State_Schema.parse({})} />
+        </div>
       </div>
     </Show>
-  );
-}
-
-type PortSideBarProps = {
-  portId: string;
-  onPortId?: (portId: string) => void;
-};
-
-function PortSideBar(props: PortSideBarProps) {
-  return (
-    <div style={{ width: "100%", height: "100%" }}>
-      <div
-        style={{
-          "border-bottom-width": "1px",
-          "padding-bottom": "0.8rem",
-          display: "flex",
-          "flex-direction": "column",
-          "row-gap": "0.2rem",
-        }}
-      >
-        <Text fontSize="sm" fontWeight="medium">
-          {"Port"}
-        </Text>
-        <Text
-          display="flex"
-          alignItems="center"
-          columnGap="0.5rem"
-          fontSize="sm"
-          fontWeight="semibold"
-        >
-          <div
-            class={css({
-              width: "0.6rem",
-              height: "0.6rem",
-              background: props.portId.length > 0 ? "accent.9" : "gray.7",
-              borderRadius: "2rem",
-              display: "flex",
-              outlineWidth: "0.15rem",
-              outlineColor: props.portId.length > 0 ? "accent.7" : "gray.5",
-              outlineStyle: "solid",
-            })}
-          ></div>
-          {props.portId.length > 0 ? props.portId : "Not connected"}
-        </Text>
-        <ConnectButton
-          portId={props.portId}
-          onPortIdChange={(portId) => props.onPortId?.(portId)}
-        />
-      </div>
-    </div>
   );
 }
