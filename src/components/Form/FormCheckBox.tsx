@@ -66,7 +66,12 @@ export const FormCheckBox = (props: FormCheckBoxProps) => {
             alignItems="center"
             gap="0.4rem"
           >
-            <Show when={props.originalValue !== props.checked}>
+            <Show
+              when={
+                typeof props.originalValue === "boolean" &&
+                props.originalValue !== props.checked
+              }
+            >
               <div
                 class={css({
                   background: "accent.9",
