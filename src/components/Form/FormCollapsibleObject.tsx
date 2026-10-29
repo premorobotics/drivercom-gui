@@ -71,40 +71,35 @@ export const FormCollapsibleObject = (props: FormCollapsibleObjectProps) => {
         </Accordion.ItemTrigger>
 
         <Accordion.ItemContent>
-          <Show
-            when={props.key !== "command"}
-            fallback={
-              <LoggingCommandTable
-                id={`${props.id}.${key}`}
-                config={value as CommandType}
-                defaultValue={Object.keys(value)[0]}
-                format={props.format}
-                description={props.description}
-                originalFile={props.originalFile}
-                changeUnits={props.changeUnits}
-                onItemChange={() => {
-                  props.onItemChange?.();
-                }}
-                accordionStates={props.accordionStates}
-              />
-            }
-          >
-            <Form
-              value={value}
-              id={`${props.id}.${key}`}
-              style={{ "padding-left": "1rem" }}
-              format={props.format}
-              description={props.description}
-              originalFile={props.originalFile}
-              changeUnits={props.changeUnits}
-              onItemChange={() => {
-                props.onItemChange?.();
-              }}
-              accordionStates={props.accordionStates}
-              logStartCombinators={props.logStartCombinators}
-              logStartConditions={props.logStartConditions}
-            />
-          </Show>
+          <LoggingCommandTable
+            id={`${props.id}.${key}`}
+            config={value as CommandType}
+            defaultValue={Object.keys(value)[0]}
+            format={props.format}
+            description={props.description}
+            originalFile={props.originalFile}
+            changeUnits={props.changeUnits}
+            onItemChange={() => {
+              props.onItemChange?.();
+            }}
+            accordionStates={props.accordionStates}
+          />
+
+          <Form
+            value={value}
+            id={`${props.id}.${key}`}
+            style={{ "padding-left": "1rem" }}
+            format={props.format}
+            description={props.description}
+            originalFile={props.originalFile}
+            changeUnits={props.changeUnits}
+            onItemChange={() => {
+              props.onItemChange?.();
+            }}
+            accordionStates={props.accordionStates}
+            logStartCombinators={props.logStartCombinators}
+            logStartConditions={props.logStartConditions}
+          />
         </Accordion.ItemContent>
       </Accordion.Item>
     </Accordion.Root>
