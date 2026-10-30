@@ -112,9 +112,11 @@ export function PortSideBar(props: PortSideBarProps) {
           />
         </div>
         <DrivercomCommandButton
-          onRunCommand={(portId) => props.onStartLogging?.(portId)}
+          onRunCommand={(portId) => {
+            props.onStartLogging?.(portId);
+          }}
         >
-          <Button size="2xs" class={css({ padding: "0" })} gridColumn="span 2">
+          <Button size="2xs" class={css({ padding: "0" })}>
             {"Start Logging"}
           </Button>
         </DrivercomCommandButton>

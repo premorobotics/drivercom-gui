@@ -3,6 +3,7 @@ import { portCommands } from "~/store/GlobalState";
 import { toaster } from "~/components/ui/toast.tsx";
 import JSON5 from "json5";
 import { ConfigType } from "src-tauri/generated/config/ConfigType";
+import { LogConfigType } from "src-tauri/generated/config/LogConfigType";
 
 export type Port = {
   id: string;
@@ -123,5 +124,23 @@ export async function toggleServo(portId: string, servoState: boolean) {
     "--port",
     portId,
     servoState ? "off" : "on",
+  ]);
+}
+
+export async function startLogging(
+  portId: string,
+  filePath: string,
+  logConfig: LogConfigType,
+) {
+  const stringifyLogConfig = JSON5.stringify(logConfig, { quote: "'" });
+  return await sendDrivercomCommand([
+    "--port",
+    portId,
+    "--timeout",
+    "10000",
+    "log.start",
+    "--output",
+    filePath,
+    stringifyLogConfig,
   ]);
 }
