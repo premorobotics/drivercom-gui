@@ -2,20 +2,20 @@ import { LogConfigType } from "src-tauri/generated/config/LogConfigType.tsx";
 import { createStore } from "solid-js/store";
 import { FormNumberInput } from "~/components/Form/FormNumberInput.tsx";
 import { LoggingCommandTable } from "./LoggingCommandTable.tsx";
-import { LoggingAccordionStates } from "~/components/Form.tsx";
 import * as Checkbox from "../../../components/ui/checkbox.tsx";
 import { DrivercomCommandButton } from "../../Configuration/ConfigForm/DrivercomCommandButton.tsx";
 import { For } from "solid-js";
 import { Text } from "~/components/ui/text.tsx";
 import { css } from "styled-system/css/css";
 import { Button } from "~/components/ui/button.tsx";
+import { AccordionStates } from "~/pages/Configuration/ConfigForm/ConfigForm.tsx";
 
 type PortSideBarProps = {
   id: string;
   config: LogConfigType;
   duration?: number;
   onStartLogging?: (portId: string) => void;
-  accordionStates: LoggingAccordionStates;
+  accordionStates: AccordionStates;
 };
 
 export function PortSideBar(props: PortSideBarProps) {

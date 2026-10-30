@@ -1,11 +1,4 @@
-import {
-  For,
-  createSignal,
-  JSX,
-  type Setter,
-  type Accessor,
-  Show,
-} from "solid-js";
+import { For, createSignal, JSX, Show } from "solid-js";
 import { Text } from "./ui/text.tsx";
 import { FormCheckBox } from "./Form/FormCheckBox.tsx";
 import { FormNumberInput } from "./Form/FormNumberInput.tsx";
@@ -15,11 +8,7 @@ import * as Select from "./ui/select.tsx";
 import { createStore } from "solid-js/store";
 import { Tooltip } from "./ui/tooltip.tsx";
 import { IconHelp } from "@tabler/icons-solidjs";
-
-export type LoggingAccordionStates = Map<
-  string,
-  [Accessor<string[]>, Setter<string[]>]
->;
+import { AccordionStates } from "~/pages/Configuration/ConfigForm/ConfigForm.tsx";
 
 export type FormProps = JSX.HTMLAttributes<HTMLDivElement> & {
   id: string;
@@ -30,7 +19,7 @@ export type FormProps = JSX.HTMLAttributes<HTMLDivElement> & {
   originalFile?: object;
   changeUnits?: boolean;
   onItemChange?: () => void;
-  accordionStates: LoggingAccordionStates;
+  accordionStates: AccordionStates;
   logStartConditions?: ListCollection;
   logStartCombinators?: ListCollection;
 };

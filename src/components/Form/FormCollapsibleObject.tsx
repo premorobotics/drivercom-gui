@@ -3,7 +3,6 @@ import { Text } from "../ui/text";
 import { Stack } from "styled-system/jsx";
 import { Show } from "solid-js";
 import { Form, FormProps } from "../Form";
-import { createSignal } from "solid-js";
 import { IconChevronDown } from "@tabler/icons-solidjs";
 import { LoggingCommandTable } from "~/pages/Logging/LoggingForm/LoggingCommandTable";
 import { CommandType } from "src-tauri/generated/config/LogConfigType";
@@ -16,19 +15,18 @@ export type FormCollapsibleObjectProps = FormProps & {
 export const FormCollapsibleObject = (props: FormCollapsibleObjectProps) => {
   const itemId = props.id + props.key;
   if (!props.accordionStates.has(itemId)) {
-    props.accordionStates.set(itemId, createSignal<string[]>([itemId]));
+    props.accordionStates.set(itemId, [itemId]);
   }
-  const [accordionValue, setAccordionValue] =
-    props.accordionStates.get(itemId)!;
+  const accordionValue = props.accordionStates.get(itemId)!;
 
   const key = props.key;
   const value = props.value;
 
   return (
     <Accordion.Root
-      value={accordionValue()}
+      value={accordionValue}
       onValueChange={(details) => {
-        setAccordionValue(details.value);
+        props.accordionStates.set(itemId, details.value);
       }}
       multiple
       padding="0.2rem"

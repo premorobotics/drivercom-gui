@@ -380,7 +380,9 @@ export function LoggingTabContent() {
             width="100%"
             gap="0"
             height={"2rem"}
-            borderBottomWidth={"1px"}
+            outlineStyle="solid"
+            outlineWidth="1px"
+            outlineColor="border"
             alignItems={"center"}
             gridRow="1"
             gridColumn="2"
@@ -450,7 +452,11 @@ export function LoggingTabContent() {
             "grid-column": 3,
           }}
         >
-          <DriverStatus id={getTabId()} driverStatus={State_Schema.parse({})} />
+          <DriverStatus
+            id={getTabId()}
+            driverStatus={State_Schema.parse({})}
+            accordionStatuses={getAccordionStates()!}
+          />
         </div>
       </div>
     </Show>
