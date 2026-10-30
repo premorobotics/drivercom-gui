@@ -8,7 +8,6 @@ import {
 } from "~/store/GlobalState.ts";
 import { createEffect, createSignal, on, Show } from "solid-js";
 import { onMount } from "solid-js";
-import { LoggingAccordionStates } from "~/components/Form.tsx";
 
 import {
   PanelLayout,
@@ -25,13 +24,14 @@ import { LoggingTabContent } from "./LoggingTabContent.tsx";
 import JSON5 from "json5";
 import { load } from "@tauri-apps/plugin-store";
 import { LogConfigType } from "src-tauri/generated/config/LogConfigType.tsx";
+import { AccordionStates } from "../Configuration/ConfigForm/ConfigForm.tsx";
 
 export type LoggingFormType = {
   title: string;
   filePath: string;
   portId: string;
   logConfig: LogConfigType;
-  accordionStates: LoggingAccordionStates;
+  accordionStates: AccordionStates;
   originalFile: object;
 };
 
@@ -62,7 +62,7 @@ export function Logging() {
 
   const createLoggingTab = (key: string) => {
     const id = crypto.randomUUID();
-    const accordionStates: LoggingAccordionStates = new Map();
+    const accordionStates: AccordionStates = new Map();
     const newTab: TabContext = {
       tab: {
         id: id,
