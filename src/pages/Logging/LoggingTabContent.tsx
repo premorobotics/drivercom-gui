@@ -7,12 +7,9 @@ import {
   pageKeys,
   recentLogFilePaths,
   setRecentLogFilePaths,
-  csvFileDownloads,
-  setCsvFileDownloads,
   logConfigDescription,
   tabStore,
 } from "~/store/GlobalState.ts";
-import { Command } from "@tauri-apps/plugin-shell";
 import { createSignal, Show, useContext } from "solid-js";
 import { LoggingForm } from "./LoggingForm.tsx";
 import { IconDeviceFloppy } from "@tabler/icons-solidjs";
@@ -20,7 +17,6 @@ import { createEffect } from "solid-js";
 import { on } from "solid-js";
 import { Button } from "~/components/ui/button.tsx";
 import { FileHandler } from "../../services/FileHandler.ts";
-import { DownloadStates, DownloadStatus } from "~/components/DownloadList.tsx";
 import { toaster } from "~/components/ui/toast.tsx";
 import { TabPageContext } from "~/components/Tab/TabList.tsx";
 import { FileImportButton } from "./LoggingForm/FileImportButton.tsx";
@@ -28,6 +24,7 @@ import { css } from "styled-system/css/css";
 import { DriverStatus } from "../Configuration/ConfigForm/DriverStatus.tsx";
 import { State_Schema } from "src-tauri/generated/config/ConfigType.tsx";
 import { PortSideBar } from "./LoggingForm/PortSideBar.tsx";
+import { startLogging } from "~/services/PortService.ts";
 
 // A custom tab page component for the Logging page.
 export function LoggingTabContent() {
@@ -139,108 +136,6 @@ export function LoggingTabContent() {
       },
     ),
   );
-
-  // Save log.csv file && Display `Log Get` button loading while saving log.csv file
-  async function saveLogCsvFile(
-    filePath: string,
-    portId: string,
-    duration: number,
-  ) {
-    const logGet = Command.sidecar("binaries/drivercom", [
-      `--port`,
-      portId,
-      `--timeout`,
-      `10000`,
-      `log.get`,
-      `-f`,
-      filePath,
-    ]);
-
-    let pid: number | null = null;
-    let logCycles = 0;
-
-    logGet.stdout.on("data", () => {
-      logCycles = logCycles + 1;
-      const index = csvFileDownloads.findIndex(
-        (download) => download.filePath === filePath,
-      );
-
-      setCsvFileDownloads(
-        index,
-        "downloadProgress",
-        Math.floor((logCycles / duration) * 100),
-      );
-    });
-
-    logGet.on("close", (data) => {
-      if (pid) {
-        portCommands.delete(pid);
-      }
-      if (data.code === null) {
-        toaster.create({
-          title: "Download Fail",
-          description: "Fail to download file.",
-          type: "error",
-        });
-        const index = csvFileDownloads.findIndex(
-          (download) => download.filePath === filePath,
-        );
-        if (csvFileDownloads[index].status === DownloadStatus.Progressing) {
-          setCsvFileDownloads(index, "status", DownloadStatus.Error);
-        }
-      } else {
-        if (data.code == 0) {
-          const index = csvFileDownloads.findIndex(
-            (download) => download.filePath === filePath,
-          );
-          if (csvFileDownloads[index].status === DownloadStatus.Progressing) {
-            setCsvFileDownloads(index, "status", DownloadStatus.Success);
-          }
-        } else {
-          const index = csvFileDownloads.findIndex(
-            (download) => download.filePath === filePath,
-          );
-          if (csvFileDownloads[index].status === DownloadStatus.Progressing) {
-            setCsvFileDownloads(index, "status", DownloadStatus.Error);
-          }
-        }
-      }
-
-      logGet.removeAllListeners();
-    });
-
-    logGet.on("error", async (error) => {
-      if (pid) {
-        portCommands.delete(pid);
-      }
-      toaster.create({
-        title: "Download Fail",
-        description: error,
-        type: "error",
-      });
-
-      const index = csvFileDownloads.findIndex(
-        (download) => download.filePath === filePath,
-      );
-      if (csvFileDownloads[index].status === DownloadStatus.Progressing) {
-        setCsvFileDownloads(index, "status", DownloadStatus.Error);
-      }
-
-      logGet.removeAllListeners();
-    });
-
-    const child = await logGet.spawn();
-    pid = child.pid;
-    portCommands.set(pid, { port: portId, child: child });
-    const newDownload: DownloadStates = {
-      filePath: filePath,
-      status: DownloadStatus.Progressing,
-      port: portId,
-      pid: pid,
-      downloadProgress: 0,
-    };
-    setCsvFileDownloads([newDownload, ...csvFileDownloads]);
-  }
 
   const refresh = () => {
     setRenderLoggingForm(false);
@@ -362,12 +257,8 @@ export function LoggingTabContent() {
               // Add port command in here
               // portCommand.set()
               try {
-                const filePath = await fileHandler.saveFileDialog("json5", "");
-                await saveLogCsvFile(
-                  filePath,
-                  portId,
-                  getLoggingConfig().duration,
-                );
+                const filePath = await fileHandler.saveFileDialog("csv", "");
+                await startLogging(portId, filePath, getLoggingConfig()!);
               } catch (e) {
                 //Add error message
                 console.error(e);
