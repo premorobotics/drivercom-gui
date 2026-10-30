@@ -77,7 +77,6 @@ export const ConfigFormTabPage = (props: ConfigFormTabPageProps) => {
       <div
         style={{
           width: "100%",
-          "max-width": "50rem",
           height: "100%",
           display: "flex",
           "flex-direction": "column",

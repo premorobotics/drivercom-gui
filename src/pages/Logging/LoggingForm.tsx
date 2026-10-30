@@ -43,7 +43,6 @@ export function LoggingForm(props: LoggingFormProps) {
         "overflow-y": "auto",
         "padding-left": "0.5rem",
         "padding-right": "0.5rem",
-        "max-width": "50rem",
       }}
     >
       <Form
