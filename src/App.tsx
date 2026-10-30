@@ -61,7 +61,10 @@ import { load } from "@tauri-apps/plugin-store";
 import { ConfigTuneType } from "src-tauri/generated/config/ConfigTune.tsx";
 import { ConfigCalibrationType } from "src-tauri/generated/config/ConfigCalibration.tsx";
 import { ConfigSystemType } from "src-tauri/generated/config/ConfigSystem.tsx";
-import { logConfigDefaultValues } from "src-tauri/generated/config/LogConfigType.tsx";
+import {
+  logConfigDefaultValues,
+  LogConfigType,
+} from "src-tauri/generated/config/LogConfigType.tsx";
 import {
   configDefaultValues,
   ConfigType,
@@ -84,7 +87,6 @@ import { css } from "styled-system/css/css";
 import * as Popover from "./components/ui/popover.tsx";
 import { IconButton } from "./components/ui/icon-button.tsx";
 import { Portal } from "solid-js/web";
-import { LoggingAccordionStates } from "./components/Form.tsx";
 import { Button } from "./components/ui/button.tsx";
 
 type PageMeta = {
@@ -544,8 +546,7 @@ function App(props: RouteSectionProps) {
                         event.payload.paths[0],
                         logFormFileFormat(),
                       );
-                      const accordionStatuses: LoggingAccordionStates =
-                        new Map();
+                      const accordionStatuses: AccordionStates = new Map();
 
                       newTab = {
                         tab: {
@@ -564,7 +565,7 @@ function App(props: RouteSectionProps) {
                               "\\",
                               "/",
                             ),
-                            logConfig: logConfig,
+                            logConfig: logConfig as LogConfigType,
                             originalFile: JSON5.parse(
                               JSON5.stringify(logConfig),
                             ),
