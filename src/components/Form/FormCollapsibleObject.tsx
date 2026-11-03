@@ -95,8 +95,6 @@ export const FormCollapsibleObject = (props: FormCollapsibleObjectProps) => {
               props.onItemChange?.();
             }}
             accordionStates={props.accordionStates}
-            logStartCombinators={props.logStartCombinators}
-            logStartConditions={props.logStartConditions}
           />
         </Accordion.ItemContent>
       </Accordion.Item>

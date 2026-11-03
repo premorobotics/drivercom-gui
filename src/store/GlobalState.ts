@@ -55,13 +55,6 @@ export const [recentConfigFilePaths, setRecentConfigFilePaths] = createSignal<
   string[]
 >([]);
 
-export const [logStartConditionList, setLogStartConditionList] = createSignal<
-  string[]
->([]);
-export const [logStartCombinatorList, setLogStartCombinatorList] = createSignal<
-  string[]
->([]);
-
 type PageKeys = Map<string, string>;
 export const pageKeys: PageKeys = new Map();
 
