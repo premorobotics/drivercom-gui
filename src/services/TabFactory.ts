@@ -10,7 +10,7 @@ import { logFormFileFormat } from "~/store/GlobalState";
 import { ConfigType } from "src-tauri/generated/config/ConfigType";
 import { LogConfigType } from "src-tauri/generated/config/LogConfigType";
 
-export function createNewTab(key: string, newTab: TabContext) {
+export function addNewTab(key: string, newTab: TabContext) {
   if (tabStore.has(key)) {
     const tabCtx = tabStore.get(key)!;
     tabCtx[1]("tabContext", tabCtx[0].tabContext.length, newTab);

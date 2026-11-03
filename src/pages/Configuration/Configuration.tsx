@@ -15,7 +15,7 @@ import { ConfigTabContent } from "./ConfigTabContent.tsx";
 import { createEffect, createSignal, on, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { load } from "@tauri-apps/plugin-store";
-import { createNewTab, generateNewConfigTab } from "~/services/TabFactory.ts";
+import { addNewTab, generateNewConfigTab } from "~/services/TabFactory.ts";
 
 function Configuration() {
   const [render, setRender] = createSignal<boolean>(false);
@@ -43,7 +43,7 @@ function Configuration() {
   const createNewConfigTab = (key: string) => {
     setRender(false);
     const newConfigTab = generateNewConfigTab();
-    createNewTab(key, newConfigTab);
+    addNewTab(key, newConfigTab);
     setRender(true);
   };
 

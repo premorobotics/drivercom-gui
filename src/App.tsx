@@ -81,7 +81,7 @@ import {
   prepareConfigTabFormat,
 } from "./services/PortService.ts";
 import {
-  createNewTab,
+  addNewTab,
   generateNewConfigTab,
   generateNewLoggingTab,
   generateNewLogViewerTab,
@@ -406,7 +406,7 @@ function App(props: RouteSectionProps) {
 
                 if (tabStore.has(tabStoreKey)) {
                   if (newTab) {
-                    createNewTab(tabStoreKey, newTab);
+                    addNewTab(tabStoreKey, newTab);
                   }
                 } else {
                   if (newTab) {

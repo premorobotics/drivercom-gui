@@ -19,7 +19,7 @@ import { LoggingTabContent } from "./LoggingTabContent.tsx";
 import { load } from "@tauri-apps/plugin-store";
 import { LogConfigType } from "src-tauri/generated/config/LogConfigType.tsx";
 import { AccordionStates } from "../Configuration/ConfigForm/ConfigForm.tsx";
-import { createNewTab, generateNewLoggingTab } from "~/services/TabFactory.ts";
+import { addNewTab, generateNewLoggingTab } from "~/services/TabFactory.ts";
 
 export type LoggingFormType = {
   title: string;
@@ -57,7 +57,7 @@ export function Logging() {
 
   const createLoggingTab = (key: string) => {
     const newLoggingTab = generateNewLoggingTab();
-    createNewTab(key, newLoggingTab);
+    addNewTab(key, newLoggingTab);
     setRender(true);
   };
 

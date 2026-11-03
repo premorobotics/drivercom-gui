@@ -5,7 +5,7 @@ import { Pages } from "~/store/GlobalState";
 import { LogViewerTabPageContent } from "./LogViewerTabPageContent";
 import { toaster } from "~/components/ui/toast.tsx";
 import { FileHandler } from "~/services/FileHandler";
-import { createNewTab, generateNewLogViewerTab } from "~/services/TabFactory";
+import { addNewTab, generateNewLogViewerTab } from "~/services/TabFactory";
 
 function LogViewer() {
   const fileHandler = new FileHandler();
@@ -13,7 +13,7 @@ function LogViewer() {
     try {
       const filePath = await fileHandler.openFileDialog("csv");
       const newTab = generateNewLogViewerTab(filePath);
-      createNewTab(key, newTab);
+      addNewTab(key, newTab);
     } catch (e) {
       toaster.create({
         title: "Log viewer tab failed",
