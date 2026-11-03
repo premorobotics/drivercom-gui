@@ -20,16 +20,12 @@ export type Port = {
 };
 
 async function sendDrivercomCommand(args: string[]): Promise<string> {
-  try {
-    const drivercom = Command.sidecar("binaries/drivercom", args);
-    const output = await drivercom.execute();
-    if (output.stderr.length > 0) {
-      throw output.stderr;
-    }
-    return output.stdout;
-  } catch (e) {
-    throw e as string;
+  const drivercom = Command.sidecar("binaries/drivercom", args);
+  const output = await drivercom.execute();
+  if (output.stderr.length > 0) {
+    throw output.stderr;
   }
+  return output.stdout;
 }
 
 export async function detectPort(): Promise<Port[]> {
@@ -155,83 +151,52 @@ export async function startLogging(
 }
 
 export async function getCclinkSpeenEnum() {
-  try {
-    const output = await sendDrivercomCommand([`config.cc_link_speed.list`]);
-    const parseOutput = output
-      .replaceAll("[", "")
-      .replaceAll("]", "")
-      .split(":");
-    const cclinkSpeed = parseOutput[1]
-      .split(",")
-      .filter((value) => value !== "\n");
-    setCclinkSpeed(cclinkSpeed);
-  } catch (e) {
-    throw e as string;
-  }
+  const output = await sendDrivercomCommand([`config.cc_link_speed.list`]);
+  const parseOutput = output.replaceAll("[", "").replaceAll("]", "").split(":");
+  const cclinkSpeed = parseOutput[1]
+    .split(",")
+    .filter((value) => value !== "\n");
+  setCclinkSpeed(cclinkSpeed);
 }
 
 export async function getConfigDescription() {
-  try {
-    const output = await sendDrivercomCommand([`config.info`]);
-    const desc = JSON5.parse(output);
-    setConfigDescription(desc);
-  } catch (e) {
-    throw e as string;
-  }
+  const output = await sendDrivercomCommand([`config.info`]);
+  const desc = JSON5.parse(output);
+  setConfigDescription(desc);
 }
 
 export async function getLogConfigDescription() {
-  try {
-    const output = await sendDrivercomCommand([`log.info`]);
-    const desc = JSON5.parse(output);
-    setLogConfigDescription(desc);
-  } catch (e) {
-    throw e as string;
-  }
+  const output = await sendDrivercomCommand([`log.info`]);
+  const desc = JSON5.parse(output);
+  setLogConfigDescription(desc);
 }
 
 async function getTuneConfig(): Promise<ConfigTuneType> {
-  try {
-    const output = await sendDrivercomCommand([`config.empty.tune`]);
-    const tuneConfig: ConfigTuneType = JSON5.parse(output);
-    return tuneConfig;
-  } catch (e) {
-    throw e as string;
-  }
+  const output = await sendDrivercomCommand([`config.empty.tune`]);
+  const tuneConfig: ConfigTuneType = JSON5.parse(output);
+  return tuneConfig;
 }
 
 async function getCalibrationConfig(): Promise<ConfigCalibrationType> {
-  try {
-    const output = await sendDrivercomCommand([`config.empty.calibration`]);
-    const calConfig: ConfigCalibrationType = JSON5.parse(output);
-    return calConfig;
-  } catch (e) {
-    throw e as string;
-  }
+  const output = await sendDrivercomCommand([`config.empty.calibration`]);
+  const calConfig: ConfigCalibrationType = JSON5.parse(output);
+  return calConfig;
 }
 
 async function getSystemConfig(): Promise<ConfigSystemType> {
-  try {
-    const output = await sendDrivercomCommand([`config.empty.system`]);
-    const systemConfig: ConfigSystemType = JSON5.parse(output);
-    return systemConfig;
-  } catch (e) {
-    throw e as string;
-  }
+  const output = await sendDrivercomCommand([`config.empty.system`]);
+  const systemConfig: ConfigSystemType = JSON5.parse(output);
+  return systemConfig;
 }
 
 export async function prepareConfigTabFormat() {
-  try {
-    const tuneConfig = await getTuneConfig();
-    const calConfig = await getCalibrationConfig();
-    const systemConfig = await getSystemConfig();
-    const config = {
-      system: systemConfig,
-      tune: tuneConfig,
-      calibration: calConfig,
-    };
-    setConfigTabForm(config);
-  } catch (e) {
-    throw e as string;
-  }
+  const tuneConfig = await getTuneConfig();
+  const calConfig = await getCalibrationConfig();
+  const systemConfig = await getSystemConfig();
+  const config = {
+    system: systemConfig,
+    tune: tuneConfig,
+    calibration: calConfig,
+  };
+  setConfigTabForm(config);
 }
