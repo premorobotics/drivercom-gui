@@ -35,13 +35,8 @@ import {
   setDriverComVersion,
   setGlobalState,
   setLogFormFileFormat,
-  setLogStartConditionList,
-  setLogStartCombinatorList,
   setPage,
   Theme,
-  setConfigDescription,
-  setConfigTabForm,
-  setLogConfigDescription,
   setRecentConfigFilePaths,
   setRecentLogFilePaths,
   panelStore,
@@ -49,7 +44,6 @@ import {
   tabStore,
   configFormFileFormat,
   logFormFileFormat,
-  setCclinkSpeed,
 } from "./store/GlobalState.ts";
 
 import { Text } from "~/components/ui/text.tsx";
@@ -58,9 +52,6 @@ import { Command } from "@tauri-apps/plugin-shell";
 import { DownloadList } from "./components/DownloadList.tsx";
 import JSON5 from "json5";
 import { load } from "@tauri-apps/plugin-store";
-import { ConfigTuneType } from "src-tauri/generated/config/ConfigTune.tsx";
-import { ConfigCalibrationType } from "src-tauri/generated/config/ConfigCalibration.tsx";
-import { ConfigSystemType } from "src-tauri/generated/config/ConfigSystem.tsx";
 import {
   logConfigDefaultValues,
   LogConfigType,
@@ -88,6 +79,12 @@ import * as Popover from "./components/ui/popover.tsx";
 import { IconButton } from "./components/ui/icon-button.tsx";
 import { Portal } from "solid-js/web";
 import { Button } from "./components/ui/button.tsx";
+import {
+  getCclinkSpeenEnum,
+  getConfigDescription,
+  getLogConfigDescription,
+  prepareConfigTabFormat,
+} from "./services/PortService.ts";
 
 type PageMeta = {
   icon: ValidComponent;
@@ -115,8 +112,6 @@ function App(props: RouteSectionProps) {
 
     const prebuildFunctions = [
       detectCliVersion(),
-      getLogStartCombinator(),
-      getLogStartCondition(),
       getCclinkSpeenEnum(),
       getLogConfigDescription(),
       prepareConfigTabFormat(),
@@ -146,106 +141,6 @@ function App(props: RouteSectionProps) {
 
   function buildEmptyDriverConfiguration() {
     setConfigFormFileFormat(configDefaultValues);
-  }
-
-  // Get log start options from the drivercom-CLI Command
-  async function getLogStartCondition() {
-    const logStartCondition = Command.sidecar("binaries/drivercom", [
-      `log.config.start.condition.list`,
-    ]);
-    const output = await logStartCondition.execute();
-    const parseOutput = output.stdout
-      .replaceAll("[", "")
-      .replaceAll("]", "")
-      .split(":");
-    const startConditionList = parseOutput[1]
-      .split(",")
-      .filter((value) => value !== "\n");
-    setLogStartConditionList(startConditionList);
-  }
-
-  // Get log start combinator options from the drivercom-CLI Command
-  async function getLogStartCombinator() {
-    const logStartCombinator = Command.sidecar("binaries/drivercom", [
-      `log.config.start.combinator.list`,
-    ]);
-    const output = await logStartCombinator.execute();
-    const parseOutput = output.stdout
-      .replaceAll("[", "")
-      .replaceAll("]", "")
-      .split(":");
-    const startCombinatorList = parseOutput[1]
-      .split(",")
-      .filter((value) => value !== "\n");
-    setLogStartCombinatorList(startCombinatorList);
-  }
-
-  async function getCclinkSpeenEnum() {
-    const cclinkSpeedList = Command.sidecar("binaries/drivercom", [
-      `config.cc_link_speed.list`,
-    ]);
-    const output = await cclinkSpeedList.execute();
-    const parseOutput = output.stdout
-      .replaceAll("[", "")
-      .replaceAll("]", "")
-      .split(":");
-    const cclinkSpeed = parseOutput[1]
-      .split(",")
-      .filter((value) => value !== "\n");
-    setCclinkSpeed(cclinkSpeed);
-  }
-
-  async function getConfigDescription() {
-    const configDesc = Command.sidecar("binaries/drivercom", [`config.info`]);
-    const output = await configDesc.execute();
-    const desc = JSON5.parse(output.stdout);
-    setConfigDescription(desc);
-  }
-
-  async function getLogConfigDescription() {
-    const configDesc = Command.sidecar("binaries/drivercom", [`log.info`]);
-    const output = await configDesc.execute();
-    const desc = JSON5.parse(output.stdout);
-    setLogConfigDescription(desc);
-  }
-
-  async function getTuneConfig(): Promise<ConfigTuneType> {
-    const getTuneConfig = Command.sidecar("binaries/drivercom", [
-      `config.empty.tune`,
-    ]);
-    const output = await getTuneConfig.execute();
-    const tuneConfig: ConfigTuneType = JSON5.parse(output.stdout);
-    return tuneConfig;
-  }
-
-  async function getCalibrationConfig(): Promise<ConfigCalibrationType> {
-    const getCalibrationConfig = Command.sidecar("binaries/drivercom", [
-      `config.empty.calibration`,
-    ]);
-    const output = await getCalibrationConfig.execute();
-    const calConfig: ConfigCalibrationType = JSON5.parse(output.stdout);
-    return calConfig;
-  }
-
-  async function getSystemConfig(): Promise<ConfigSystemType> {
-    const getSystemConfig = Command.sidecar("binaries/drivercom", [
-      `config.empty.system`,
-    ]);
-    const output = await getSystemConfig.execute();
-    const systemConfig: ConfigSystemType = JSON5.parse(output.stdout);
-    return systemConfig;
-  }
-
-  async function prepareConfigTabFormat() {
-    const tuneConfig = await getTuneConfig();
-    const calConfig = await getCalibrationConfig();
-    const systemConfig = await getSystemConfig();
-    const config = {
-      system: systemConfig,
-      tune: tuneConfig,
-      calibration: calConfig,
-    };
-    setConfigTabForm(config);
   }
 
   // Get local storage values using the Tauri store API.

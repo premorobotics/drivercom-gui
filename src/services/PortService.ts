@@ -1,9 +1,18 @@
 import { Command } from "@tauri-apps/plugin-shell";
-import { portCommands } from "~/store/GlobalState";
+import {
+  portCommands,
+  setCclinkSpeed,
+  setConfigDescription,
+  setConfigTabForm,
+  setLogConfigDescription,
+} from "~/store/GlobalState";
 import { toaster } from "~/components/ui/toast.tsx";
 import JSON5 from "json5";
 import { ConfigType } from "src-tauri/generated/config/ConfigType";
 import { LogConfigType } from "src-tauri/generated/config/LogConfigType";
+import { ConfigTuneType } from "src-tauri/generated/config/ConfigTune";
+import { ConfigCalibrationType } from "src-tauri/generated/config/ConfigCalibration";
+import { ConfigSystemType } from "src-tauri/generated/config/ConfigSystem";
 
 export type Port = {
   id: string;
@@ -143,4 +152,86 @@ export async function startLogging(
     filePath,
     stringifyLogConfig,
   ]);
+}
+
+export async function getCclinkSpeenEnum() {
+  try {
+    const output = await sendDrivercomCommand([`config.cc_link_speed.list`]);
+    const parseOutput = output
+      .replaceAll("[", "")
+      .replaceAll("]", "")
+      .split(":");
+    const cclinkSpeed = parseOutput[1]
+      .split(",")
+      .filter((value) => value !== "\n");
+    setCclinkSpeed(cclinkSpeed);
+  } catch (e) {
+    throw e as string;
+  }
+}
+
+export async function getConfigDescription() {
+  try {
+    const output = await sendDrivercomCommand([`config.info`]);
+    const desc = JSON5.parse(output);
+    setConfigDescription(desc);
+  } catch (e) {
+    throw e as string;
+  }
+}
+
+export async function getLogConfigDescription() {
+  try {
+    const output = await sendDrivercomCommand([`log.info`]);
+    const desc = JSON5.parse(output);
+    setLogConfigDescription(desc);
+  } catch (e) {
+    throw e as string;
+  }
+}
+
+async function getTuneConfig(): Promise<ConfigTuneType> {
+  try {
+    const output = await sendDrivercomCommand([`config.empty.tune`]);
+    const tuneConfig: ConfigTuneType = JSON5.parse(output);
+    return tuneConfig;
+  } catch (e) {
+    throw e as string;
+  }
+}
+
+async function getCalibrationConfig(): Promise<ConfigCalibrationType> {
+  try {
+    const output = await sendDrivercomCommand([`config.empty.calibration`]);
+    const calConfig: ConfigCalibrationType = JSON5.parse(output);
+    return calConfig;
+  } catch (e) {
+    throw e as string;
+  }
+}
+
+async function getSystemConfig(): Promise<ConfigSystemType> {
+  try {
+    const output = await sendDrivercomCommand([`config.empty.system`]);
+    const systemConfig: ConfigSystemType = JSON5.parse(output);
+    return systemConfig;
+  } catch (e) {
+    throw e as string;
+  }
+}
+
+export async function prepareConfigTabFormat() {
+  try {
+    const tuneConfig = await getTuneConfig();
+    const calConfig = await getCalibrationConfig();
+    const systemConfig = await getSystemConfig();
+    const config = {
+      system: systemConfig,
+      tune: tuneConfig,
+      calibration: calConfig,
+    };
+    setConfigTabForm(config);
+  } catch (e) {
+    throw e as string;
+  }
 }
