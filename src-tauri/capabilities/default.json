@@ -50,13 +50,11 @@
         }
       ]
     },
-    "pty:allow-spawn", "pty:default",
     "shell:allow-stdin-write",
     "shell:allow-open",
     "dialog:default",
     "fs:default",
     "fs:write-all",
-    "tcp:default",
     "store:default",
     "fs:allow-read-dir",
     "fs:allow-write",
