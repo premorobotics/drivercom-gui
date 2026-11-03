@@ -1,10 +1,4 @@
 import { JSX } from "solid-js";
-import {
-  logStartCombinatorList,
-  logStartConditionList,
-} from "~/store/GlobalState";
-import { createListCollection } from "@ark-ui/solid/collection";
-import { ListCollection } from "@ark-ui/solid/collection";
 import { Form } from "~/components/Form";
 import { AccordionStates } from "../Configuration/ConfigForm/ConfigForm";
 
@@ -20,22 +14,6 @@ export type LoggingFormProps = JSX.HTMLAttributes<HTMLDivElement> & {
 export function LoggingForm(props: LoggingFormProps) {
   const logForm = props.formData;
 
-  // Log config start condition list for select component
-  const parseStartConditionList = logStartConditionList().map((condition) => {
-    return { label: condition, value: condition };
-  });
-  const logStartConditions: ListCollection = createListCollection({
-    items: parseStartConditionList,
-  });
-
-  // Log config start combinator list for select component
-  const parseCombinatorList = logStartCombinatorList().map((condition) => {
-    return { label: condition, value: condition };
-  });
-  const logStartCombinators = createListCollection({
-    items: parseCombinatorList,
-  });
-
   return (
     <div
       ref={props.ref}
@@ -48,8 +26,6 @@ export function LoggingForm(props: LoggingFormProps) {
       <Form
         id={props.id}
         value={logForm}
-        logStartCombinators={logStartCombinators}
-        logStartConditions={logStartConditions}
         accordionStates={props.accordionStates}
         originalFile={props.originalFile}
         description={props.description}

@@ -1,13 +1,8 @@
 import { For, createSignal, JSX, Show } from "solid-js";
-import { Text } from "./ui/text.tsx";
 import { FormCheckBox } from "./Form/FormCheckBox.tsx";
 import { FormNumberInput } from "./Form/FormNumberInput.tsx";
 import { FormCollapsibleObject } from "./Form/FormCollapsibleObject.tsx";
-import { ListCollection } from "@ark-ui/solid";
-import * as Select from "./ui/select.tsx";
 import { createStore } from "solid-js/store";
-import { Tooltip } from "./ui/tooltip.tsx";
-import { IconHelp } from "@tabler/icons-solidjs";
 import { AccordionStates } from "~/pages/Configuration/ConfigForm/ConfigForm.tsx";
 
 export type FormProps = JSX.HTMLAttributes<HTMLDivElement> & {
@@ -20,8 +15,6 @@ export type FormProps = JSX.HTMLAttributes<HTMLDivElement> & {
   changeUnits?: boolean;
   onItemChange?: () => void;
   accordionStates: AccordionStates;
-  logStartConditions?: ListCollection;
-  logStartCombinators?: ListCollection;
 };
 
 // A generic form component that can adapt to any object shape.
@@ -188,88 +181,6 @@ export function Form(props: FormProps) {
                   />
                 );
               }
-
-              if (
-                typeof format == "string" &&
-                props.logStartConditions &&
-                props.logStartCombinators
-              ) {
-                const description = props.description
-                  ? props.description[
-                      `__${key}` as keyof typeof props.description
-                    ]
-                  : undefined;
-                return (
-                  <>
-                    <div
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        "align-items": "center",
-                      }}
-                    >
-                      <Text
-                        marginTop="0.5rem"
-                        marginLeft="0.2rem"
-                        userSelect="none"
-                        marginBottom="0.5rem"
-                        marginRight="0.5rem"
-                      >
-                        {`${key[0].toUpperCase()}${key.slice(1, key.length)}`}
-                      </Text>
-                      <Show when={description}>
-                        <Tooltip
-                          content={
-                            description![
-                              "description" as keyof typeof description
-                            ]
-                          }
-                        >
-                          <IconHelp size="1em" opacity={0.5} />
-                        </Tooltip>
-                      </Show>
-                    </div>
-
-                    <Select.Root
-                      positioning={{ sameWidth: true }}
-                      width="2xs"
-                      collection={
-                        key === "kind"
-                          ? props.logStartConditions
-                          : props.logStartCombinators
-                      }
-                      defaultValue={[format.toString()]}
-                      onValueChange={(v) => {
-                        setObject(key as keyof typeof object, v.items[0].label);
-                      }}
-                    >
-                      <Select.Control>
-                        <Select.Trigger>
-                          <Select.ValueText placeholder={`Select ${key}`} />
-                        </Select.Trigger>
-                      </Select.Control>
-                      <Select.Positioner>
-                        <Select.Content>
-                          <For
-                            each={
-                              key === "kind"
-                                ? props.logStartConditions.items
-                                : props.logStartCombinators.items
-                            }
-                          >
-                            {(item) => (
-                              <Select.Item item={item}>
-                                <Select.ItemText>{item.label}</Select.ItemText>
-                                <Select.ItemIndicator></Select.ItemIndicator>
-                              </Select.Item>
-                            )}
-                          </For>
-                        </Select.Content>
-                      </Select.Positioner>
-                    </Select.Root>
-                  </>
-                );
-              }
             }}
           </For>
         </div>
@@ -359,8 +270,6 @@ export function Form(props: FormProps) {
                   format={props.format ? format : undefined}
                   value={object[key as keyof typeof object]}
                   accordionStates={props.accordionStates}
-                  logStartCombinators={props.logStartCombinators}
-                  logStartConditions={props.logStartConditions}
                 />
               );
             }
