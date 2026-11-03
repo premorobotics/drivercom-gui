@@ -1,5 +1,4 @@
 import {
-  logFormFileFormat,
   Pages,
   pageKeys,
   panelStore,
@@ -14,17 +13,13 @@ import {
   PanelSizeContext,
 } from "~/components/Panel/PanelLayout.tsx";
 import { createStore } from "solid-js/store";
-import {
-  TabContext,
-  TabList,
-  TabListContext,
-} from "~/components/Tab/TabList.tsx";
+import { TabList, TabListContext } from "~/components/Tab/TabList.tsx";
 import { Panel } from "~/components/Panel/Panel.tsx";
 import { LoggingTabContent } from "./LoggingTabContent.tsx";
-import JSON5 from "json5";
 import { load } from "@tauri-apps/plugin-store";
 import { LogConfigType } from "src-tauri/generated/config/LogConfigType.tsx";
 import { AccordionStates } from "../Configuration/ConfigForm/ConfigForm.tsx";
+import { createNewTab, generateNewLoggingTab } from "~/services/TabFactory.ts";
 
 export type LoggingFormType = {
   title: string;
@@ -61,34 +56,8 @@ export function Logging() {
   });
 
   const createLoggingTab = (key: string) => {
-    const id = crypto.randomUUID();
-    const accordionStates: AccordionStates = new Map();
-    const newTab: TabContext = {
-      tab: {
-        id: id,
-        tabName: "New file",
-      },
-      tabPage: {
-        loggingTabPage: {
-          title: "No port",
-          portId: "",
-          logConfig: JSON5.parse(JSON5.stringify(logFormFileFormat())),
-          originalFile: JSON5.parse(JSON5.stringify(logFormFileFormat())),
-          filePath: "",
-          accordionStates: accordionStates,
-        },
-        configTabPage: null,
-        logViewerTabPage: null,
-      },
-    };
-
-    if (tabStore.has(key)) {
-      const tabCtx = tabStore.get(key)!;
-      tabCtx[1]("tabContext", tabCtx[0].tabContext.length, newTab);
-      setTimeout(() => {
-        tabCtx[1]("focusedTab", newTab.tab.id);
-      });
-    }
+    const newLoggingTab = generateNewLoggingTab();
+    createNewTab(key, newLoggingTab);
     setRender(true);
   };
 

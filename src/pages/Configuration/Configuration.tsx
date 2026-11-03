@@ -1,5 +1,4 @@
 import {
-  configFormFileFormat,
   Pages,
   pageKeys,
   tabStore,
@@ -11,22 +10,12 @@ import {
   PanelLayout,
   PanelSizeContext,
 } from "~/components/Panel/PanelLayout.tsx";
-import {
-  TabContext,
-  TabList,
-  TabListContext,
-} from "~/components/Tab/TabList.tsx";
+import { TabList, TabListContext } from "~/components/Tab/TabList.tsx";
 import { ConfigTabContent } from "./ConfigTabContent.tsx";
-import {
-  AccordionStates,
-  GainLockStates,
-  LinkStates,
-} from "~/pages/Configuration/ConfigForm/ConfigForm.tsx";
 import { createEffect, createSignal, on, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { load } from "@tauri-apps/plugin-store";
-import { ConfigType } from "src-tauri/generated/config/ConfigType.tsx";
-import JSON5 from "json5";
+import { createNewTab, generateNewConfigTab } from "~/services/TabFactory.ts";
 
 function Configuration() {
   const [render, setRender] = createSignal<boolean>(false);
@@ -46,53 +35,15 @@ function Configuration() {
         panelStoreKey,
         createStore<TabListContext>({ tabContext: [], focusedTab: "" }),
       );
-      createNewTab(panelStoreKey, configFormFileFormat(), "New File");
+      createNewConfigTab(panelStoreKey);
     }
     setRender(true);
   });
 
-  const createNewTab = (
-    key: string,
-    form: ConfigType,
-    formName: string,
-    portId?: string,
-    filePath?: string,
-  ) => {
+  const createNewConfigTab = (key: string) => {
     setRender(false);
-    const id = crypto.randomUUID();
-    const accordionStatuses: AccordionStates = new Map();
-    const linkedStatuses: LinkStates = new Map();
-    const gainLockStatuses: GainLockStates = new Map();
-    const formOverflowY: Map<string, number> = new Map();
-    const newForm = JSON.parse(JSON.stringify(form));
-    const newTab = {
-      tab: {
-        id: id,
-        tabName: formName,
-      },
-      tabPage: {
-        configTabPage: {
-          filePath: filePath ? filePath : "",
-          portId: portId ? portId : "",
-          configForm: newForm,
-          configAccordionStatuses: accordionStatuses,
-          configLinkedStatuses: linkedStatuses,
-          configGainLockStatuses: gainLockStatuses,
-          originalFile: JSON.parse(JSON.stringify(form)),
-          formOverflowY: formOverflowY,
-          focusedTab: `system`,
-          showTreeView: true,
-          treeViewExpandedValue: [] as string[],
-          showDriverStatus: true,
-        },
-      },
-    } as TabContext;
-
-    if (tabStore.has(key)) {
-      const tabCtx = tabStore.get(key)!;
-      tabCtx[1]("tabContext", tabCtx[0].tabContext.length, newTab);
-      tabCtx[1]("focusedTab", newTab.tab.id);
-    }
+    const newConfigTab = generateNewConfigTab();
+    createNewTab(key, newConfigTab);
     setRender(true);
   };
 
@@ -127,13 +78,7 @@ function Configuration() {
           <Panel>
             <TabList
               onCreateTab={(tabStoreKey) => {
-                createNewTab(
-                  tabStoreKey,
-                  JSON5.parse(
-                    JSON5.stringify(configFormFileFormat()),
-                  ) as ConfigType,
-                  "New File",
-                );
+                createNewConfigTab(tabStoreKey);
               }}
             >
               <ConfigTabContent />
