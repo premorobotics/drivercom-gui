@@ -1,8 +1,12 @@
-import { For, Show } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 import { StateAxesType } from "src-tauri/generated/config/ConfigType";
 import { css } from "styled-system/css";
 import { Text } from "~/components/ui/text";
 import { HelpTooltip } from "~/components/HelpTooltip";
+import { FormNumberInput } from "~/components/Form/FormNumberInput";
+import { DrivercomCommandButton } from "./DrivercomCommandButton";
+import { Button } from "~/components/ui/button";
+import { initializeSlider } from "~/services/PortService";
 
 type DriverStatusAxesProps = {
   axes: StateAxesType[];
@@ -33,8 +37,53 @@ export function DriverStatusAxes(props: DriverStatusAxesProps) {
     ? props.description[0]
     : props.description;
 
+  const [sliderId, setSliderId] = createSignal<number>(0);
+  const [axisId, setAxisId] = createSignal<number>(0);
+
   return (
-    <div style={{ padding: "0.2rem" }}>
+    <div>
+      {/*"Initialize Carrier"*/}
+      <div
+        style={{
+          "border-bottom-width": "1px",
+          display: "flex",
+          "row-gap": "0.4rem",
+          "padding-bottom": "0.8rem",
+          width: "100%",
+          height: "2rem",
+        }}
+      >
+        <Text fontSize="sm" fontWeight="medium">
+          {"Initialize"}
+        </Text>
+        <FormNumberInput
+          id={`${"driverStatusAxes"}.slider`}
+          label={"Slider"}
+          inputValue={sliderId()}
+          onInputChange={(value) => {
+            setSliderId(Number(value));
+          }}
+        />
+        <FormNumberInput
+          id={`${"driverStatusAxes"}.axis`}
+          label={"Axis"}
+          inputValue={axisId()}
+          onInputChange={(value) => {
+            setAxisId(Number(value));
+          }}
+        />
+        <div
+          style={{ "justify-content": "right", display: "flex", width: "100%" }}
+        >
+          <DrivercomCommandButton
+            onRunCommand={(portId) => {
+              initializeSlider(portId, axisId(), sliderId());
+            }}
+          >
+            <Button size="2xs">{"Initialize"}</Button>
+          </DrivercomCommandButton>
+        </div>
+      </div>
       <div
         class={css({
           width: "100%",
@@ -42,7 +91,6 @@ export function DriverStatusAxes(props: DriverStatusAxesProps) {
           display: "grid",
           gridTemplateColumns: "minmax(0,1fr) 21% 21% 21% ",
           gridAutoRows: "1.5rem",
-          borderWidth: "1px 1px 0px 1px",
         })}
       >
         <Text

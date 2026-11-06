@@ -272,9 +272,9 @@ const DriverStatusTable = (props: {
 }) => {
   const entries = Object.entries(props.branch);
   const notIncludedKeys = ["servo_enabled", "cc_link_enabled", "sys_version"];
-  const objectEntries = entries.filter(
-    ([, value]) => typeof value === "object",
-  );
+  const objectEntries = entries
+    .filter(([, value]) => typeof value === "object")
+    .sort(([a], [b]) => a.localeCompare(b));
   const noneObjectEntries = entries.filter(
     ([key, value]) =>
       typeof value !== "object" && !notIncludedKeys.includes(key),
@@ -414,7 +414,7 @@ const DriverStatusTable = (props: {
                 >
                   <Accordion.ItemTrigger
                     borderBottomWidth="1px"
-                    background="gray.2"
+                    background="gray.4"
                     style={{
                       padding:
                         typeof props.paddingLeft === "number"
