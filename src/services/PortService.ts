@@ -194,6 +194,20 @@ function parseToPercentage(line: string) {
   return null;
 }
 
+export async function initializeSlider(
+  portId: string,
+  axisId: number,
+  slider: number,
+) {
+  return await sendDrivercomCommand([
+    `--port`,
+    portId,
+    "initialize_slider",
+    axisId.toString(),
+    slider.toString(),
+  ]);
+}
+
 export async function getCclinkSpeenEnum() {
   const output = await sendDrivercomCommand([`config.cc_link_speed.list`]);
   const parseOutput = output.replaceAll("[", "").replaceAll("]", "").split(":");

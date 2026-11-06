@@ -15,7 +15,41 @@ export function DriverStatusSectionCount(props: DriverStatusSectionCountProps) {
   );
 
   return (
-    <>
+    <div
+      class={css({
+        width: "100%",
+        height: "100%",
+        display: "grid",
+        gridTemplateColumns: "minmax(0,1fr) 21% 21% 21% ",
+        gridAutoRows: "1.5rem",
+      })}
+    >
+      <div
+        class={css({
+          gridRow: "span 1",
+          gridColumn: "span 1",
+          background: "gray.3",
+          borderBottomWidth: "1px",
+        })}
+      />
+      <For each={valueKeys}>
+        {(columnName) => {
+          return (
+            <Text
+              paddingLeft="0.2rem"
+              background="gray.3"
+              gridRow="span 1"
+              gridColumn="span 1"
+              fontSize="sm"
+              textAlign="center"
+              borderLeftWidth="1px"
+              borderBottomWidth="1px"
+            >
+              {columnName}
+            </Text>
+          );
+        }}
+      </For>
       <For each={Object.entries(props.sectionCount)}>
         {([accordionKey, accordionValue]) => {
           if (typeof accordionValue === "object") {
@@ -36,8 +70,14 @@ export function DriverStatusSectionCount(props: DriverStatusSectionCountProps) {
               : parentDescriptionMeta;
 
             return (
-              <div style={{ padding: "0 0.2rem 0 0.2rem" }}>
-                <Text fontSize="sm" fontWeight="medium">
+              <>
+                <Text
+                  fontSize="sm"
+                  background="gray.3"
+                  gridColumn="span 4"
+                  gridRow="span 1"
+                  borderBottomWidth="1px"
+                >
                   {accordionKey[0].toUpperCase() +
                     accordionKey
                       .slice(1, accordionKey.length)
@@ -46,154 +86,121 @@ export function DriverStatusSectionCount(props: DriverStatusSectionCountProps) {
                     <HelpTooltip content={parentDesciriptionText} />
                   </Show>
                 </Text>
-                <div
-                  class={css({
-                    width: "100%",
-                    height: "100%",
-                    display: "grid",
-                    gridTemplateColumns: "minmax(0,1fr) 21% 21% 21% ",
-                    gridAutoRows: "1.5rem",
-                    borderWidth: "1px 1px 0px 1px",
-                  })}
-                >
-                  <Text
-                    background="gray.3"
-                    gridRow="span 1"
-                    gridColumn="span 1"
-                  ></Text>
-                  <For each={valueKeys}>
-                    {(columnName) => {
+
+                <For each={Object.entries(accordionValue)}>
+                  {([parentKey, parentValue]) => {
+                    if (typeof parentValue === "object") {
+                      const childDescription = parentDescription
+                        ? parentDescription[
+                            parentKey as keyof typeof parentDescription
+                          ]
+                        : parentDescription;
                       return (
-                        <Text
-                          paddingLeft="0.2rem"
-                          background="gray.3"
-                          gridRow="span 1"
-                          gridColumn="span 1"
-                          fontSize="sm"
-                          textAlign="center"
-                          borderLeftWidth="1px"
-                          borderBottomWidth="1px"
-                        >
-                          {columnName}
-                        </Text>
-                      );
-                    }}
-                  </For>
-                  <For each={Object.entries(accordionValue)}>
-                    {([parentKey, parentValue]) => {
-                      if (typeof parentValue === "object") {
-                        const childDescription = parentDescription
-                          ? parentDescription[
-                              parentKey as keyof typeof parentDescription
-                            ]
-                          : parentDescription;
-                        return (
-                          <For each={Object.entries(parentValue)}>
-                            {([key, value]) => {
-                              const shortenKey = key[0] + "wd";
-                              if (typeof value == "object") {
-                                const innerChildDescription = childDescription
-                                  ? childDescription[
-                                      `__${key}` as keyof typeof childDescription
+                        <For each={Object.entries(parentValue)}>
+                          {([key, value]) => {
+                            const shortenKey = key[0] + "wd";
+                            if (typeof value == "object") {
+                              const innerChildDescription = childDescription
+                                ? childDescription[
+                                    `__${key}` as keyof typeof childDescription
+                                  ]
+                                : childDescription;
+                              const innerChildDescriptionText =
+                                innerChildDescription
+                                  ? innerChildDescription[
+                                      `description` as keyof typeof innerChildDescription
                                     ]
-                                  : childDescription;
-                                const innerChildDescriptionText =
-                                  innerChildDescription
-                                    ? innerChildDescription[
-                                        `description` as keyof typeof innerChildDescription
-                                      ]
-                                    : innerChildDescription;
-                                return (
-                                  <>
-                                    <Text
-                                      gridRow={"span 1"}
-                                      gridColumn={1}
-                                      fontSize="sm"
-                                      borderBottomWidth="1px"
-                                      borderRightWidth="1px"
-                                      paddingLeft="0.2rem"
-                                    >
-                                      {parentKey + " " + shortenKey}
-                                      <Show when={innerChildDescription}>
-                                        <HelpTooltip
-                                          content={innerChildDescriptionText}
-                                        />
-                                      </Show>
-                                    </Text>
-                                    <Text
-                                      gridRow={"span 1"}
-                                      gridColumn={2}
-                                      fontSize="sm"
-                                      textAlign={"right"}
-                                      borderBottomWidth="1px"
-                                      borderRightWidth="1px"
-                                      paddingRight="0.2rem"
-                                      background={
-                                        typeof value[
-                                          valueKeys[0] as keyof typeof value
-                                        ] === "number"
-                                          ? "transparent"
-                                          : "gray.3"
-                                      }
-                                    >
-                                      {value[
+                                  : innerChildDescription;
+                              return (
+                                <>
+                                  <Text
+                                    gridRow={"span 1"}
+                                    gridColumn={1}
+                                    fontSize="sm"
+                                    borderBottomWidth="1px"
+                                    borderRightWidth="1px"
+                                    paddingLeft="0.2rem"
+                                  >
+                                    {parentKey + " " + shortenKey}
+                                    <Show when={innerChildDescription}>
+                                      <HelpTooltip
+                                        content={innerChildDescriptionText}
+                                      />
+                                    </Show>
+                                  </Text>
+                                  <Text
+                                    gridRow={"span 1"}
+                                    gridColumn={2}
+                                    fontSize="sm"
+                                    textAlign={"right"}
+                                    borderBottomWidth="1px"
+                                    borderRightWidth="1px"
+                                    paddingRight="0.2rem"
+                                    background={
+                                      typeof value[
                                         valueKeys[0] as keyof typeof value
-                                      ] ?? ""}
-                                    </Text>
-                                    <Text
-                                      gridRow={"span 1"}
-                                      gridColumn={3}
-                                      fontSize="sm"
-                                      textAlign={"right"}
-                                      borderBottomWidth="1px"
-                                      borderRightWidth="1px"
-                                      paddingRight="0.2rem"
-                                      background={
-                                        typeof value[
-                                          valueKeys[1] as keyof typeof value
-                                        ] === "number"
-                                          ? "transparent"
-                                          : "gray.3"
-                                      }
-                                    >
-                                      {value[
+                                      ] === "number"
+                                        ? "transparent"
+                                        : "gray.3"
+                                    }
+                                  >
+                                    {value[
+                                      valueKeys[0] as keyof typeof value
+                                    ] ?? ""}
+                                  </Text>
+                                  <Text
+                                    gridRow={"span 1"}
+                                    gridColumn={3}
+                                    fontSize="sm"
+                                    textAlign={"right"}
+                                    borderBottomWidth="1px"
+                                    borderRightWidth="1px"
+                                    paddingRight="0.2rem"
+                                    background={
+                                      typeof value[
                                         valueKeys[1] as keyof typeof value
-                                      ] ?? ""}
-                                    </Text>
-                                    <Text
-                                      gridRow={"span 1"}
-                                      gridColumn={4}
-                                      fontSize="sm"
-                                      textAlign={"right"}
-                                      borderBottomWidth="1px"
-                                      paddingRight="0.2rem"
-                                      background={
-                                        typeof value[
-                                          valueKeys[2] as keyof typeof value
-                                        ] === "number"
-                                          ? "transparent"
-                                          : "gray.3"
-                                      }
-                                    >
-                                      {value[
+                                      ] === "number"
+                                        ? "transparent"
+                                        : "gray.3"
+                                    }
+                                  >
+                                    {value[
+                                      valueKeys[1] as keyof typeof value
+                                    ] ?? ""}
+                                  </Text>
+                                  <Text
+                                    gridRow={"span 1"}
+                                    gridColumn={4}
+                                    fontSize="sm"
+                                    textAlign={"right"}
+                                    borderBottomWidth="1px"
+                                    paddingRight="0.2rem"
+                                    background={
+                                      typeof value[
                                         valueKeys[2] as keyof typeof value
-                                      ] ?? ""}
-                                    </Text>
-                                  </>
-                                );
-                              }
-                            }}
-                          </For>
-                        );
-                      }
-                    }}
-                  </For>
-                </div>
-              </div>
+                                      ] === "number"
+                                        ? "transparent"
+                                        : "gray.3"
+                                    }
+                                  >
+                                    {value[
+                                      valueKeys[2] as keyof typeof value
+                                    ] ?? ""}
+                                  </Text>
+                                </>
+                              );
+                            }
+                          }}
+                        </For>
+                      );
+                    }
+                  }}
+                </For>
+              </>
             );
           }
         }}
       </For>
-    </>
+    </div>
   );
 }

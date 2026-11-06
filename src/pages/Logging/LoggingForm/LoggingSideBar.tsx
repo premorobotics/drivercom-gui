@@ -24,9 +24,11 @@ export function LoggingSideBar(props: PortSideBarProps) {
 
   return (
     <div style={{ width: "100%", height: "100%" }}>
+      {/*"Set Logging"*/}
       <div
         style={{
           "border-bottom-width": "1px",
+          "padding-top": "0.8rem",
           "padding-bottom": "0.8rem",
           display: "flex",
           "row-gap": "0.4rem",
@@ -112,19 +114,19 @@ export function LoggingSideBar(props: PortSideBarProps) {
             defaultValue={Object.keys(logConfig.command)[0]}
           />
         </div>
-        <DrivercomCommandButton
-          onRunCommand={(portId) => {
-            props.onStartLogging?.(portId);
-          }}
+        <div
+          style={{ "justify-content": "right", display: "flex", width: "100%" }}
         >
-          <Button
-            loading={props.loadStartButton}
-            size="2xs"
-            class={css({ padding: "0" })}
+          <DrivercomCommandButton
+            onRunCommand={(portId) => {
+              props.onStartLogging?.(portId);
+            }}
           >
-            {"Start Logging"}
-          </Button>
-        </DrivercomCommandButton>
+            <Button loading={props.loadStartButton} size="2xs">
+              {"Start Logging"}
+            </Button>
+          </DrivercomCommandButton>
+        </div>
       </div>
     </div>
   );
