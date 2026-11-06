@@ -23,7 +23,7 @@ import { FileImportButton } from "./LoggingForm/FileImportButton.tsx";
 import { css } from "styled-system/css/css";
 import { DriverStatus } from "../Configuration/ConfigForm/DriverStatus.tsx";
 import { State_Schema } from "src-tauri/generated/config/ConfigType.tsx";
-import { PortSideBar } from "./LoggingForm/PortSideBar.tsx";
+import { LoggingSideBar } from "./LoggingForm/LoggingSideBar.tsx";
 import { startLogging } from "~/services/PortService.ts";
 
 // A custom tab page component for the Logging page.
@@ -247,7 +247,7 @@ export function LoggingTabContent() {
             padding: "0.4rem",
           })}
         >
-          <PortSideBar
+          <LoggingSideBar
             id={getTabId()}
             config={getLoggingConfig()}
             accordionStates={getAccordionStates()}

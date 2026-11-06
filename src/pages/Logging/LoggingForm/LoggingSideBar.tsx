@@ -19,7 +19,7 @@ type PortSideBarProps = {
   loadStartButton?: boolean;
 };
 
-export function PortSideBar(props: PortSideBarProps) {
+export function LoggingSideBar(props: PortSideBarProps) {
   const [logConfig, setLogConfig] = createStore<LogConfigType>(props.config);
 
   return (
