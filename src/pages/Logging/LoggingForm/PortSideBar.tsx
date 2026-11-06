@@ -16,6 +16,7 @@ type PortSideBarProps = {
   duration?: number;
   onStartLogging?: (portId: string) => void;
   accordionStates: AccordionStates;
+  loadStartButton?: boolean;
 };
 
 export function PortSideBar(props: PortSideBarProps) {
@@ -116,7 +117,11 @@ export function PortSideBar(props: PortSideBarProps) {
             props.onStartLogging?.(portId);
           }}
         >
-          <Button size="2xs" class={css({ padding: "0" })}>
+          <Button
+            loading={props.loadStartButton}
+            size="2xs"
+            class={css({ padding: "0" })}
+          >
             {"Start Logging"}
           </Button>
         </DrivercomCommandButton>
