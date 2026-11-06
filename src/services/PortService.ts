@@ -1,4 +1,4 @@
-import { Command } from "@tauri-apps/plugin-shell";
+import { Child, Command } from "@tauri-apps/plugin-shell";
 import {
   portCommands,
   setCclinkSpeed,
@@ -137,8 +137,11 @@ export async function startLogging(
   filePath: string,
   logConfig: LogConfigType,
 ) {
-  const stringifyLogConfig = JSON5.stringify(logConfig, { quote: "'" });
-  return await sendDrivercomCommand([
+  const stringifyLogConfig = JSON5.stringify(logConfig, { quote: "'" })
+    .replace("current_state", `"current_state"`)
+    .replace("speed_profile", `"speed_profile`)
+    .replace("position_profile", `"position_profile"`);
+  const args = [
     "--port",
     portId,
     "--timeout",
@@ -147,7 +150,48 @@ export async function startLogging(
     "--output",
     filePath,
     stringifyLogConfig,
-  ]);
+  ];
+  const startLogging = Command.sidecar("binaries/drivercom", args);
+
+  // Get percentage
+  startLogging.stderr.addListener("data", (line) => {
+    const percentage = parseToPercentage(line);
+    if (typeof percentage === "number") {
+      console.log(percentage);
+    }
+  });
+
+  let child: Child | null = null;
+  const done = new Promise<void>((resolve, reject) => {
+    startLogging.on("close", ({ code, signal }) => {
+      if (code === 0) resolve();
+      else
+        reject(new Error(`drivercom exited (code=${code}, signal=${signal})`));
+    });
+    startLogging.on("error", (error) => {
+      if (child) {
+        child.kill().catch((e) => {
+          reject(new Error(String(e)));
+        });
+      }
+      reject(new Error(String(error)));
+    });
+  });
+
+  child = await startLogging.spawn();
+  return done;
+}
+
+function parseToPercentage(line: string) {
+  const regex = /(\d+)\/(\d+)\s*bytes/;
+  const m = line.match(regex);
+  if (m) {
+    const received = Number(m[1]);
+    const total = Number(m[2]);
+    const percentage = Math.round((received / total) * 100);
+    return percentage;
+  }
+  return null;
 }
 
 export async function getCclinkSpeenEnum() {

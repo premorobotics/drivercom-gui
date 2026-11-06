@@ -223,6 +223,9 @@ export function LoggingTabContent() {
     }
   };
 
+  const [loadStartLogButton, setLoadStartLogButton] =
+    createSignal<boolean>(false);
+
   return (
     <Show when={pageKeys.has(Pages.Logging) ? true : renderLoggingForm()}>
       <div
@@ -248,18 +251,22 @@ export function LoggingTabContent() {
             id={getTabId()}
             config={getLoggingConfig()}
             accordionStates={getAccordionStates()}
+            loadStartButton={loadStartLogButton()}
             onStartLogging={async (portId) => {
               const check = checkAvailablePort(portId);
               if (!check) {
                 //Add error message
                 return;
               }
+              setLoadStartLogButton(true);
               // Add port command in here
               // portCommand.set()
               try {
                 const filePath = await fileHandler.saveFileDialog("csv", "");
                 await startLogging(portId, filePath, getLoggingConfig()!);
+                setLoadStartLogButton(false);
               } catch (e) {
+                setLoadStartLogButton(false);
                 //Add error message
                 console.error(e);
               }

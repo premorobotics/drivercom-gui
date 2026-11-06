@@ -43,7 +43,14 @@ export function LoggingCommandTable(props: LoggingCommandProps) {
     items: parseCommandList,
   });
 
-  const [render, setRender] = createSignal<boolean>(true);
+  const hasField = (form: CommandType) => {
+    const valueLength = Object.keys(
+      form[Object.keys(form)[0] as keyof typeof form],
+    ).length;
+    return valueLength > 0;
+  };
+
+  const [render, setRender] = createSignal<boolean>(hasField(command));
 
   return (
     <div
@@ -69,12 +76,7 @@ export function LoggingCommandTable(props: LoggingCommandProps) {
           const defaultValue = commandList[findIndex]
             .defaultValue as CommandType;
           setCommand(reconcile(structuredClone(defaultValue)));
-          const valueLength = Object.keys(
-            defaultValue[
-              Object.keys(defaultValue)[0] as keyof typeof defaultValue
-            ],
-          ).length;
-          if (valueLength > 0) {
+          if (hasField(defaultValue)) {
             setRender(true);
           }
         }}
