@@ -91,15 +91,12 @@ export function DriverStatus(props: DriverStatusProps) {
           display: "grid",
           "align-items": "center",
           "padding-left": "0.4rem",
-          "grid-template-columns": "5.4rem 4rem minmax(0,1fr)",
+          "grid-template-columns": "5.4rem minmax(0,1fr)",
         }}
       >
         <Text fontSize="sm" fontFamily="body" fontWeight={"bold"}>
           {"Driver status"}
         </Text>
-
-        <Badge size="sm">{"Read only"}</Badge>
-
         <div
           style={{
             display: "flex",
@@ -255,9 +252,7 @@ export function DriverStatus(props: DriverStatusProps) {
           "overflow-y": "auto",
         }}
       >
-        <div style={{ "border-width": "1px" }}>
-          {DriverStatusReactiveTable()}
-        </div>
+        <div>{DriverStatusReactiveTable()}</div>
       </div>
     </div>
   );
@@ -280,95 +275,12 @@ const DriverStatusTable = (props: {
       typeof value !== "object" && !notIncludedKeys.includes(key),
   );
 
-  return (
-    <>
-      <Show when={noneObjectEntries.length > 0}>
-        <div
-          style={{
-            width: "100%",
-            height: "fit-content",
-            display: "grid",
-            "grid-template-columns": "25% 25% 25% minmax(0,1fr)",
-            "grid-auto-rows": "1.5rem",
-          }}
-        >
-          <For each={noneObjectEntries}>
-            {([key, value], index) => {
-              const rowNumber = index() + 1;
-              const description = props.description
-                ? props.description[
-                    `__${key}` as keyof typeof props.description
-                  ]
-                : props.description;
-              const descriptionText = description
-                ? description["description" as keyof typeof description]
-                : description;
-              const unitShort = description
-                ? description["unit_short" as keyof typeof description]
-                : description;
-              const unitLong = description
-                ? description["unit_long" as keyof typeof description]
-                : description;
+  const checkLastLine = (index: number) =>
+    index >=
+    noneObjectEntries.length - (noneObjectEntries.length % 2 === 0 ? 2 : 1);
 
-              return (
-                <>
-                  <Text
-                    gridColumn={"span 1"}
-                    gridRow={rowNumber}
-                    fontFamily={"body"}
-                    fontSize="sm"
-                    borderWidth={"0 0px 1px 0"}
-                    style={{
-                      "padding-left": props.paddingLeft
-                        ? `${props.paddingLeft}rem`
-                        : "0.2rem",
-                      "white-space": "nowrap",
-                    }}
-                    display="flex"
-                    alignItems="center"
-                  >
-                    {key.replaceAll("_", " ")}
-                    <Show when={descriptionText}>
-                      <Tooltip content={descriptionText}>
-                        <IconButton
-                          variant="plain"
-                          color={"fg.subtle"}
-                          size="2xs"
-                        >
-                          <IconHelp />
-                        </IconButton>
-                      </Tooltip>
-                    </Show>
-                  </Text>
-                  <Text
-                    gridColumn={"span 1"}
-                    gridRow={rowNumber}
-                    fontFamily={"body"}
-                    fontSize="sm"
-                    borderRightWidth={index() % 2 === 0 ? "1px" : "0"}
-                    borderBottomWidth="1px"
-                    paddingRight="0.4rem"
-                    textAlign={"right"}
-                    display={"flex"}
-                    justifyContent="right"
-                    alignItems="center"
-                    columnGap="0.2rem"
-                  >
-                    {value.toString()}
-                    <Show when={typeof unitShort === "string"}>
-                      <Tooltip content={unitLong}>
-                        <Text fontSize="sm" color="fg.subtle">
-                          {unitShort}
-                        </Text>
-                      </Tooltip>
-                    </Show>
-                  </Text>
-                </>
-              );
-            }}
-          </For>
-        </div>
-      </Show>
+  return (
+    <div style={{ "border-width": "1px" }}>
       <Show when={objectEntries.length > 0}>
         <For each={objectEntries}>
           {([key, value]) => {
@@ -411,10 +323,9 @@ const DriverStatusTable = (props: {
                   value={accordionValue}
                   padding="0"
                   borderWidth="0"
+                  borderBottomWidth="1px"
                 >
                   <Accordion.ItemTrigger
-                    borderBottomWidth="1px"
-                    background="gray.4"
                     style={{
                       padding:
                         typeof props.paddingLeft === "number"
@@ -448,7 +359,7 @@ const DriverStatusTable = (props: {
                       <IconChevronDown />
                     </Accordion.ItemIndicator>
                   </Accordion.ItemTrigger>
-                  <Accordion.ItemContent>
+                  <Accordion.ItemContent padding="0 0.4rem 0.2rem 0.4rem">
                     <Show
                       when={key !== "section_count" && key !== "axes"}
                       fallback={
@@ -487,6 +398,93 @@ const DriverStatusTable = (props: {
           }}
         </For>
       </Show>
-    </>
+      <Show when={noneObjectEntries.length > 0}>
+        <div
+          style={{
+            width: "100%",
+            height: "fit-content",
+            display: "grid",
+            "grid-template-columns": "25% 25% 25% minmax(0,1fr)",
+            "grid-auto-rows": "1.5rem",
+          }}
+        >
+          <For each={noneObjectEntries}>
+            {([key, value], index) => {
+              const rowNumber = index() + 1;
+              const description = props.description
+                ? props.description[
+                    `__${key}` as keyof typeof props.description
+                  ]
+                : props.description;
+              const descriptionText = description
+                ? description["description" as keyof typeof description]
+                : description;
+              const unitShort = description
+                ? description["unit_short" as keyof typeof description]
+                : description;
+              const unitLong = description
+                ? description["unit_long" as keyof typeof description]
+                : description;
+
+              return (
+                <>
+                  <Text
+                    gridColumn={"span 1"}
+                    gridRow={rowNumber}
+                    fontFamily={"body"}
+                    fontSize="sm"
+                    borderBottomWidth={checkLastLine(index()) ? "0px" : "1px"}
+                    style={{
+                      "padding-left": props.paddingLeft
+                        ? `${props.paddingLeft}rem`
+                        : "0.2rem",
+                      "white-space": "nowrap",
+                    }}
+                    display="flex"
+                    alignItems="center"
+                  >
+                    {key.replaceAll("_", " ")}
+                    <Show when={descriptionText}>
+                      <Tooltip content={descriptionText}>
+                        <IconButton
+                          variant="plain"
+                          color={"fg.subtle"}
+                          size="2xs"
+                        >
+                          <IconHelp />
+                        </IconButton>
+                      </Tooltip>
+                    </Show>
+                  </Text>
+                  <Text
+                    gridColumn={"span 1"}
+                    gridRow={rowNumber}
+                    fontFamily={"body"}
+                    fontSize="sm"
+                    borderRightWidth={index() % 2 === 0 ? "1px" : "0"}
+                    borderBottomWidth={checkLastLine(index()) ? "0px" : "1px"}
+                    paddingRight="0.4rem"
+                    textAlign={"right"}
+                    display={"flex"}
+                    justifyContent="right"
+                    alignItems="center"
+                    columnGap="0.2rem"
+                  >
+                    {value.toString()}
+                    <Show when={typeof unitShort === "string"}>
+                      <Tooltip content={unitLong}>
+                        <Text fontSize="sm" color="fg.subtle">
+                          {unitShort}
+                        </Text>
+                      </Tooltip>
+                    </Show>
+                  </Text>
+                </>
+              );
+            }}
+          </For>
+        </div>
+      </Show>
+    </div>
   );
 };
