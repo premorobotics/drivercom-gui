@@ -22,6 +22,7 @@ export function DriverStatusSectionCount(props: DriverStatusSectionCountProps) {
         display: "grid",
         gridTemplateColumns: "minmax(0,1fr) 21% 21% 21% ",
         gridAutoRows: "1.5rem",
+        borderWidth: "1px 1px 0px 1px",
       })}
     >
       <div
