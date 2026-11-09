@@ -23,6 +23,14 @@ import { toaster } from "~/components/ui/toast";
 import { trackStore } from "@solid-primitives/deep";
 import { DriverStatusAxes } from "./DriverStatusAxes";
 import { DriverStatusSectionCount } from "./DrivreStatusSectionCount";
+import { FormNumberInput } from "~/components/Form/FormNumberInput";
+import { initializeSlider } from "~/services/PortService";
+import * as Select from "~/components/ui/select";
+import { createListCollection } from "@ark-ui/solid";
+import { Portal } from "solid-js/web";
+
+const axisIdArray = ["1", "2", "3"] as const;
+type AxisIdType = (typeof axisIdArray)[number];
 
 type DriverStatusProps = {
   id: string;
@@ -70,6 +78,17 @@ export function DriverStatus(props: DriverStatusProps) {
   const [isToggleButtonLoading, setIsToggleButtonLoading] =
     createSignal<boolean>(false);
   const [isReseting, setIsReseting] = createSignal<boolean>(false);
+
+  const [sliderId, setSliderId] = createSignal<number>(0);
+
+  const [axisId, setAxisId] = createSignal<AxisIdType>("1");
+  const collection = createListCollection<{ label: string; value: AxisIdType }>(
+    {
+      items: axisIdArray.map((axisId) => {
+        return { label: `Axis ${axisId}`, value: axisId as AxisIdType };
+      }),
+    },
+  );
 
   return (
     <div
@@ -252,6 +271,88 @@ export function DriverStatus(props: DriverStatusProps) {
           "overflow-y": "auto",
         }}
       >
+        {/*"Initialize Carrier"*/}
+        <div
+          style={{
+            display: "grid",
+            "grid-template-columns": "25% 30% 30% minmax(0,1fr)",
+            "column-gap": "0.4rem",
+            "padding-bottom": "0.8rem",
+            "align-items": "center",
+            width: "100%",
+            height: "2rem",
+          }}
+        >
+          <Text fontSize="sm" fontWeight="medium">
+            {"Initialize"}
+          </Text>
+          <FormNumberInput
+            id={`${"driverStatusAxes"}.slider`}
+            label={"slider"}
+            inputValue={sliderId()}
+            onInputChange={(value) => {
+              setSliderId(Number(value));
+            }}
+          />
+          <div
+            style={{
+              display: "grid",
+              height: "1.5rem",
+              width: "100%",
+              "grid-template-columns": `minmax(0,1fr) 5rem`,
+            }}
+          >
+            <Text fontSize="sm">{"axis"}</Text>
+            <Select.Root
+              value={[axisId()]}
+              onValueChange={(e) => {
+                setAxisId(e.value.toString() as AxisIdType);
+              }}
+              collection={collection}
+              size="xs"
+            >
+              <Select.Control class={css({ h: "1.5rem" })}>
+                <Select.Trigger class={css({ h: "1.5rem" })}>
+                  <Select.ValueText fontSize={"sm"} />
+                  <Select.Indicator>
+                    <IconChevronDown />
+                  </Select.Indicator>
+                </Select.Trigger>
+              </Select.Control>
+              <Portal>
+                <Select.Positioner>
+                  <Select.Content>
+                    <For each={collection.items}>
+                      {(item) => (
+                        <Select.Item item={item}>
+                          <Select.ItemText>{item.label}</Select.ItemText>
+                          <Select.ItemIndicator>✓</Select.ItemIndicator>
+                        </Select.Item>
+                      )}
+                    </For>
+                  </Select.Content>
+                </Select.Positioner>
+              </Portal>
+              <Select.HiddenSelect />
+            </Select.Root>
+          </div>
+
+          <div
+            style={{
+              "justify-content": "right",
+              display: "flex",
+              width: "100%",
+            }}
+          >
+            <DrivercomCommandButton
+              onRunCommand={(portId) => {
+                initializeSlider(portId, Number(axisId()), sliderId());
+              }}
+            >
+              <Button size="2xs">{"Start"}</Button>
+            </DrivercomCommandButton>
+          </div>
+        </div>
         <div>{DriverStatusReactiveTable()}</div>
       </div>
     </div>
