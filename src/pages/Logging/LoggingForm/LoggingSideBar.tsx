@@ -28,7 +28,6 @@ export function LoggingSideBar(props: PortSideBarProps) {
       <div
         style={{
           "border-bottom-width": "1px",
-          "padding-top": "0.8rem",
           "padding-bottom": "0.8rem",
           display: "flex",
           "row-gap": "0.4rem",
