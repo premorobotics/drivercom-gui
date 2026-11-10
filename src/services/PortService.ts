@@ -1,9 +1,11 @@
 import { Child, Command } from "@tauri-apps/plugin-shell";
 import {
+  csvFileDownloads,
   portCommands,
   setCclinkSpeed,
   setConfigDescription,
   setConfigTabForm,
+  setCsvFileDownloads,
   setLogConfigDescription,
 } from "~/store/GlobalState";
 import { toaster } from "~/components/ui/toast.tsx";
@@ -13,26 +15,64 @@ import { LogConfigType } from "src-tauri/generated/config/LogConfigType";
 import { ConfigTuneType } from "src-tauri/generated/config/ConfigTune";
 import { ConfigCalibrationType } from "src-tauri/generated/config/ConfigCalibration";
 import { ConfigSystemType } from "src-tauri/generated/config/ConfigSystem";
+import { DownloadStates, DownloadStatus } from "~/components/DownloadList";
 
 export type Port = {
   id: string;
   version: string;
 };
 
-async function sendDrivercomCommand(args: string[]): Promise<string> {
-  const drivercom = Command.sidecar("binaries/drivercom", args);
-  const output = await drivercom.execute();
-  if (output.stderr.length > 0) {
-    throw output.stderr;
+async function sendDrivercomCommand(
+  args: string[],
+  portId?: string,
+): Promise<string> {
+  if (portId) {
+    const check = checkAvailablePort(portId);
+    if (!check) throw "Port is not available";
   }
-  return output.stdout;
+  let child: Child | null = null;
+  let stdout = "";
+  let stderr = "";
+  const drivercom = Command.sidecar("binaries/drivercom", args);
+  drivercom.stdout.on("data", (data) => {
+    stdout = stdout + data;
+  });
+  drivercom.stderr.on("data", (data) => {
+    stderr = stderr + data;
+  });
+
+  const result = new Promise<string>((resolve, reject) => {
+    drivercom.on("close", ({ code, signal }) => {
+      if (child) {
+        portCommands.delete(child.pid);
+      }
+      if (code === 0) {
+        resolve(stdout);
+      } else {
+        if (stderr.length > 0) {
+          reject(new Error(stderr));
+        }
+        reject(new Error(`drivercom exited (code=${code}, signal=${signal})`));
+      }
+    });
+    drivercom.on("error", async (error) => {
+      if (portId && child) {
+        await child.kill();
+      }
+      reject(error);
+    });
+  });
+
+  child = await drivercom.spawn();
+  if (portId) {
+    portCommands.set(child.pid, { port: portId, child: child });
+  }
+  return result;
 }
 
 export async function detectPort(): Promise<Port[]> {
-  const drivercom = Command.sidecar("binaries/drivercom", ["port.detect"]);
-  const output = await drivercom.execute();
-
-  const portNames = output.stdout
+  const output = await sendDrivercomCommand(["port.detect"]);
+  const portNames = output
     .split("\n")
     .map((portName) => {
       const matched = portName.match(/\(([^)]+)\)/);
@@ -61,20 +101,18 @@ export async function detectPort(): Promise<Port[]> {
 }
 
 async function detectFirmwareVersion(portId: string): Promise<string | null> {
-  const drivercom = Command.sidecar("binaries/drivercom", [
-    "--port",
+  const output = await sendDrivercomCommand(
+    ["--port", portId, "firmware"],
     portId,
-    "firmware",
-  ]);
-  const output = await drivercom.execute();
-  const splits = output.stdout.split(":");
+  );
+  const splits = output.split(":");
   if (splits.length < 2) return null;
 
   const version_string = splits[1].trimStart().trimEnd();
   return version_string;
 }
 
-export const checkAvailablePort = (portId: string): boolean => {
+const checkAvailablePort = (portId: string): boolean => {
   if (portId.length === 0) {
     return true;
   }
@@ -95,11 +133,10 @@ export async function getConfigFromPort(
   portId: string,
   version?: string,
 ): Promise<ConfigType> {
-  const getConfig = await sendDrivercomCommand([
-    `--port`,
+  const getConfig = await sendDrivercomCommand(
+    [`--port`, portId, `config.get`],
     portId,
-    `config.get`,
-  ]);
+  );
   const config: ConfigType = JSON5.parse(getConfig);
   if (version) {
     const parseVersion = Number(version);
@@ -113,23 +150,17 @@ export async function saveConfigToPort(
   portId: string,
 ): Promise<string> {
   const json_str = JSON5.stringify(config, { space: 2, quote: '"' });
-  return await sendDrivercomCommand([
-    `--port`,
+  return await sendDrivercomCommand(
+    [`--port`, portId, `config.set`, json_str, `--timeout`, `10000`],
     portId,
-    `config.set`,
-    json_str,
-    `--timeout`,
-    `10000`,
-  ]);
+  );
 }
 
 export async function toggleServo(portId: string, servoState: boolean) {
-  return await sendDrivercomCommand([
-    "toggle_servo",
-    "--port",
+  return await sendDrivercomCommand(
+    ["toggle_servo", "--port", portId, servoState ? "off" : "on"],
     portId,
-    servoState ? "off" : "on",
-  ]);
+  );
 }
 
 export async function startLogging(
@@ -157,16 +188,36 @@ export async function startLogging(
   startLogging.stderr.addListener("data", (line) => {
     const percentage = parseToPercentage(line);
     if (typeof percentage === "number") {
-      console.log(percentage);
+      if (child) {
+        const findIndex = csvFileDownloads.findIndex(
+          (download) => download.pid == child?.pid,
+        );
+        setCsvFileDownloads(findIndex, "downloadProgress", percentage);
+      }
     }
   });
 
   let child: Child | null = null;
   const done = new Promise<void>((resolve, reject) => {
     startLogging.on("close", ({ code, signal }) => {
-      if (code === 0) resolve();
-      else
+      if (child) {
+        portCommands.delete(child.pid);
+      }
+      if (code === 0) {
+        const findIndex = csvFileDownloads.findIndex(
+          (download) => download.pid == child?.pid,
+        );
+        setCsvFileDownloads(findIndex, "status", DownloadStatus.Success);
+        resolve();
+      } else {
+        const findIndex = csvFileDownloads.findIndex(
+          (download) => download.pid == child?.pid,
+        );
+        if (csvFileDownloads[findIndex].status === DownloadStatus.Progressing) {
+          setCsvFileDownloads(findIndex, "status", DownloadStatus.Error);
+        }
         reject(new Error(`drivercom exited (code=${code}, signal=${signal})`));
+      }
     });
     startLogging.on("error", (error) => {
       if (child) {
@@ -174,11 +225,25 @@ export async function startLogging(
           reject(new Error(String(e)));
         });
       }
+      const findIndex = csvFileDownloads.findIndex(
+        (download) => download.pid == child?.pid,
+      );
+      setCsvFileDownloads(findIndex, "status", DownloadStatus.Error);
       reject(new Error(String(error)));
     });
   });
 
   child = await startLogging.spawn();
+  portCommands.set(child.pid, { port: portId, child: child });
+
+  const newFileDownload: DownloadStates = {
+    filePath: filePath,
+    port: portId,
+    pid: child.pid,
+    status: DownloadStatus.Progressing,
+    downloadProgress: 0,
+  };
+  setCsvFileDownloads((prev) => [...prev, newFileDownload]);
   return done;
 }
 
@@ -199,13 +264,16 @@ export async function initializeSlider(
   axisId: number,
   slider: number,
 ) {
-  return await sendDrivercomCommand([
-    `--port`,
+  return await sendDrivercomCommand(
+    [
+      `--port`,
+      portId,
+      "initialize_slider",
+      axisId.toString(),
+      slider.toString(),
+    ],
     portId,
-    "initialize_slider",
-    axisId.toString(),
-    slider.toString(),
-  ]);
+  );
 }
 
 export async function getCclinkSpeenEnum() {
