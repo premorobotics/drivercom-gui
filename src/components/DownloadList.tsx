@@ -3,11 +3,7 @@ import {
   IconFileCheck,
   IconExclamationCircle,
   IconProgressDown,
-  IconRefreshAlert,
-  IconPlayerPlay,
-  IconFolderPause,
   IconFolderCancel,
-  IconPlayerPause,
 } from "@tabler/icons-solidjs";
 import { IconButton } from "./ui/icon-button";
 import { createEffect, createSignal, For, JSX, on, Show } from "solid-js";
@@ -32,11 +28,9 @@ import { TabContext } from "./Tab/TabList";
 import { TabListContext } from "./Tab/TabList";
 import { css } from "styled-system/css";
 import { Progress } from "@ark-ui/solid/progress";
-import { Command } from "@tauri-apps/plugin-shell";
 
 export enum DownloadStatus {
   Progressing,
-  Paused,
   Cancel,
   Success,
   Error,
@@ -117,146 +111,6 @@ export const DownloadList = (props: JSX.HTMLAttributes<HTMLDivElement>) => {
     }
   };
 
-  async function getCurrentLogStatus(portId: string): Promise<{
-    logStatus: string;
-    cycle: number;
-  }> {
-    const logStatus = Command.sidecar("binaries/drivercom", [
-      `--port`,
-      portId,
-      `log.status`,
-    ]);
-
-    let stdout = "";
-    logStatus.stdout.on("data", (data) => {
-      stdout = stdout + data;
-    });
-
-    let stderr = "";
-    logStatus.stderr.on("data", (data) => {
-      stderr = stderr + data;
-    });
-
-    const child = await logStatus.spawn();
-    const pid = child.pid;
-    portCommands.set(pid, { port: portId, child: child });
-
-    return new Promise((resolve, reject) => {
-      logStatus.on("close", async () => {
-        portCommands.delete(pid);
-        if (stdout.length < 1) return reject("Invalid log status.");
-        const parseOutput = stdout.replaceAll(" ", "").replaceAll("\n", "");
-        const currentLogStatusList = parseOutput.split(",").map((value) => {
-          return value.split(":");
-        });
-
-        const currentCompletedLogCycle = Number(currentLogStatusList[1][1]);
-        const currentLogState = currentLogStatusList[0][1];
-
-        if (!currentLogState || isNaN(currentCompletedLogCycle))
-          return reject("Invalid log status.");
-        return resolve({
-          logStatus: currentLogState,
-          cycle: currentCompletedLogCycle,
-        });
-      });
-
-      logStatus.on("error", async () => {
-        portCommands.delete(pid);
-        return reject(stderr);
-      });
-    });
-  }
-
-  async function resumeLogCsvFile(
-    filePath: string,
-    portId: string,
-    cycle: number,
-    startPercentage: number,
-  ) {
-    const logGet = Command.sidecar("binaries/drivercom", [
-      `--port`,
-      portId,
-      `--timeout`,
-      `10000`,
-      `log.get`,
-      `-f`,
-      filePath,
-      `--resume`,
-    ]);
-
-    let pid: number | null = null;
-    let logCycles = Math.floor((startPercentage / 100) * cycle);
-
-    logGet.stdout.on("data", () => {
-      logCycles = logCycles + 1;
-      const index = csvFileDownloads.findIndex(
-        (download) => download.filePath === filePath,
-      );
-
-      setCsvFileDownloads(
-        index,
-        "downloadProgress",
-        Math.floor((logCycles / cycle) * 100),
-      );
-    });
-
-    logGet.on("close", (data) => {
-      if (data.code === null) {
-        const index = csvFileDownloads.findIndex(
-          (download) => download.filePath === filePath,
-        );
-        if (csvFileDownloads[index].status === DownloadStatus.Progressing) {
-          setCsvFileDownloads(index, "status", DownloadStatus.Error);
-        }
-      } else {
-        if (data.code == 0) {
-          const index = csvFileDownloads.findIndex(
-            (download) => download.filePath === filePath,
-          );
-          if (csvFileDownloads[index].status === DownloadStatus.Progressing) {
-            setCsvFileDownloads(index, "status", DownloadStatus.Success);
-          }
-        } else {
-          const index = csvFileDownloads.findIndex(
-            (download) => download.filePath === filePath,
-          );
-          if (csvFileDownloads[index].status === DownloadStatus.Progressing) {
-            setCsvFileDownloads(index, "status", DownloadStatus.Error);
-          }
-        }
-      }
-
-      logGet.removeAllListeners();
-      if (pid) {
-        portCommands.delete(pid);
-      }
-    });
-
-    logGet.on("error", async () => {
-      const index = csvFileDownloads.findIndex(
-        (download) => download.filePath === filePath,
-      );
-      if (csvFileDownloads[index].status === DownloadStatus.Progressing) {
-        setCsvFileDownloads(index, "status", DownloadStatus.Error);
-      }
-
-      logGet.removeAllListeners();
-      if (pid) {
-        portCommands.delete(pid);
-      }
-    });
-
-    const child = await logGet.spawn();
-    pid = child.pid;
-    portCommands.set(pid, { port: portId, child: child });
-    const index = csvFileDownloads.findIndex(
-      (download) => download.filePath === filePath,
-    );
-    setCsvFileDownloads(index, "status", DownloadStatus.Progressing);
-    setCsvFileDownloads(index, "pid", pid);
-  }
-
   return (
     <Show when={openPopover()}>
       <div {...props}>
@@ -273,7 +127,7 @@ export const DownloadList = (props: JSX.HTMLAttributes<HTMLDivElement>) => {
           <Stack
             width="100%"
             direction={"row-reverse"}
-            background={"bg.subtle"}
+            background={"gray.3"}
             borderBottomWidth={"1px"}
             alignItems={"center"}
             borderRadius={"0.5em 0.5em 0 0"}
@@ -281,7 +135,7 @@ export const DownloadList = (props: JSX.HTMLAttributes<HTMLDivElement>) => {
             <IconButton
               size="xs"
               variant="plain"
-              onClick={() => setCsvFileDownloads([])}
+              onClick={() => setOpenPopover(false)}
             >
               <IconX />
             </IconButton>
@@ -333,9 +187,6 @@ export const DownloadList = (props: JSX.HTMLAttributes<HTMLDivElement>) => {
                         when={download.status === DownloadStatus.Progressing}
                       >
                         <IconProgressDown />
-                      </Show>
-                      <Show when={download.status === DownloadStatus.Paused}>
-                        <IconFolderPause />
                       </Show>
                       <Show when={download.status === DownloadStatus.Cancel}>
                         <IconFolderCancel />
@@ -397,16 +248,6 @@ export const DownloadList = (props: JSX.HTMLAttributes<HTMLDivElement>) => {
                           {`Download failed`}
                         </Text>
                       </Show>
-                      <Show when={download.status === DownloadStatus.Paused}>
-                        <Text
-                          height="min-content"
-                          textStyle="sm"
-                          color="fg.muted"
-                          fontWeight="medium"
-                        >
-                          {`Downloaded until ${download.downloadProgress}%`}
-                        </Text>
-                      </Show>
                       <Show when={download.status === DownloadStatus.Cancel}>
                         <Text
                           height="min-content"
@@ -434,7 +275,7 @@ export const DownloadList = (props: JSX.HTMLAttributes<HTMLDivElement>) => {
                             >
                               <Progress.Track
                                 class={css({
-                                  background: "bg.disabled",
+                                  background: "gray.3",
                                   borderRadius: "0.2em",
                                 })}
                               >
@@ -473,61 +314,23 @@ export const DownloadList = (props: JSX.HTMLAttributes<HTMLDivElement>) => {
                         }
                       >
                         <IconButton
-                          width="2em"
                           size="xs"
-                          variant={"plain"}
-                          onClick={async (e) => {
-                            e.stopPropagation();
-                            if (portCommands.has(download.pid)) {
-                              const command = portCommands.get(download.pid);
-                              await command!.child.kill();
-                              portCommands.delete(download.pid);
-                            }
-                            setCsvFileDownloads(
-                              index(),
-                              "status",
-                              DownloadStatus.Paused,
-                            );
-                          }}
-                        >
-                          <IconPlayerPause />
-                        </IconButton>
-                      </Show>
-
-                      <Show
-                        when={
-                          csvFileDownloads.findIndex(
-                            (child) => child.port === download.port,
-                          ) === index() &&
-                          (download.status === DownloadStatus.Paused ||
-                            download.status === DownloadStatus.Error)
-                        }
-                      >
-                        <IconButton
-                          size="sm"
                           variant="plain"
                           width="2em"
                           onClick={async (e) => {
                             e.stopPropagation();
-                            const logStatus = await getCurrentLogStatus(
-                              download.port,
-                            );
-                            if (logStatus.logStatus === ".stopped") {
-                              await resumeLogCsvFile(
-                                download.filePath,
-                                download.port,
-                                logStatus.cycle,
-                                download.downloadProgress,
+                            const command = portCommands.get(download.pid);
+                            if (command) {
+                              await command.child.kill();
+                              setCsvFileDownloads(
+                                index(),
+                                "status",
+                                DownloadStatus.Cancel,
                               );
                             }
                           }}
                         >
-                          <Show
-                            when={download.status === DownloadStatus.Paused}
-                            fallback={<IconRefreshAlert />}
-                          >
-                            <IconPlayerPlay />
-                          </Show>
+                          <IconX />
                         </IconButton>
                       </Show>
                     </Stack>
