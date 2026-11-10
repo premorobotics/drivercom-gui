@@ -90,6 +90,11 @@ export function DriverStatus(props: DriverStatusProps) {
     },
   );
 
+  async function refreshStatus(port: string, version?: string) {
+    const newConfig = await getConfigFromPort(port, version);
+    setDriverStatus(reconcile(newConfig.state));
+  }
+
   return (
     <div
       class={css({
@@ -128,8 +133,7 @@ export function DriverStatus(props: DriverStatusProps) {
               try {
                 setIsToggleButtonLoading(true);
                 await toggleServo(port, driverStatus.servo_enabled);
-                const newConfig = await getConfigFromPort(port, version);
-                setDriverStatus(reconcile(newConfig.state));
+                await refreshStatus(port, version);
                 setIsToggleButtonLoading(false);
               } catch (e) {
                 setIsToggleButtonLoading(false);
@@ -156,8 +160,7 @@ export function DriverStatus(props: DriverStatusProps) {
               if (isReseting()) return;
               try {
                 setIsReseting(true);
-                const newConfig = await getConfigFromPort(port, version);
-                setDriverStatus(reconcile(newConfig.state));
+                await refreshStatus(port, version);
                 setIsReseting(false);
               } catch (e) {
                 setIsReseting(false);
@@ -345,8 +348,17 @@ export function DriverStatus(props: DriverStatusProps) {
             }}
           >
             <DrivercomCommandButton
-              onRunCommand={(portId) => {
-                initializeSlider(portId, Number(axisId()), sliderId());
+              onRunCommand={async (portId, version) => {
+                try {
+                  await initializeSlider(portId, Number(axisId()), sliderId());
+                  await refreshStatus(portId, version);
+                } catch (e) {
+                  toaster.create({
+                    title: "Initialize failed",
+                    description: e as string,
+                    type: "error",
+                  });
+                }
               }}
             >
               <Button size="2xs">{"Start"}</Button>
