@@ -41,17 +41,6 @@ export function DrivercomCommandButton(
           const results = await Promise.allSettled(
             detectedPorts.map((port) => getConfigFromPort(port.id)),
           );
-          if (
-            results.filter((response) => response.status === "rejected")
-              .length > 0
-          ) {
-            toaster.create({
-              title: "Port detected failed",
-              description: "Fail to read driver id and stiation id.",
-              type: "error",
-            });
-            return;
-          }
           const fullFilledResults = results
             .filter((response) => response.status === "fulfilled")
             .map((response) => response.value);
