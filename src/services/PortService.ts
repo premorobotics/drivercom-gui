@@ -43,6 +43,7 @@ async function sendDrivercomCommand(
 
   const result = new Promise<string>((resolve, reject) => {
     drivercom.on("close", ({ code, signal }) => {
+      console.log(stdout, stderr);
       if (child) {
         portCommands.delete(child.pid);
       }
