@@ -30,6 +30,8 @@ export type LoggingPageTabContentType = {
   accordionStates: AccordionStates;
   originalFile: object;
   driverStatus: StateType;
+  showLogStartSetting: boolean;
+  showDriverStatus: boolean;
 };
 
 export function Logging() {
