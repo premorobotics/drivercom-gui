@@ -282,8 +282,11 @@ export function LoggingTabContent() {
                   setLoadStartLogButton(false);
                 } catch (e) {
                   setLoadStartLogButton(false);
-                  //Add error message
-                  console.error(e);
+                  toaster.create({
+                    title: "Logging Failed",
+                    description: e as string,
+                    type: "error",
+                  });
                 }
               }}
             />
@@ -372,20 +375,22 @@ export function LoggingTabContent() {
             />
           </div>
         </Show>
-        <div
-          style={{
-            width: "100%",
-            height: "100%",
-            "grid-row": "span 2",
-            "grid-column": 3,
-          }}
-        >
-          <DriverStatus
-            id={getTabId()}
-            driverStatus={getDriverStatus()}
-            accordionStatuses={getAccordionStates()!}
-          />
-        </div>
+        <Show when={getShowDriverStatus()}>
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              "grid-row": "span 2",
+              "grid-column": 3,
+            }}
+          >
+            <DriverStatus
+              id={getTabId()}
+              driverStatus={getDriverStatus()}
+              accordionStatuses={getAccordionStates()!}
+            />
+          </div>
+        </Show>
       </div>
     </Show>
   );

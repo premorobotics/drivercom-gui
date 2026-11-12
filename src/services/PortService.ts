@@ -164,7 +164,7 @@ export async function startLogging(
 ) {
   const stringifyLogConfig = JSON5.stringify(logConfig, { quote: "'" })
     .replace("current_state", `"current_state"`)
-    .replace("speed_profile", `"speed_profile`)
+    .replace("speed_profile", `"speed_profile"`)
     .replace("position_profile", `"position_profile"`);
   const args = [
     "--port",
@@ -201,12 +201,18 @@ export async function startLogging(
         const findIndex = csvFileDownloads.findIndex(
           (download) => download.pid == child?.pid,
         );
+        if (findIndex === -1) {
+          return reject("Cannot find download entry.");
+        }
         setCsvFileDownloads(findIndex, "status", DownloadStatus.Success);
         resolve();
       } else {
         const findIndex = csvFileDownloads.findIndex(
           (download) => download.pid == child?.pid,
         );
+        if (findIndex === -1) {
+          return reject("Cannot find download entry.");
+        }
         if (csvFileDownloads[findIndex].status === DownloadStatus.Progressing) {
           setCsvFileDownloads(findIndex, "status", DownloadStatus.Error);
         }
@@ -219,9 +225,11 @@ export async function startLogging(
           reject(new Error(String(e)));
         });
       }
+
       const findIndex = csvFileDownloads.findIndex(
         (download) => download.pid == child?.pid,
       );
+      if (findIndex === -1) return reject("Cannot find download entry.");
       setCsvFileDownloads(findIndex, "status", DownloadStatus.Error);
       reject(new Error(String(error)));
     });
