@@ -11,7 +11,11 @@ import {
 } from "~/store/GlobalState.ts";
 import { createSignal, Show, useContext } from "solid-js";
 import { LoggingForm } from "./LoggingForm.tsx";
-import { IconDeviceFloppy } from "@tabler/icons-solidjs";
+import {
+  IconAdjustmentsCog,
+  IconDeviceFloppy,
+  IconTableFilled,
+} from "@tabler/icons-solidjs";
 import { createEffect } from "solid-js";
 import { on } from "solid-js";
 import { Button } from "~/components/ui/button.tsx";
@@ -23,6 +27,7 @@ import { css } from "styled-system/css/css";
 import { DriverStatus } from "../Configuration/ConfigForm/DriverStatus.tsx";
 import { LoggingSideBar } from "./LoggingForm/LoggingSideBar.tsx";
 import { startLogging } from "~/services/PortService.ts";
+import { IconButton } from "~/components/ui/icon-button.tsx";
 
 // A custom tab page component for the Logging page.
 export function LoggingTabContent() {
@@ -97,6 +102,38 @@ export function LoggingTabContent() {
   const getDriverStatus = () => {
     return tabStore.get(loggingTabProps.key)![0].tabContext[getTabIndex()]
       .tabPage!.loggingTabPage!.driverStatus;
+  };
+
+  const getShowLogSetting = () => {
+    return tabStore.get(loggingTabProps.key)![0].tabContext[getTabIndex()]
+      .tabPage!.loggingTabPage!.showLogStartSetting;
+  };
+
+  const setShowLogSetting = (newStatus: boolean) => {
+    return tabStore.get(loggingTabProps.key)![1](
+      "tabContext",
+      getTabIndex(),
+      "tabPage",
+      "loggingTabPage",
+      "showLogStartSetting",
+      newStatus,
+    );
+  };
+
+  const getShowDriverStatus = () => {
+    return tabStore.get(loggingTabProps.key)![0].tabContext[getTabIndex()]
+      .tabPage!.loggingTabPage!.showDriverStatus;
+  };
+
+  const setShowDriverStatus = (newStatus: boolean) => {
+    return tabStore.get(loggingTabProps.key)![1](
+      "tabContext",
+      getTabIndex(),
+      "tabPage",
+      "loggingTabPage",
+      "showDriverStatus",
+      newStatus,
+    );
   };
 
   // This signal is needed in UI when reload the file or port.
@@ -219,37 +256,39 @@ export function LoggingTabContent() {
           width: `100% `,
           display: "grid",
           "grid-auto-rows": `2rem minmax(0,1fr)`,
-          "grid-template-columns": `15rem minmax(0,1fr) 30rem`,
+          "grid-template-columns": `${getShowLogSetting() ? 15 : 0}rem minmax(0,1fr) ${getShowDriverStatus() ? 30 : 0}rem`,
         }}
       >
-        <div
-          class={css({
-            borderRightWidth: "1px",
-            background: "gray.2",
-            gridRow: "span 2",
-            gridColumn: "1",
-            padding: "0.4rem",
-          })}
-        >
-          <LoggingSideBar
-            id={getTabId()}
-            config={getLoggingConfig()}
-            accordionStates={getAccordionStates()}
-            loadStartButton={loadStartLogButton()}
-            onStartLogging={async (portId) => {
-              setLoadStartLogButton(true);
-              try {
-                const filePath = await fileHandler.saveFileDialog("csv", "");
-                await startLogging(portId, filePath, getLoggingConfig()!);
-                setLoadStartLogButton(false);
-              } catch (e) {
-                setLoadStartLogButton(false);
-                //Add error message
-                console.error(e);
-              }
-            }}
-          />
-        </div>
+        <Show when={getShowLogSetting()}>
+          <div
+            class={css({
+              borderRightWidth: "1px",
+              background: "gray.2",
+              gridRow: "span 2",
+              gridColumn: "1",
+              padding: "0.4rem",
+            })}
+          >
+            <LoggingSideBar
+              id={getTabId()}
+              config={getLoggingConfig()}
+              accordionStates={getAccordionStates()}
+              loadStartButton={loadStartLogButton()}
+              onStartLogging={async (portId) => {
+                setLoadStartLogButton(true);
+                try {
+                  const filePath = await fileHandler.saveFileDialog("csv", "");
+                  await startLogging(portId, filePath, getLoggingConfig()!);
+                  setLoadStartLogButton(false);
+                } catch (e) {
+                  setLoadStartLogButton(false);
+                  //Add error message
+                  console.error(e);
+                }
+              }}
+            />
+          </div>
+        </Show>
         <Show when={renderLoggingForm()}>
           <Stack
             width="100%"
@@ -263,12 +302,18 @@ export function LoggingTabContent() {
             gridColumn="2"
             background="gray.2"
             display={"grid"}
-            gridTemplateColumns={"minmax(0,1fr) 7rem 7rem"}
+            gridTemplateColumns={"2rem minmax(0,1fr) 7rem 7rem 2rem"}
             fontSize="sm"
           >
-            <Text paddingLeft="0.4rem" fontWeight="medium">
-              {"Log Config"}
-            </Text>
+            <IconButton
+              variant="plain"
+              size="xs"
+              onClick={() => setShowLogSetting(!getShowLogSetting())}
+              color={getShowLogSetting() ? "accent.9" : "fg.muted"}
+            >
+              <IconAdjustmentsCog />
+            </IconButton>
+            <Text fontWeight="medium">{"Log Config"}</Text>
             {/*Open file button */}
             <FileImportButton
               tabId={getTabId()}
@@ -298,6 +343,14 @@ export function LoggingTabContent() {
               <IconDeviceFloppy />
               {"Save as file"}
             </Button>
+            <IconButton
+              variant="plain"
+              size="xs"
+              onClick={() => setShowDriverStatus(!getShowDriverStatus())}
+              color={getShowDriverStatus() ? "accent.9" : "fg.muted"}
+            >
+              <IconTableFilled />
+            </IconButton>
           </Stack>
 
           <div

@@ -55,6 +55,8 @@ export function generateNewLoggingTab(
         filePath: filePath ?? "",
         accordionStates: accordionStates,
         driverStatus: State_Schema.parse({}),
+        showDriverStatus: true,
+        showLogStartSetting: true,
       },
       configTabPage: null,
       logViewerTabPage: null,
