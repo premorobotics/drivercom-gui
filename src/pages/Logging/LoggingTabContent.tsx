@@ -1,7 +1,6 @@
 import { Stack } from "styled-system/jsx";
 import { Text } from "~/components/ui/text.tsx";
 import {
-  portCommands,
   logFormFileFormat,
   Pages,
   pageKeys,
@@ -98,25 +97,6 @@ export function LoggingTabContent() {
 
   // This signal is needed in UI when reload the file or port.
   const [renderLoggingForm, setRenderLoggingForm] = createSignal<boolean>(true);
-
-  const checkAvailablePort = (portId: string): boolean => {
-    if (portId.length <= 0) {
-      return false;
-    }
-    if (
-      Array.from(portCommands.values()).some(
-        (command) => command.port === portId,
-      )
-    ) {
-      toaster.create({
-        title: "Communication error",
-        description: "Port is already in use.",
-        type: "error",
-      });
-      return false;
-    }
-    return true;
-  };
 
   function setLogFormData(form: object, path: string) {
     setTabName(path.replaceAll("\\", "/").split("/").pop()!);
@@ -253,14 +233,7 @@ export function LoggingTabContent() {
             accordionStates={getAccordionStates()}
             loadStartButton={loadStartLogButton()}
             onStartLogging={async (portId) => {
-              const check = checkAvailablePort(portId);
-              if (!check) {
-                //Add error message
-                return;
-              }
               setLoadStartLogButton(true);
-              // Add port command in here
-              // portCommand.set()
               try {
                 const filePath = await fileHandler.saveFileDialog("csv", "");
                 await startLogging(portId, filePath, getLoggingConfig()!);

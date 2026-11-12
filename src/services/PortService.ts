@@ -8,7 +8,6 @@ import {
   setCsvFileDownloads,
   setLogConfigDescription,
 } from "~/store/GlobalState";
-import { toaster } from "~/components/ui/toast.tsx";
 import JSON5 from "json5";
 import { ConfigType } from "src-tauri/generated/config/ConfigType";
 import { LogConfigType } from "src-tauri/generated/config/LogConfigType";
@@ -42,8 +41,7 @@ async function sendDrivercomCommand(
   });
 
   const result = new Promise<string>((resolve, reject) => {
-    drivercom.on("close", ({ code, signal }) => {
-      console.log(stdout, stderr);
+    drivercom.on("close", ({ code }) => {
       if (child) {
         portCommands.delete(child.pid);
       }
@@ -53,12 +51,12 @@ async function sendDrivercomCommand(
         if (stderr.length > 0) {
           reject(new Error(stderr));
         }
-        reject(new Error(`drivercom exited (code=${code}, signal=${signal})`));
+        reject(new Error(stdout));
       }
     });
     drivercom.on("error", async (error) => {
-      if (portId && child) {
-        await child.kill();
+      if (child) {
+        portCommands.delete(child.pid);
       }
       reject(error);
     });
@@ -120,11 +118,6 @@ const checkAvailablePort = (portId: string): boolean => {
   if (
     Array.from(portCommands.values()).some((command) => command.port === portId)
   ) {
-    toaster.create({
-      title: "Communication error",
-      description: "Port is already in use.",
-      type: "error",
-    });
     return false;
   }
   return true;
@@ -186,12 +179,12 @@ export async function startLogging(
   const startLogging = Command.sidecar("binaries/drivercom", args);
 
   // Get percentage
-  startLogging.stderr.addListener("data", (line) => {
+  startLogging.stderr.addListener("data", async (line) => {
     const percentage = parseToPercentage(line);
     if (typeof percentage === "number") {
-      if (child) {
+      if (child !== null) {
         const findIndex = csvFileDownloads.findIndex(
-          (download) => download.pid == child?.pid,
+          (download) => download.pid == child!.pid,
         );
         setCsvFileDownloads(findIndex, "downloadProgress", percentage);
       }
