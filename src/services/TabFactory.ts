@@ -7,7 +7,10 @@ import {
 import { configFormFileFormat, tabStore } from "~/store/GlobalState";
 import JSON5 from "json5";
 import { logFormFileFormat } from "~/store/GlobalState";
-import { ConfigType } from "src-tauri/generated/config/ConfigType";
+import {
+  ConfigType,
+  State_Schema,
+} from "src-tauri/generated/config/ConfigType";
 import { LogConfigType } from "src-tauri/generated/config/LogConfigType";
 
 export function addNewTab(key: string, newTab: TabContext) {
@@ -51,6 +54,7 @@ export function generateNewLoggingTab(
         ),
         filePath: filePath ?? "",
         accordionStates: accordionStates,
+        driverStatus: State_Schema.parse({}),
       },
       configTabPage: null,
       logViewerTabPage: null,

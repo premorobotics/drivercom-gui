@@ -21,7 +21,6 @@ import { TabPageContext } from "~/components/Tab/TabList.tsx";
 import { FileImportButton } from "./LoggingForm/FileImportButton.tsx";
 import { css } from "styled-system/css/css";
 import { DriverStatus } from "../Configuration/ConfigForm/DriverStatus.tsx";
-import { State_Schema } from "src-tauri/generated/config/ConfigType.tsx";
 import { LoggingSideBar } from "./LoggingForm/LoggingSideBar.tsx";
 import { startLogging } from "~/services/PortService.ts";
 
@@ -93,6 +92,11 @@ export function LoggingTabContent() {
   const getAccordionStates = () => {
     return tabStore.get(loggingTabProps.key)![0].tabContext[getTabIndex()]
       .tabPage!.loggingTabPage!.accordionStates;
+  };
+
+  const getDriverStatus = () => {
+    return tabStore.get(loggingTabProps.key)![0].tabContext[getTabIndex()]
+      .tabPage!.loggingTabPage!.driverStatus;
   };
 
   // This signal is needed in UI when reload the file or port.
@@ -325,7 +329,7 @@ export function LoggingTabContent() {
         >
           <DriverStatus
             id={getTabId()}
-            driverStatus={State_Schema.parse({})}
+            driverStatus={getDriverStatus()}
             accordionStatuses={getAccordionStates()!}
           />
         </div>
