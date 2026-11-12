@@ -20,17 +20,17 @@ import { load } from "@tauri-apps/plugin-store";
 import { LogConfigType } from "src-tauri/generated/config/LogConfigType.tsx";
 import { AccordionStates } from "../Configuration/ConfigForm/ConfigForm.tsx";
 import { addNewTab, generateNewLoggingTab } from "~/services/TabFactory.ts";
+import { StateType } from "src-tauri/generated/config/ConfigType.tsx";
 
-export type LoggingFormType = {
+export type LoggingPageTabContentType = {
   title: string;
   filePath: string;
   portId: string;
   logConfig: LogConfigType;
   accordionStates: AccordionStates;
   originalFile: object;
+  driverStatus: StateType;
 };
-
-export type LoggingPageTabContentType = LoggingFormType;
 
 export function Logging() {
   const [render, setRender] = createSignal<boolean>(false);
