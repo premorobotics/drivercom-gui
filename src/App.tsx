@@ -21,6 +21,7 @@ import {
   IconInfoCircle,
   IconMoonFilled,
   IconSunFilled,
+  IconWaveSine,
 } from "@tabler/icons-solidjs";
 
 import {
@@ -462,6 +463,11 @@ function App(props: RouteSectionProps) {
     logViewer: {
       icon: IconDeviceAnalytics,
       label: "Log Viewer",
+      disabled: false,
+    },
+    vibrationLogger: {
+      icon: IconWaveSine,
+      label: "Vibration Logger",
       disabled: false,
     },
   };
