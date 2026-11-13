@@ -11,6 +11,9 @@ const Configuration = lazy(
 );
 const LogViewer = lazy(() => import("./pages/LogViewer/LogViewer.tsx"));
 const Logging = lazy(() => import("./pages/Logging/Logging.tsx"));
+const VibrationLogger = lazy(
+  () => import("./pages/VibrationLogger/VibrationLogger.tsx"),
+);
 
 render(
   () => (
@@ -18,6 +21,7 @@ render(
       <Route path="/configuration" component={Configuration} />
       <Route path="/logviewer" component={LogViewer} />
       <Route path="/logging" component={Logging} />
+      <Route path="/vibrationlogger" component={VibrationLogger} />
     </Router>
   ),
   document.getElementById("root") as HTMLElement,

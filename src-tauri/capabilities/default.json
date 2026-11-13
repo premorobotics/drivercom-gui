@@ -17,6 +17,11 @@
           "args": true,
           "name": "binaries/rustscan",
           "sidecar": true
+        },
+        {
+          "args": true,
+          "name": "binaries/vilo",
+          "sidecar": true
         }
       ]
     },
@@ -32,6 +37,11 @@
           "args": true,
           "name": "binaries/rustscan",
           "sidecar": true
+        },
+        {
+          "args": true,
+          "name": "binaries/vilo",
+          "sidecar": true
         }
       ]
     },
@@ -46,6 +56,11 @@
         {
           "args": true,
           "name": "binaries/rustscan",
+          "sidecar": true
+        },
+        {
+          "args": true,
+          "name": "binaries/vilo",
           "sidecar": true
         }
       ]
