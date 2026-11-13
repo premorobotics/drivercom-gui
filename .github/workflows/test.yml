@@ -44,8 +44,8 @@ jobs:
       - name: Check formatting
         run: pnpm fmt-check
 
-      - name: Generate config types
-        run: pnpm drivercom
+      - name: Generate config types for sidecars
+        run: pnpm sidecar
         env:
           GH_TOKEN: ${{ secrets.DRIVERCOM_CLI_RELEASE_ACCESS_TOKEN }}
 
