@@ -136,6 +136,13 @@ export async function pingNode(port: string, node: number): Promise<boolean> {
   }
 }
 
+// Sets the node to idle, which wakes it if it sleeps and stops its sampling.
+// A sleeping node only listens every few seconds, so this can take as long
+// as vilo's timeout (10 s), after which it fails with `Timeout`.
+export async function setNodeToIdle(port: string, node: number): Promise<void> {
+  await runOnPort(["node", "idle", "-p", port, "-n", String(node)]);
+}
+
 export async function getNodeConfig(
   port: string,
   node: number,
@@ -281,7 +288,8 @@ export function startLog(port: string, node: number): Promise<LogProcess> {
   return started;
 }
 
-// New samples since the last call.
+// New samples since the last call. vilo keeps none: whatever is not fetched
+// before the session ends is lost.
 export async function showLog(endpoint: number): Promise<Sample[]> {
   const result = JSON.parse(await run(["log", "show", "-p", String(endpoint)]));
   if (!Array.isArray(result)) {
@@ -290,7 +298,7 @@ export async function showLog(endpoint: number): Promise<Sample[]> {
   return result;
 }
 
-// Sets the node to idle; the session keeps its data.
+// Sets the node to idle.
 export async function pauseLog(endpoint: number): Promise<void> {
   await run(["log", "stop", "-p", String(endpoint)]);
 }
@@ -299,19 +307,26 @@ export async function resumeLog(endpoint: number): Promise<void> {
   await run(["log", "continue", "-p", String(endpoint)]);
 }
 
-export async function saveLog(endpoint: number, path: string): Promise<void> {
-  await run(["log", "save", "-p", String(endpoint), "-f", path]);
-}
-
 // Ends `vilo log start`. vilo expects Ctrl+C here: it then sets the node to
 // idle and closes the base station itself.
 // TODO: Send Ctrl+C. Until then, the node is set to idle with `log stop`
 // and the process is killed.
-export async function endLog(log: LogProcess): Promise<void> {
+// `drain` runs once the node is idle, to fetch the last samples.
+export async function endLog(
+  log: LogProcess,
+  drain?: () => Promise<void>,
+): Promise<void> {
   try {
     await pauseLog(log.endpoint);
   } catch {
     // The process may already be gone.
+  }
+  if (drain) {
+    try {
+      await drain();
+    } catch {
+      // Same; the samples fetched so far stay.
+    }
   }
   await log.child.kill();
   await log.exited;

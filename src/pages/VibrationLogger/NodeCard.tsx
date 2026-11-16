@@ -45,7 +45,12 @@ import {
   numeric,
 } from "./styles";
 
-export type NodeState = "none" | "checking" | "unreachable" | "selected";
+export type NodeState =
+  | "none"
+  | "checking"
+  | "settingIdle"
+  | "unreachable"
+  | "selected";
 
 type NodeCardProps = {
   state: NodeState;
@@ -63,6 +68,7 @@ type NodeCardProps = {
   onUse: (node: DiscoveredNode) => void;
   onConnect: (address: number) => void;
   onRetry: () => void;
+  onSetIdle: () => void;
   onChangeNode: () => void;
   // Resolves true when applied.
   onApply: (config: RadioConfig) => Promise<boolean>;
@@ -316,7 +322,9 @@ export function NodeCard(props: NodeCardProps) {
           </div>
         </Match>
 
-        <Match when={props.state === "checking"}>
+        <Match
+          when={props.state === "checking" || props.state === "settingIdle"}
+        >
           <div class={cardHead}>
             <span class={deviceIcon}>
               <IconBroadcast />
@@ -328,7 +336,9 @@ export function NodeCard(props: NodeCardProps) {
             <div class={actions}>
               <p role="status" class={hint} style={{ display: "flex" }}>
                 <Spinner size="sm" marginRight="2" />
-                Checking node {props.address}…
+                {props.state === "settingIdle"
+                  ? `Setting node ${props.address} to idle…`
+                  : `Checking node ${props.address}…`}
               </p>
             </div>
           </div>
@@ -345,6 +355,13 @@ export function NodeCard(props: NodeCardProps) {
             </div>
             <span class={pill}>Unreachable</span>
             <div class={actions}>
+              <Button
+                size="sm"
+                disabled={props.busy}
+                onClick={() => props.onSetIdle()}
+              >
+                Set to idle
+              </Button>
               <Button
                 size="sm"
                 variant="outline"
@@ -366,7 +383,7 @@ export function NodeCard(props: NodeCardProps) {
           <p class={hint}>
             Node {props.address} did not answer the ping. It may be asleep,
             switched off, out of range, or on another frequency than the base
-            station.
+            station. Set to idle reaches a sleeping node within about 10 s.
           </p>
         </Match>
 
