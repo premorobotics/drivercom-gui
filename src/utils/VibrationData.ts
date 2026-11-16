@@ -5,10 +5,24 @@ export type SampleSeries = {
   labels: string[];
   time: number[];
   channels: number[][];
+  // vilo's sweep counter.
+  ticks: number[];
 };
 
 export function createSeries(labels: string[]): SampleSeries {
-  return { labels, time: [], channels: labels.map(() => []) };
+  return { labels, time: [], channels: labels.map(() => []), ticks: [] };
+}
+
+// Adds one sample. `stamp` is its timestamp in nanoseconds since the epoch.
+function pushSample(
+  series: SampleSeries,
+  tick: number,
+  stamp: number,
+  values: number[],
+) {
+  series.time.push(stamp / 1e9);
+  series.ticks.push(tick);
+  values.forEach((v, c) => series.channels[c].push(v));
 }
 
 // Reads a CSV that `vilo log save` wrote. A header is required with `tick`
@@ -30,8 +44,9 @@ export function parseViloCsv(text: string): SampleSeries {
     return cells;
   };
   const header = split(lines[0]);
+  const tickIndex = header.indexOf("tick");
   const timeIndex = header.indexOf("timestamp");
-  if (header.indexOf("tick") < 0 || timeIndex < 0) {
+  if (tickIndex < 0 || timeIndex < 0) {
     throw new Error("The file needs a header with tick and timestamp columns.");
   }
   const channelIndexes = header
@@ -48,14 +63,16 @@ export function parseViloCsv(text: string): SampleSeries {
         `Line ${row + 1} has ${cells.length} values, the header has ${header.length}.`,
       );
     }
-    const time = Number(cells[timeIndex]) / 1e9;
-    if (!Number.isFinite(time)) {
+    const stamp = Number(cells[timeIndex]);
+    if (!Number.isFinite(stamp)) {
       throw new Error(`Line ${row + 1} has an invalid timestamp.`);
     }
-    series.time.push(time);
-    channelIndexes.forEach((col, c) => {
-      series.channels[c].push(Number(cells[col]));
-    });
+    pushSample(
+      series,
+      Number(cells[tickIndex]),
+      stamp,
+      channelIndexes.map((col) => Number(cells[col])),
+    );
   }
   if (series.time.length === 0) {
     throw new Error("The file has no data.");
@@ -105,7 +122,7 @@ export type PlotWindow = {
 // each bucket keeps its lowest and highest value per channel, so peaks stay
 // visible. Hidden channels do not count toward `lo` and `hi`.
 export function sliceWindow(
-  series: SampleSeries,
+  series: Pick<SampleSeries, "time" | "channels">,
   start: number,
   end: number,
   maxPoints: number,
@@ -358,16 +375,46 @@ export function formatAcceleration(value: number, step: number): string {
   return `${value < -step * 1e-6 ? "−" : ""}${text} g`;
 }
 
-// Appends sweeps from `vilo log show` (timestamps in nanoseconds) to a
-// series of the channels ch1, ch2 and ch3.
+// Appends sweeps from `vilo log show` to a series of the channels ch1, ch2
+// and ch3. Timestamps are nanoseconds since the epoch.
 export function appendSweeps(
   series: SampleSeries,
-  sweeps: { timestamp: number; ch1: number; ch2: number; ch3: number }[],
+  sweeps: {
+    tick: number;
+    timestamp: number;
+    ch1: number;
+    ch2: number;
+    ch3: number;
+  }[],
 ): void {
   for (const sweep of sweeps) {
-    series.time.push(sweep.timestamp / 1e9);
-    series.channels[0].push(sweep.ch1);
-    series.channels[1].push(sweep.ch2);
-    series.channels[2].push(sweep.ch3);
+    pushSample(series, sweep.tick, sweep.timestamp, [
+      sweep.ch1,
+      sweep.ch2,
+      sweep.ch3,
+    ]);
   }
+}
+
+// The header of the CSV that `vilo log save` wrote and `parseViloCsv` reads.
+// Every line ends with a comma, as vilo wrote it.
+export function viloCsvHeader(series: SampleSeries): string {
+  return `tick,timestamp,${series.labels.join(",")},\n`;
+}
+
+// The CSV lines of samples `from` to `to` (exclusive), after the header.
+export function viloCsvRows(
+  series: SampleSeries,
+  from: number,
+  to: number,
+): string {
+  const lines: string[] = [];
+  for (let i = from; i < to; i++) {
+    // Within a microsecond of vilo's timestamp, which a JS number cannot
+    // hold exactly.
+    const stamp = Math.round(series.time[i] * 1e9);
+    const values = series.channels.map((channel) => `${channel[i]},`);
+    lines.push(`${series.ticks[i]},${stamp},${values.join("")}\n`);
+  }
+  return lines.join("");
 }

@@ -14,6 +14,8 @@ import {
   shownRange,
   sliceWindow,
   upperBound,
+  viloCsvHeader,
+  viloCsvRows,
   wholeView,
 } from "./VibrationData";
 
@@ -175,7 +177,41 @@ test("formatAcceleration", () => {
 
 test("appendSweeps", () => {
   const series = createSeries(["ch1", "ch2", "ch3"]);
-  appendSweeps(series, [{ timestamp: 2_500_000_000, ch1: 1, ch2: 2, ch3: 3 }]);
+  appendSweeps(series, [
+    { tick: 7, timestamp: 2500000000, ch1: 1, ch2: 2, ch3: 3 },
+  ]);
   expect(series.time).toStrictEqual([2.5]);
+  expect(series.ticks).toStrictEqual([7]);
   expect(series.channels).toStrictEqual([[1], [2], [3]]);
+});
+
+describe("vilo CSV", () => {
+  const text =
+    "tick,timestamp,ch1,ch2,ch3,\n" +
+    "1,1000000000,0.5,-0.25,1,\n" +
+    "2,1002000000,0.75,NaN,1.5,\n";
+
+  test("writes what vilo wrote", () => {
+    const series = parseViloCsv(text);
+    expect(series.ticks).toStrictEqual([1, 2]);
+    expect(
+      viloCsvHeader(series) + viloCsvRows(series, 0, series.time.length),
+    ).toBe(text);
+  });
+
+  test("writes a range of samples", () => {
+    const series = parseViloCsv(text);
+    expect(viloCsvRows(series, 1, 2)).toBe("2,1002000000,0.75,NaN,1.5,\n");
+  });
+
+  test("writes a timestamp to within a microsecond", () => {
+    // As JSON.parse reads it from `vilo log show`.
+    const expected = Number("1763000000123456789");
+    const series = createSeries(["ch1", "ch2", "ch3"]);
+    appendSweeps(series, [
+      { tick: 1, timestamp: expected, ch1: 0, ch2: 0, ch3: 0 },
+    ]);
+    const actual = Number(viloCsvRows(series, 0, 1).split(",")[1]);
+    expect(Math.abs(actual - expected)).toBeLessThan(1000);
+  });
 });

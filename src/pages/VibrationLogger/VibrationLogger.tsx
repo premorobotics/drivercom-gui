@@ -19,7 +19,7 @@ import {
   IconX,
 } from "@tabler/icons-solidjs";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { readTextFile } from "@tauri-apps/plugin-fs";
+import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { load } from "@tauri-apps/plugin-store";
 import { css } from "styled-system/css";
 import { Button } from "~/components/ui/button";
@@ -36,6 +36,8 @@ import {
   parseViloCsv,
   RangeView,
   SampleSeries,
+  viloCsvHeader,
+  viloCsvRows,
   wholeView,
 } from "~/utils/VibrationData";
 import { BaseStationCard, sessionLockText } from "./BaseStationCard";
@@ -55,6 +57,9 @@ type SelectedNode = { address: number; model: string | null };
 const liveLabels = ["ch1", "ch2", "ch3"];
 const pollInterval = 250;
 const storeKey = "viloLastNode";
+// Samples per write when saving, so a long session never needs one huge
+// string.
+const csvChunk = 20000;
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const messageOf = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -78,6 +83,15 @@ async function loadLastNode(): Promise<SelectedNode | null> {
     return node && typeof node.address === "number" ? node : null;
   } catch {
     return null;
+  }
+}
+
+async function writeCsv(path: string, data: SampleSeries) {
+  const count = data.time.length;
+  await writeTextFile(path, viloCsvHeader(data));
+  for (let from = 0; from < count; from += csvChunk) {
+    const to = Math.min(from + csvChunk, count);
+    await writeTextFile(path, viloCsvRows(data, from, to), { append: true });
   }
 }
 
@@ -226,16 +240,18 @@ function VibrationLogger() {
 
   // Pings the node and reads its configuration. A remembered node that does
   // not answer stays on the card as unreachable.
+  // `keep`: a node that does not answer stays, as unreachable, so that it
+  // can be woken up or retried; otherwise it is removed.
   const checkNode = async (
     candidate: SelectedNode,
-    remembered: boolean,
+    keep: boolean,
   ): Promise<boolean> => {
     const port = base()!.port;
     setNode(candidate);
     setNodeState("checking");
     setNodeNotice("");
     if (!(await vilo.pingNode(port, candidate.address))) {
-      if (remembered) {
+      if (keep) {
         setNodeState("unreachable");
       } else {
         clearNode();
@@ -300,10 +316,30 @@ function VibrationLogger() {
     }
   };
 
+  // Kept when it does not answer: an entered node is often asleep.
   const connectManual = async (address: number) => {
-    if (await checkNode({ address, model: null }, false)) {
+    if (await checkNode({ address, model: null }, true)) {
       toastInfo(`Node ${address} selected.`);
     }
+  };
+
+  const setToIdle = async () => {
+    const current = node();
+    if (!current) return;
+    setNodeState("settingIdle");
+    try {
+      await vilo.setNodeToIdle(base()!.port, current.address);
+    } catch (e) {
+      setNodeState("unreachable");
+      toastError(
+        `Node ${current.address} was not set to idle`,
+        messageOf(e) === "Timeout"
+          ? "It did not answer in time. Check that it is on, in range, and on the base station's frequency."
+          : e,
+      );
+      return;
+    }
+    await checkNode(current, true);
   };
 
   // Configure.
@@ -360,18 +396,29 @@ function VibrationLogger() {
 
   // Log session.
 
-  const poll = async (log: vilo.LogProcess) => {
+  // vilo keeps no samples, so the page holds the only copy. Fetches run one
+  // at a time, so the samples are appended in order.
+  let fetching: Promise<void> = Promise.resolve();
+  const fetchSamples = (log: vilo.LogProcess, target: SampleSeries) => {
+    const next = fetching.then(async () => {
+      const sweeps = await vilo.showLog(log.endpoint);
+      // Unless a new session or a CSV file replaced the data meanwhile.
+      if (sweeps.length > 0 && series() === target) {
+        appendSweeps(target, sweeps);
+        setVersion((v) => v + 1);
+      }
+    });
+    fetching = next.catch(() => undefined);
+    return next;
+  };
+
+  // Also while paused, for the samples sent just before the pause.
+  const poll = async (log: vilo.LogProcess, target: SampleSeries) => {
     while (session()?.log === log) {
-      if (!session()!.paused) {
-        try {
-          const sweeps = await vilo.showLog(log.endpoint);
-          if (sweeps.length > 0 && session()?.log === log) {
-            appendSweeps(series(), sweeps);
-            setVersion((v) => v + 1);
-          }
-        } catch {
-          // The process may be ending; its exit is handled on its own.
-        }
+      try {
+        await fetchSamples(log, target);
+      } catch {
+        // The process may be ending; its exit is handled on its own.
       }
       await sleep(pollInterval);
     }
@@ -423,7 +470,8 @@ function VibrationLogger() {
       return;
     }
     setStarting("");
-    setSeries(createSeries(liveLabels));
+    const target = createSeries(liveLabels);
+    setSeries(target);
     setVersion((v) => v + 1);
     setView(liveView());
     setStartedAt(Date.now());
@@ -442,16 +490,17 @@ function VibrationLogger() {
         });
       }
     });
-    void poll(log);
+    void poll(log, target);
   };
 
   const endSession = async () => {
     const current = session();
     if (!current) return;
+    const target = series();
     setSession(null);
     setEndedAt(Date.now());
     setSource("ended");
-    await vilo.endLog(current.log);
+    await vilo.endLog(current.log, () => fetchSamples(current.log, target));
   };
 
   const togglePause = async () => {
@@ -483,6 +532,7 @@ function VibrationLogger() {
   const save = async () => {
     const current = session();
     if (!current) return;
+    const target = series();
     let path: string;
     try {
       path = await fileHandler.saveFileDialog("csv", "", defaultCsvName());
@@ -490,7 +540,11 @@ function VibrationLogger() {
       return; // Cancelled.
     }
     try {
-      await vilo.saveLog(current.log.endpoint, path);
+      // With the samples that arrived since the last poll.
+      if (session()?.log === current.log) {
+        await fetchSamples(current.log, target).catch(() => undefined);
+      }
+      await writeCsv(path, target);
       toastInfo(`Saved ${fileName(path)}`);
     } catch (e) {
       toastError("Could not save the CSV file", e);
@@ -647,7 +701,11 @@ function VibrationLogger() {
               config={baseConfig()}
               options={baseOptions()}
               locked={locked()}
-              busy={busy() || nodeState() === "checking"}
+              busy={
+                busy() ||
+                nodeState() === "checking" ||
+                nodeState() === "settingIdle"
+              }
               onSelectBase={(port) => {
                 const next = bases().find((b) => b.port === port);
                 if (next) void useBase(next);
@@ -676,13 +734,18 @@ function VibrationLogger() {
               baseConfig={baseConfig()}
               notice={nodeNotice()}
               locked={locked()}
-              busy={busy() || nodeState() === "checking"}
+              busy={
+                busy() ||
+                nodeState() === "checking" ||
+                nodeState() === "settingIdle"
+              }
               onUse={(n) => void useDiscovered(n)}
               onConnect={(address) => void connectManual(address)}
               onRetry={() => {
                 const current = node();
                 if (current) void checkNode(current, true);
               }}
+              onSetIdle={() => void setToIdle()}
               onChangeNode={() => {
                 clearNode();
                 setNodeNotice("");
