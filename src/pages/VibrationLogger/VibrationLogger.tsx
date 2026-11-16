@@ -20,7 +20,6 @@ import {
 } from "@tabler/icons-solidjs";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
-import { load } from "@tauri-apps/plugin-store";
 import { css } from "styled-system/css";
 import { Button } from "~/components/ui/button";
 import { Spinner } from "~/components/ui/spinner";
@@ -56,7 +55,6 @@ type SelectedNode = { address: number; model: string | null };
 
 const liveLabels = ["ch1", "ch2", "ch3"];
 const pollInterval = 250;
-const storeKey = "viloLastNode";
 // Samples per write when saving, so a long session never needs one huge
 // string.
 const csvChunk = 20000;
@@ -73,35 +71,12 @@ function toastInfo(title: string) {
   toaster.create({ title, type: "success" });
 }
 
-async function openStore() {
-  return await load("store.json", { autoSave: false, defaults: {} });
-}
-
-async function loadLastNode(): Promise<SelectedNode | null> {
-  try {
-    const node = await (await openStore()).get<SelectedNode>(storeKey);
-    return node && typeof node.address === "number" ? node : null;
-  } catch {
-    return null;
-  }
-}
-
 async function writeCsv(path: string, data: SampleSeries) {
   const count = data.time.length;
   await writeTextFile(path, viloCsvHeader(data));
   for (let from = 0; from < count; from += csvChunk) {
     const to = Math.min(from + csvChunk, count);
     await writeTextFile(path, viloCsvRows(data, from, to), { append: true });
-  }
-}
-
-async function saveLastNode(node: SelectedNode) {
-  try {
-    const store = await openStore();
-    await store.set(storeKey, node);
-    await store.save();
-  } catch {
-    // Only a convenience for the next visit.
   }
 }
 
@@ -232,16 +207,11 @@ function VibrationLogger() {
     } catch (e) {
       toastError("Could not read the base station", e);
     }
-    const last = await loadLastNode();
-    if (last && base() === next) {
-      await checkNode(last, true);
-    }
   };
 
-  // Pings the node and reads its configuration. A remembered node that does
-  // not answer stays on the card as unreachable.
+  // Pings the node and reads its configuration.
   // `keep`: a node that does not answer stays, as unreachable, so that it
-  // can be woken up or retried; otherwise it is removed.
+  // can be set to idle or retried; otherwise it is removed.
   const checkNode = async (
     candidate: SelectedNode,
     keep: boolean,
@@ -272,7 +242,6 @@ function VibrationLogger() {
       return false;
     }
     setNodeState("selected");
-    await saveLastNode(candidate);
     return true;
   };
 
