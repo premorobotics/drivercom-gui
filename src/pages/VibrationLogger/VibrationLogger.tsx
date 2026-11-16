@@ -16,7 +16,6 @@ import {
   IconPlayerStopFilled,
   IconPlug,
   IconRefresh,
-  IconX,
 } from "@tabler/icons-solidjs";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
@@ -507,7 +506,6 @@ function VibrationLogger() {
 
   const save = async () => {
     const current = session();
-    if (!current) return;
     const target = series();
     let path: string;
     try {
@@ -517,7 +515,7 @@ function VibrationLogger() {
     }
     try {
       // With the samples that arrived since the last poll.
-      if (session()?.log === current.log) {
+      if (current && session()?.log === current.log) {
         await fetchSamples(current.log, target).catch(() => undefined);
       }
       await writeCsv(path, target);
@@ -809,30 +807,32 @@ function VibrationLogger() {
                     <Show
                       when={session()}
                       fallback={
-                        <Button
-                          loading={starting() !== ""}
-                          loadingText="Starting…"
-                          disabled={busy() || !logConfig()}
-                          onClick={start}
+                        <Tip
+                          text="Unsaved data from previous session will be lost."
+                          id="vilo-start-tip"
+                          when={source() === "ended"}
                         >
-                          <IconPlayerPlayFilled />
-                          Start logging
-                        </Button>
+                          <Button
+                            loading={starting() !== ""}
+                            loadingText="Starting…"
+                            disabled={busy() || !logConfig()}
+                            aria-describedby={
+                              source() === "ended"
+                                ? "vilo-start-tip"
+                                : undefined
+                            }
+                            onClick={start}
+                          >
+                            <IconPlayerPlayFilled />
+                            Start logging
+                          </Button>
+                        </Tip>
                       }
                     >
-                      <Tip
-                        text="Unsaved data will be lost. Save CSV first to keep it."
-                        id="vilo-end-session-tip"
-                      >
-                        <Button
-                          colorPalette="red"
-                          aria-describedby="vilo-end-session-tip"
-                          onClick={endSession}
-                        >
-                          <IconPlayerStopFilled />
-                          End session
-                        </Button>
-                      </Tip>
+                      <Button colorPalette="red" onClick={endSession}>
+                        <IconPlayerStopFilled />
+                        End session
+                      </Button>
                     </Show>
                   </div>
                   <Show when={starting()}>
@@ -928,10 +928,6 @@ function VibrationLogger() {
                             Resume
                           </Button>
                         </Show>
-                        <Button size="sm" variant="outline" onClick={save}>
-                          <IconDownload />
-                          Save CSV…
-                        </Button>
                       </Show>
                       <Show
                         when={
@@ -949,10 +945,11 @@ function VibrationLogger() {
                           Load CSV…
                         </Button>
                       </Show>
-                      <Show when={source() === "csv"}>
-                        <Button size="sm" variant="outline" onClick={clearPlot}>
-                          <IconX />
-                          Close file
+                      {/* Last, where it is during a session too. */}
+                      <Show when={source() === "live" || source() === "ended"}>
+                        <Button size="sm" variant="outline" onClick={save}>
+                          <IconDownload />
+                          Save CSV…
                         </Button>
                       </Show>
                     </div>
