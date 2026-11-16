@@ -17,6 +17,18 @@ export type DiscoveredNode = {
   comm_protocol: string;
 };
 
+// A node's details, as `vilo node state` prints them. `name` is the address
+// as text. An enum value that vilo does not know is printed as its number.
+export type NodeDetails = {
+  node_address: number;
+  name: string;
+  serial: string;
+  model: string | number;
+  microcontroller: string | number;
+  region_code: string | number;
+  firmware_version: string;
+};
+
 // Base station and node radio configuration, as `vilo base config get` and
 // `vilo node config get` print it.
 export type RadioConfig = {
@@ -134,6 +146,15 @@ export async function pingNode(port: string, node: number): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+export async function getNodeState(
+  port: string,
+  node: number,
+): Promise<NodeDetails> {
+  return JSON.parse(
+    await runOnPort(["node", "state", "-p", port, "-n", String(node)]),
+  );
 }
 
 // Sets the node to idle, which wakes it if it sleeps and stops its sampling.
