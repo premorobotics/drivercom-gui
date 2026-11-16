@@ -152,7 +152,6 @@ function VibrationLogger() {
     setNodeState("none");
     setNodeConfig(null);
     setLogConfig(null);
-    clearPlot();
   };
 
   const clearDevices = () => {
@@ -435,6 +434,7 @@ function VibrationLogger() {
     const address = node()?.address;
     const config = logConfig();
     if (!port || address === undefined || !config) return;
+    clearPlot();
     setStarting("Starting the session…");
     let log: vilo.LogProcess;
     try {
