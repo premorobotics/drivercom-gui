@@ -232,6 +232,14 @@ function VibrationLogger() {
       return false;
     }
     try {
+      // A node entered by address: its model comes from its state.
+      if (candidate.model === null) {
+        const { model } = await vilo.getNodeState(port, candidate.address);
+        if (typeof model !== "string") {
+          throw new Error(`Unknown model ${model}.`);
+        }
+        setNode({ ...candidate, model });
+      }
       setNodeConfig(await vilo.getNodeConfig(port, candidate.address));
       setLogConfig(await vilo.getLogConfig(port, candidate.address));
     } catch (e) {
@@ -413,11 +421,10 @@ function VibrationLogger() {
       return;
     }
     setStarting(`Base station found. Pinging node ${address}…`);
+    // Kept, as unreachable, so that it can be set to idle.
     if (!(await vilo.pingNode(port, address))) {
-      clearNode();
-      setNodeNotice(
-        `Node ${address} did not respond when logging started, so it was removed. Search for it or enter its address.`,
-      );
+      setNodeState("unreachable");
+      toastError("Could not start logging", `Node ${address} did not respond.`);
       return;
     }
     toastError("Could not start logging", e);
