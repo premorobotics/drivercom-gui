@@ -211,7 +211,7 @@ function VibrationLogger() {
 
   // Pings the node and reads its configuration.
   // `keep`: a node that does not answer stays, as unreachable, so that it
-  // can be set to idle or retried; otherwise it is removed.
+  // can be set to idle; otherwise it is removed.
   const checkNode = async (
     candidate: SelectedNode,
     keep: boolean,
@@ -710,10 +710,6 @@ function VibrationLogger() {
               }
               onUse={(n) => void useDiscovered(n)}
               onConnect={(address) => void connectManual(address)}
-              onRetry={() => {
-                const current = node();
-                if (current) void checkNode(current, true);
-              }}
               onSetIdle={() => void setToIdle()}
               onChangeNode={() => {
                 clearNode();
