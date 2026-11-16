@@ -67,7 +67,6 @@ type NodeCardProps = {
   busy: boolean;
   onUse: (node: DiscoveredNode) => void;
   onConnect: (address: number) => void;
-  onRetry: () => void;
   onSetIdle: () => void;
   onChangeNode: () => void;
   // Resolves true when applied.
@@ -361,14 +360,6 @@ export function NodeCard(props: NodeCardProps) {
                 onClick={() => props.onSetIdle()}
               >
                 Set to idle
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={props.busy}
-                onClick={() => props.onRetry()}
-              >
-                Retry
               </Button>
               <Button
                 size="sm"
