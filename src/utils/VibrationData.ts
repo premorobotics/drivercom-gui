@@ -110,12 +110,24 @@ export function upperBound(values: number[], value: number): number {
   return lo;
 }
 
+// One channel's lowest, highest and mean value, and its RMS around the mean,
+// so that an offset such as gravity does not count. Without samples, `min`
+// is Infinity, `max` -Infinity, and `mean` and `rms` NaN.
+export type ChannelStats = {
+  min: number;
+  max: number;
+  mean: number;
+  rms: number;
+};
+
 export type PlotWindow = {
   // uPlot data: time first, then one array per channel.
   data: number[][];
   // Lowest and highest value of the visible channels in the window.
   lo: number;
   hi: number;
+  // Each channel's, visible or not, from every sample in the window.
+  stats: ChannelStats[];
 };
 
 // The samples between `start` and `end`. With more than `maxPoints` samples,
@@ -139,15 +151,46 @@ export function sliceWindow(
       if (v > hi) hi = v;
     }
   };
+  // The sums are of each sample minus the channel's first one, so that a
+  // large offset does not swallow the small variations in rounding errors.
+  const totals = series.channels.map(() => ({
+    min: Infinity,
+    max: -Infinity,
+    n: 0,
+    shift: 0,
+    sum: 0,
+    sumSq: 0,
+  }));
+  const tally = (c: number, v: number) => {
+    if (!Number.isFinite(v)) return;
+    const t = totals[c];
+    if (t.n === 0) t.shift = v;
+    if (v < t.min) t.min = v;
+    if (v > t.max) t.max = v;
+    const d = v - t.shift;
+    t.sum += d;
+    t.sumSq += d * d;
+    t.n++;
+  };
+  const stats = (): ChannelStats[] =>
+    totals.map(({ min, max, n, shift, sum, sumSq }) => {
+      if (n === 0) return { min, max, mean: NaN, rms: NaN };
+      const offset = sum / n;
+      const variance = Math.max(0, sumSq / n - offset * offset);
+      return { min, max, mean: shift + offset, rms: Math.sqrt(variance) };
+    });
 
   if (count <= maxPoints) {
     const data = [series.time.slice(from, to)];
     series.channels.forEach((channel, c) => {
       const values = channel.slice(from, to);
-      values.forEach((v) => extend(c, v));
+      values.forEach((v) => {
+        extend(c, v);
+        tally(c, v);
+      });
       data.push(values);
     });
-    return { data, lo, hi };
+    return { data, lo, hi, stats: stats() };
   }
 
   const buckets = Math.max(1, Math.floor(maxPoints / 2));
@@ -165,6 +208,7 @@ export function sliceWindow(
       let maxAt = i0;
       for (let i = i0; i < i1; i++) {
         const v = channel[i];
+        tally(c, v);
         if (v < min) {
           min = v;
           minAt = i;
@@ -183,7 +227,7 @@ export function sliceWindow(
       }
     });
   }
-  return { data: [time, ...values], lo, hi };
+  return { data: [time, ...values], lo, hi, stats: stats() };
 }
 
 function niceStep(raw: number): number {

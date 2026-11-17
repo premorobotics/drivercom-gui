@@ -53,7 +53,7 @@ type Session = { log: vilo.LogProcess; paused: boolean };
 type SelectedNode = { address: number; model: string | null };
 
 const liveLabels = ["ch1", "ch2", "ch3"];
-const pollInterval = 250;
+const pollInterval = 1;
 // Samples per write when saving, so a long session never needs one huge
 // string.
 const csvChunk = 20000;
