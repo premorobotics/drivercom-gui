@@ -18,6 +18,7 @@ import { globalState } from "~/store/GlobalState";
 import { getComputedCSSVariableValue } from "~/utils/GetComputedCssVariableValue";
 import {
   Axis,
+  ChannelStats,
   fitAxis,
   formatAcceleration,
   formatClock,
@@ -50,26 +51,71 @@ const lightColors = ["#3d63dd", "#f08c00", "#0d5c47"];
 const darkColors = ["#849dff", "#ffa057", "#3dd68c"];
 const axisNames: Record<string, string> = { ch1: "X", ch2: "Y", ch3: "Z" };
 
-const legendItem = css({
+// One tile per channel above the plot: its RMS on the left, as the measure
+// of how strongly it vibrates, and the other stats in two columns on its
+// right. A tile also shows or hides its channel, as a legend would. The
+// tiles share the row equally; when a tile is too narrow for both sides,
+// the stats move under the RMS.
+const statTile = css({
+  flex: "1 1 0",
+  minWidth: "min-content",
   display: "flex",
-  alignItems: "center",
-  gap: "1.5",
-  minHeight: "6",
-  paddingX: "2",
-  borderRadius: "4px",
+  flexWrap: "wrap",
+  alignItems: "flex-end",
+  justifyContent: "space-between",
+  columnGap: "4",
+  rowGap: "1",
+  paddingX: "3",
+  paddingY: "2",
+  borderRadius: "6px",
+  background: "gray.2",
   fontSize: "xs",
+  color: "fg.muted",
   textAlign: "left",
-  whiteSpace: "nowrap",
   cursor: "pointer",
-  color: "fg.default",
   _hover: { background: "gray.3" },
   _focusVisible: {
     outline: "2px solid",
     outlineColor: "accent.9",
     outlineOffset: "1px",
   },
-  "&[aria-pressed=false]": { color: "fg.subtle" },
+  "&[aria-pressed=false]": { opacity: "0.5" },
 });
+const statName = css({
+  display: "flex",
+  alignItems: "center",
+  gap: "1.5",
+  fontWeight: "medium",
+  color: "fg.default",
+});
+// Equal-width digits, so "RMS" next to it stays put while the value changes.
+const statValue = css({
+  fontVariantNumeric: "tabular-nums",
+  fontSize: "lg",
+  fontWeight: "semibold",
+  lineHeight: "1.25",
+  color: "fg.default",
+});
+// Two columns of label and value. Every value gets the room of the widest
+// one, −00.000000 g (11ch with equal-width digits), so the decimal points
+// line up and nothing moves while the numbers change.
+const statDetails = css({
+  display: "grid",
+  gridTemplateColumns: "auto 11.5ch auto 11.5ch",
+  columnGap: "2",
+  lineHeight: "1.5",
+  fontVariantNumeric: "tabular-nums",
+  "& > :nth-child(even)": { textAlign: "right", color: "fg.default" },
+  "& > :nth-child(4n + 3)": { marginLeft: "2" },
+});
+
+// Six decimals, finer than the sensor's resolution of about 8 µg, or a dash
+// without samples.
+const formatStat = (value: number | undefined) => {
+  if (value === undefined || !Number.isFinite(value)) return "–";
+  const rounded = Math.round(value * 1e6) / 1e6;
+  return formatAcceleration(rounded === 0 ? 0 : rounded, 1e-6);
+};
 
 const thumb = {
   pointerEvents: "auto",
@@ -124,14 +170,17 @@ function formatSpan(seconds: number): string {
   return `${Math.floor(minutes / 60)} h ${minutes % 60} min`;
 }
 
-// Acceleration over time of day, with a legend inside the plot that shows or
-// hides each channel, and a two-handle range strip below it.
+// Acceleration over time of day, with a tile per channel above it that shows
+// the channel's statistics and shows or hides it, and a two-handle range
+// strip below it.
 export function VibrationPlot(props: VibrationPlotProps) {
   let wrapper!: HTMLDivElement;
   let container!: HTMLDivElement;
   let plot: uPlot | undefined;
 
   const [visible, setVisible] = createSignal<boolean[]>([]);
+  // Of the samples in the shown range.
+  const [stats, setStats] = createSignal<ChannelStats[]>([]);
   // Where uPlot draws, in CSS pixels from the wrapper's edges, so the legend,
   // the empty box and the range strip line up with it.
   const [area, setArea] = createSignal({
@@ -234,6 +283,7 @@ export function VibrationPlot(props: VibrationPlotProps) {
       visible(),
     );
     axis = fitAxis(window.lo, window.hi);
+    setStats(window.stats);
     xWindow = end > start ? [t0 + start, t0 + end] : [t0, t0 + 1];
     plot.setData(window.data as uPlot.AlignedData);
   };
@@ -324,6 +374,80 @@ export function VibrationPlot(props: VibrationPlotProps) {
       }}
     >
       <div
+        role="group"
+        aria-label="Channels shown, with statistics of the shown range"
+        class={css({
+          flex: "none",
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "2",
+        })}
+        style={{
+          "margin-left": `${area().left}px`,
+          "margin-right": `${area().right}px`,
+          ...hiddenWhenEmpty(),
+        }}
+      >
+        <For each={props.series.labels}>
+          {(label, i) => {
+            const shownChannel = () => visible()[i()] ?? true;
+            const stat = () => stats()[i()];
+            return (
+              <button
+                type="button"
+                class={statTile}
+                aria-pressed={shownChannel()}
+                onClick={() => toggle(i())}
+              >
+                <span
+                  style={{
+                    display: "flex",
+                    "flex-direction": "column",
+                    gap: "2px",
+                  }}
+                >
+                  <span class={statName}>
+                    <span
+                      aria-hidden="true"
+                      style={{
+                        width: "12px",
+                        height: "3px",
+                        "border-radius": "2px",
+                        background: shownChannel()
+                          ? colors()[i() % colors().length]
+                          : "transparent",
+                        "box-shadow": shownChannel()
+                          ? "none"
+                          : "inset 0 0 0 1px currentColor",
+                      }}
+                    />
+                    {axisNames[label]
+                      ? `${label} (${axisNames[label]})`
+                      : label}
+                  </span>
+                  <span>
+                    <span class={statValue}>{formatStat(stat()?.rms)}</span> RMS
+                  </span>
+                </span>
+                <span class={statDetails}>
+                  <span>min</span>
+                  <span>{formatStat(stat()?.min)}</span>
+                  <abbr title="Peak to peak">p-p</abbr>
+                  <span>
+                    {formatStat((stat()?.max ?? NaN) - (stat()?.min ?? NaN))}
+                  </span>
+                  <span>max</span>
+                  <span>{formatStat(stat()?.max)}</span>
+                  <span>avg</span>
+                  <span>{formatStat(stat()?.mean)}</span>
+                </span>
+              </button>
+            );
+          }}
+        </For>
+      </div>
+
+      <div
         ref={wrapper}
         style={{ position: "relative", flex: "1", "min-height": "160px" }}
       >
@@ -347,55 +471,6 @@ export function VibrationPlot(props: VibrationPlotProps) {
             {props.children}
           </div>
         </Show>
-        <div
-          role="group"
-          aria-label="Channels shown"
-          class={css({
-            position: "absolute",
-            display: "flex",
-            flexDirection: "column",
-            gap: "0.5",
-            padding: "1",
-            background: "gray.1",
-            opacity: "0.92",
-            borderWidth: "1px",
-            borderColor: "border",
-            borderRadius: "6px",
-          })}
-          style={{
-            top: `${area().top + 8}px`,
-            right: `${area().right + 8}px`,
-            ...hiddenWhenEmpty(),
-          }}
-        >
-          <For each={props.series.labels}>
-            {(label, i) => (
-              <button
-                type="button"
-                class={legendItem}
-                aria-pressed={visible()[i()] ?? true}
-                onClick={() => toggle(i())}
-              >
-                <span
-                  style={{
-                    width: "18px",
-                    height: "3px",
-                    "border-radius": "2px",
-                    background:
-                      (visible()[i()] ?? true)
-                        ? colors()[i() % colors().length]
-                        : "transparent",
-                    "box-shadow":
-                      (visible()[i()] ?? true)
-                        ? "none"
-                        : "inset 0 0 0 1px currentColor",
-                  }}
-                />
-                {axisNames[label] ? `${label} (${axisNames[label]})` : label}
-              </button>
-            )}
-          </For>
-        </div>
       </div>
 
       <div

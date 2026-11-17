@@ -109,6 +109,42 @@ describe("sliceWindow", () => {
     expect(actual.hi).toBe(100);
   });
 
+  test("gives each channel's stats from every sample", () => {
+    // Drawn as is or decimated, the same samples count.
+    for (const maxPoints of [100, 4]) {
+      const [a, b] = sliceWindow(series, 0, 7, maxPoints, [true, false]).stats;
+      expect(a.min).toBe(-3);
+      expect(a.max).toBe(5);
+      expect(a.mean).toBeCloseTo(7 / 8, 12);
+      // sqrt(39 / 8 - (7 / 8)^2)
+      expect(a.rms).toBeCloseTo(Math.sqrt(4.109375), 12);
+      expect(b).toStrictEqual({ min: 100, max: 100, mean: 100, rms: 0 });
+    }
+  });
+
+  test("keeps a small RMS on a large offset", () => {
+    const offset = { time: [0, 1, 2, 3], channels: [[1, 1.00001, 1, 1.00001]] };
+    const [actual] = sliceWindow(offset, 0, 3, 100, [true]).stats;
+    expect(actual.mean).toBeCloseTo(1.000005, 12);
+    expect(actual.rms).toBeCloseTo(0.000005, 12);
+  });
+
+  test("skips missing values in the stats", () => {
+    const gappy = { time: [0, 1, 2], channels: [[1, NaN, 3]] };
+    const actual = sliceWindow(gappy, 0, 2, 100, [true]);
+    expect(actual.stats).toStrictEqual([{ min: 1, max: 3, mean: 2, rms: 1 }]);
+  });
+
+  test("has no stats without samples", () => {
+    const actual = sliceWindow(series, 10, 20, 100, [true, true]);
+    expect(actual.stats[0]).toStrictEqual({
+      min: Infinity,
+      max: -Infinity,
+      mean: NaN,
+      rms: NaN,
+    });
+  });
+
   test("has no range without visible channels", () => {
     const actual = sliceWindow(series, 0, 7, 100, [false, false]);
     expect(actual.lo).toBe(Infinity);
