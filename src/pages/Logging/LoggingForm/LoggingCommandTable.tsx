@@ -11,6 +11,7 @@ import {
 import { Text } from "~/components/ui/text";
 import { Form, FormProps } from "~/components/Form";
 import { css } from "styled-system/css";
+import { HelpTooltip } from "~/components/HelpTooltip";
 
 type LoggingCommandProps = Omit<FormProps, "value"> & {
   config: CommandType;
@@ -30,10 +31,35 @@ export function LoggingCommandTable(props: LoggingCommandProps) {
     current_state: Current_state_Schema.parse({}),
   };
 
-  const commandList: { id: string; defaultValue: CommandType }[] = [
-    { id: "current_state", defaultValue: currentState },
-    { id: "speed_profile", defaultValue: speedProfileDefaultValue },
-    { id: "position_profile", defaultValue: positionProfileDefaultValue },
+  const findDesc = (key: string) => {
+    if (!props.description) return props.description;
+    const findObject =
+      props.description[`__${key}` as keyof typeof props.description];
+    if (typeof findObject !== "object") return undefined;
+    const findDesc = findObject["description" as keyof typeof findObject];
+    return findDesc as string;
+  };
+
+  const commandList: {
+    id: string;
+    defaultValue: CommandType;
+    description?: string;
+  }[] = [
+    {
+      id: "current_state",
+      defaultValue: currentState,
+      description: findDesc("current_state"),
+    },
+    {
+      id: "speed_profile",
+      defaultValue: speedProfileDefaultValue,
+      description: findDesc("speed_profile"),
+    },
+    {
+      id: "position_profile",
+      defaultValue: positionProfileDefaultValue,
+      description: findDesc("position_profile"),
+    },
   ];
 
   const parseCommandList = commandList.map((command) => {
@@ -85,17 +111,30 @@ export function LoggingCommandTable(props: LoggingCommandProps) {
           <Text fontSize="sm">{"Command type"}</Text>
           <Select.Trigger>
             <Select.ValueText placeholder={`Select Command`} />
+            <Select.IndicatorGroup>
+              <Select.Indicator />
+            </Select.IndicatorGroup>
           </Select.Trigger>
         </Select.Control>
         <Select.Positioner>
           <Select.Content>
             <For each={commandListCollection.items}>
-              {(item) => (
-                <Select.Item item={item}>
-                  <Select.ItemText>{item.label}</Select.ItemText>
-                  <Select.ItemIndicator></Select.ItemIndicator>
-                </Select.Item>
-              )}
+              {(item) => {
+                const findIndex = commandList.findIndex(
+                  (command) => command.id === item.label,
+                );
+                return (
+                  <Select.Item item={item}>
+                    <Select.ItemText>
+                      {item.label}
+                      <HelpTooltip
+                        content={commandList[findIndex].description}
+                      />
+                    </Select.ItemText>
+                    <Select.ItemIndicator></Select.ItemIndicator>
+                  </Select.Item>
+                );
+              }}
             </For>
           </Select.Content>
         </Select.Positioner>

@@ -274,6 +274,7 @@ export function LoggingTabContent() {
               config={getLoggingConfig()}
               accordionStates={getAccordionStates()}
               loadStartButton={loadStartLogButton()}
+              description={logConfigDescription()}
               onStartLogging={async (portId) => {
                 setLoadStartLogButton(true);
                 try {
