@@ -294,7 +294,7 @@ export async function getConfigDescription() {
 }
 
 export async function getLogConfigDescription() {
-  const output = await sendDrivercomCommand([`log.info`]);
+  const output = await sendDrivercomCommand([`log.config.info`]);
   const desc = JSON5.parse(output);
   setLogConfigDescription(desc);
 }
