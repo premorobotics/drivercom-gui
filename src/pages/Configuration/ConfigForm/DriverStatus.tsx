@@ -28,6 +28,7 @@ import { initializeSlider } from "~/services/PortService";
 import * as Select from "~/components/ui/select";
 import { createListCollection } from "@ark-ui/solid";
 import { Portal } from "solid-js/web";
+import { configDescription } from "~/store/GlobalState";
 
 const axisIdArray = ["1", "2", "3"] as const;
 type AxisIdType = (typeof axisIdArray)[number];
@@ -36,7 +37,6 @@ type DriverStatusProps = {
   id: string;
   driverStatus: StateType;
   accordionStatuses?: AccordionStates;
-  description?: object;
 };
 
 // Since the Driver status is immutable, It has a seperate components.
@@ -44,9 +44,9 @@ export function DriverStatus(props: DriverStatusProps) {
   const [driverStatus, setDriverStatus] = createStore<StateType>(
     props.driverStatus,
   );
-  const stateDecription = props.description
-    ? props.description["state" as keyof typeof props.description]
-    : props.description;
+
+  const configDesc = configDescription();
+  const stateDecription = configDesc["state" as keyof typeof configDesc];
 
   createEffect(
     on(

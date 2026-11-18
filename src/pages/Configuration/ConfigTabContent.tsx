@@ -702,7 +702,6 @@ export function ConfigTabContent() {
             id={getTabId() + "." + "driverStatus"}
             driverStatus={getConfigForm()!.state}
             accordionStatuses={getAccordionStatuses()!}
-            description={configDescription()}
           />
         </div>
       </Show>
