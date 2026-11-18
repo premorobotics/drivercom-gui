@@ -11,6 +11,7 @@ import {
   IconChartLine,
   IconDownload,
   IconFile,
+  IconInfoCircle,
   IconPlayerPauseFilled,
   IconPlayerPlayFilled,
   IconPlayerStopFilled,
@@ -26,16 +27,13 @@ import { toaster } from "~/components/ui/toast";
 import { FileHandler } from "~/services/FileHandler";
 import * as vilo from "~/services/ViloService";
 import {
-  appendSweeps,
-  createSeries,
+  calculateCapacity,
   formatClock,
   formatDuration,
   liveView,
-  parseViloCsv,
+  parseCsv,
   RangeView,
   SampleSeries,
-  viloCsvHeader,
-  viloCsvRows,
   wholeView,
 } from "~/utils/VibrationData";
 import { BaseStationCard, sessionLockText } from "./BaseStationCard";
@@ -43,7 +41,7 @@ import { Tip, TipLayer } from "./CursorTip";
 import { NodeCard, NodeState } from "./NodeCard";
 import { OptionSelect } from "./OptionSelect";
 import { VibrationPlot } from "./VibrationPlot";
-import { emptyBox, hint, notice, numeric } from "./styles";
+import { emptyBox, hint, infoButton, notice, numeric } from "./styles";
 
 type Stage = "detecting" | "noBase" | "ready";
 // What the plot shows: nothing, the running session, the session that just
@@ -53,10 +51,21 @@ type Session = { log: vilo.LogProcess; paused: boolean };
 type SelectedNode = { address: number; model: string | null };
 
 const liveLabels = ["ch1", "ch2", "ch3"];
-const pollInterval = 1;
+const pollInterval = 10;
 // Samples per write when saving, so a long session never needs one huge
 // string.
 const csvChunk = 20000;
+// How much of a session the page keeps, in minutes. The page allocates
+// room for it when the session starts and then drops the oldest samples.
+const storeLimits = ["1", "5", "10", "30", "60"];
+const defaultStoreLimit = "10";
+const storeLimitInfo =
+  "How much of the newest data the logger keeps. Older data is dropped, so Save CSV saves at most this much.";
+
+const formatMinutes = (value: string) => {
+  const minutes = Number(value);
+  return minutes % 60 === 0 ? `${minutes / 60} h` : `${minutes} min`;
+};
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const messageOf = (e: unknown) => (e instanceof Error ? e.message : String(e));
@@ -72,10 +81,10 @@ function toastInfo(title: string) {
 
 async function writeCsv(path: string, data: SampleSeries) {
   const count = data.time.length;
-  await writeTextFile(path, viloCsvHeader(data));
+  await writeTextFile(path, data.formatCsvHeader());
   for (let from = 0; from < count; from += csvChunk) {
     const to = Math.min(from + csvChunk, count);
-    await writeTextFile(path, viloCsvRows(data, from, to), { append: true });
+    await writeTextFile(path, data.formatCsvRows(from, to), { append: true });
   }
 }
 
@@ -111,6 +120,7 @@ function VibrationLogger() {
   );
   const [nodeNotice, setNodeNotice] = createSignal("");
   const [logConfig, setLogConfig] = createSignal<vilo.LogConfig | null>(null);
+  const [storeLimit, setStoreLimit] = createSignal(defaultStoreLimit);
   // A device command (configure, switch) is running.
   const [busy, setBusy] = createSignal(false);
 
@@ -129,7 +139,7 @@ function VibrationLogger() {
   const [starting, setStarting] = createSignal("");
   const [source, setSource] = createSignal<Source>("none");
   const [series, setSeries] = createSignal<SampleSeries>(
-    createSeries(liveLabels),
+    new SampleSeries(liveLabels, 0),
   );
   const [version, setVersion] = createSignal(0);
   const [view, setView] = createSignal<RangeView>(liveView());
@@ -142,7 +152,7 @@ function VibrationLogger() {
 
   const clearPlot = () => {
     setSource("none");
-    setSeries(createSeries(liveLabels));
+    setSeries(new SampleSeries(liveLabels, 0));
     setVersion((v) => v + 1);
   };
 
@@ -370,32 +380,35 @@ function VibrationLogger() {
   };
 
   // Log session.
-
-  // vilo keeps no samples, so the page holds the only copy. Fetches run one
-  // at a time, so the samples are appended in order.
-  let fetching: Promise<void> = Promise.resolve();
-  const fetchSamples = (log: vilo.LogProcess, target: SampleSeries) => {
-    const next = fetching.then(async () => {
-      const sweeps = await vilo.showLog(log.endpoint);
-      // Unless a new session or a CSV file replaced the data meanwhile.
-      if (sweeps.length > 0 && series() === target) {
-        appendSweeps(target, sweeps);
-        setVersion((v) => v + 1);
-      }
-    });
-    fetching = next.catch(() => undefined);
+  let queue: Promise<void> = Promise.resolve();
+  const enqueue = (task: () => Promise<void>) => {
+    const next = queue.then(task);
+    queue = next.catch(() => undefined);
     return next;
   };
+
+  const appendFetched = async (log: vilo.LogProcess, target: SampleSeries) => {
+    const sweeps = await vilo.showLog(log.endpoint);
+    // Unless a new session or a CSV file replaced the data meanwhile.
+    if (sweeps.length > 0 && series() === target) {
+      target.appendSweeps(sweeps);
+      setVersion((v) => v + 1);
+    }
+  };
+
+  const fetchSamples = (log: vilo.LogProcess, target: SampleSeries) =>
+    enqueue(() => appendFetched(log, target));
 
   // Also while paused, for the samples sent just before the pause.
   const poll = async (log: vilo.LogProcess, target: SampleSeries) => {
     while (session()?.log === log) {
+      const started = performance.now();
       try {
         await fetchSamples(log, target);
       } catch {
         // The process may be ending; its exit is handled on its own.
       }
-      await sleep(pollInterval);
+      await sleep(Math.max(0, pollInterval - (performance.now() - started)));
     }
   };
 
@@ -434,6 +447,17 @@ function VibrationLogger() {
     const config = logConfig();
     if (!port || address === undefined || !config) return;
     clearPlot();
+    // Room for the whole store limit, before the node starts.
+    let target: SampleSeries;
+    try {
+      target = new SampleSeries(
+        liveLabels,
+        calculateCapacity(config.sample_rate, Number(storeLimit())),
+      );
+    } catch (e) {
+      toastError("Could not start logging", e);
+      return;
+    }
     setStarting("Starting the session…");
     let log: vilo.LogProcess;
     try {
@@ -445,7 +469,6 @@ function VibrationLogger() {
       return;
     }
     setStarting("");
-    const target = createSeries(liveLabels);
     setSeries(target);
     setVersion((v) => v + 1);
     setView(liveView());
@@ -514,11 +537,13 @@ function VibrationLogger() {
       return; // Cancelled.
     }
     try {
-      // With the samples that arrived since the last poll.
-      if (current && session()?.log === current.log) {
-        await fetchSamples(current.log, target).catch(() => undefined);
-      }
-      await writeCsv(path, target);
+      await enqueue(async () => {
+        // With the samples that arrived since the last poll.
+        if (current && session()?.log === current.log) {
+          await appendFetched(current.log, target).catch(() => undefined);
+        }
+        await writeCsv(path, target);
+      });
       toastInfo(`Saved ${fileName(path)}`);
     } catch (e) {
       toastError("Could not save the CSV file", e);
@@ -533,7 +558,7 @@ function VibrationLogger() {
       return; // Cancelled.
     }
     try {
-      const parsed = parseViloCsv(await readTextFile(path));
+      const parsed = parseCsv(await readTextFile(path));
       setSeries(parsed);
       setVersion((v) => v + 1);
       setView(wholeView());
@@ -596,7 +621,7 @@ function VibrationLogger() {
     void version();
     const time = series().time;
     if (time.length === 0) return "";
-    return `${sampleCount().toLocaleString("en-US")} samples · ${formatClock(time[0], false)} – ${formatClock(time[time.length - 1], false)}`;
+    return `${sampleCount().toLocaleString("en-US")} samples · ${formatClock(time.get(0), false)} – ${formatClock(time.get(time.length - 1), false)}`;
   };
 
   return (
@@ -803,6 +828,43 @@ function VibrationLogger() {
                   <p class={hint}>
                     Written to the node when the session starts.
                   </p>
+                  <div>
+                    <div
+                      class={css({
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5",
+                        marginBottom: "1",
+                      })}
+                    >
+                      <label
+                        class={css({ fontSize: "sm", fontWeight: "medium" })}
+                        for="vilo-store-limit"
+                      >
+                        Store limit
+                      </label>
+                      <Tip text={storeLimitInfo} id="vilo-store-limit-tip">
+                        <button
+                          type="button"
+                          class={infoButton}
+                          aria-label="About the store limit"
+                          aria-describedby="vilo-store-limit-tip"
+                        >
+                          <IconInfoCircle />
+                        </button>
+                      </Tip>
+                    </div>
+                    <Tip text={sessionLockText} when={locked()} block>
+                      <OptionSelect
+                        id="vilo-store-limit"
+                        value={storeLimit()}
+                        options={storeLimits}
+                        format={formatMinutes}
+                        disabled={locked()}
+                        onChange={setStoreLimit}
+                      />
+                    </Tip>
+                  </div>
                   <div style={{ display: "flex", gap: "8px" }}>
                     <Show
                       when={session()}

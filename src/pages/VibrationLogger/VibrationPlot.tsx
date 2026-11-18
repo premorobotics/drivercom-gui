@@ -29,7 +29,7 @@ import {
   RangeView,
   SampleSeries,
   shownRange,
-  sliceWindow,
+  Span,
   wholeView,
 } from "~/utils/VibrationData";
 import { emptyBox, numeric } from "./styles";
@@ -189,18 +189,26 @@ export function VibrationPlot(props: VibrationPlotProps) {
     top: 0,
     bottom: 30,
   });
+  // Counts redraws. The range strip and its text follow it, so they change
+  // once per frame with the plot, not with every fetch.
+  const [redraws, setRedraws] = createSignal(0);
 
   // The scales uPlot reads on every redraw.
   let axis: Axis = fitAxis(-1, 1);
   let xWindow: [number, number] = [0, 1];
 
-  const firstTime = () => props.series.time[0] ?? Date.now() / 1000;
-  const total = () => {
-    void props.version;
+  // Times of the oldest and the newest kept sample.
+  const span = (): Span => {
+    void redraws();
     const time = props.series.time;
-    return time.length > 1 ? time[time.length - 1] - time[0] : 0;
+    if (time.length === 0) {
+      const now = Date.now() / 1000;
+      return [now, now];
+    }
+    return [time.get(0), time.get(time.length - 1)];
   };
-  const shown = () => shownRange(props.view, total());
+  const total = () => span()[1] - span()[0];
+  const shown = () => shownRange(props.view, span());
 
   const colors = () =>
     globalState.theme === "dark" ? darkColors : lightColors;
@@ -247,7 +255,8 @@ export function VibrationPlot(props: VibrationPlotProps) {
           ...props.series.labels.map((label, i) => ({
             label,
             stroke: colors()[i % colors().length],
-            width: 1.5,
+            // Thin, so a dense band of vibration stays cheap to paint.
+            width: 1,
             show: visible()[i] ?? true,
             points: { show: false },
           })),
@@ -273,19 +282,32 @@ export function VibrationPlot(props: VibrationPlotProps) {
 
   const update = () => {
     if (!plot) return;
-    const t0 = firstTime();
     const [start, end] = shown();
-    const window = sliceWindow(
-      props.series,
-      t0 + start,
-      t0 + end,
-      Math.max(200, plot.width * 2),
+    // One point per pixel: a min/max pair per 2 px still keeps every peak,
+    // and fewer strokes keep wide windows smooth.
+    const window = props.series.sliceWindow(
+      start,
+      end,
+      Math.max(200, plot.width),
       visible(),
     );
     axis = fitAxis(window.lo, window.hi);
     setStats(window.stats);
-    xWindow = end > start ? [t0 + start, t0 + end] : [t0, t0 + 1];
+    xWindow = end > start ? [start, end] : [start, start + 1];
     plot.setData(window.data as uPlot.AlignedData);
+  };
+
+  // Redraws at most once per screen frame. New samples and range changes
+  // only ask for it; the next frame draws all of them at once. Fetches can
+  // come far more often than the screen shows frames.
+  let frame = 0;
+  const requestUpdate = () => {
+    if (frame !== 0) return;
+    frame = requestAnimationFrame(() => {
+      frame = 0;
+      update();
+      setRedraws((n) => n + 1);
+    });
   };
 
   onMount(() => {
@@ -306,9 +328,11 @@ export function VibrationPlot(props: VibrationPlotProps) {
       ),
     );
     createEffect(
-      on(() => [props.version, props.view, visible(), props.series], update, {
-        defer: true,
-      }),
+      on(
+        () => [props.version, props.view, visible(), props.series],
+        requestUpdate,
+        { defer: true },
+      ),
     );
 
     const observer = new ResizeObserver(() => {
@@ -322,6 +346,7 @@ export function VibrationPlot(props: VibrationPlotProps) {
     });
     observer.observe(wrapper);
     onCleanup(() => {
+      cancelAnimationFrame(frame);
       observer.disconnect();
       plot?.destroy();
     });
@@ -335,24 +360,30 @@ export function VibrationPlot(props: VibrationPlotProps) {
   };
 
   const overview = createMemo(() => {
-    void props.version;
-    const series = props.series;
-    return overviewPath(series.time, series.channels[0] ?? [], 300, 1000, 300);
+    void redraws();
+    const { time, channels } = props.series;
+    return channels.length > 0
+      ? overviewPath(time, channels[0], 300, 1000, 300)
+      : "";
   });
 
   const selection = () => {
     const max = Math.max(total(), 1);
     const [start, end] = shown();
-    return { x: (start / max) * 1000, w: ((end - start) / max) * 1000 };
+    const x = start - span()[0];
+    return { x: (x / max) * 1000, w: ((end - start) / max) * 1000 };
   };
 
   const rangeText = () => {
-    const t0 = firstTime();
     const [start, end] = shown();
-    let text = `${formatClock(t0 + start, false)} – ${formatClock(t0 + end, false)} (${formatSpan(end - start)})`;
+    let text = `${formatClock(start, false)} – ${formatClock(end, false)} (${formatSpan(end - start)})`;
     if (props.live && props.view.follow) {
+      // Once full, the oldest samples are being dropped.
+      const full = props.series.time.isFull();
       text += props.view.whole
-        ? " · whole session, live"
+        ? full
+          ? " · all kept data, live"
+          : " · whole session, live"
         : " · following live data";
     }
     return text;
@@ -501,7 +532,7 @@ export function VibrationPlot(props: VibrationPlotProps) {
           <Button
             size="2xs"
             variant="outline"
-            disabled={isWholeRange(props.view, total())}
+            disabled={isWholeRange(props.view, span())}
             onClick={() => props.onViewChange(wholeView())}
           >
             <IconArrowsMaximize />
@@ -564,17 +595,17 @@ export function VibrationPlot(props: VibrationPlotProps) {
           <input
             type="range"
             class={rangeInput}
-            min="0"
-            max={Math.max(total(), 1)}
+            min={span()[0]}
+            max={span()[0] + Math.max(total(), 1)}
             step="any"
             value={shown()[0]}
             aria-label="Range start"
-            aria-valuetext={formatClock(firstTime() + shown()[0], false)}
+            aria-valuetext={formatClock(shown()[0], false)}
             onInput={(e) =>
               props.onViewChange(
                 moveRangeStart(
                   props.view,
-                  total(),
+                  span(),
                   Number(e.currentTarget.value),
                 ),
               )
@@ -583,19 +614,15 @@ export function VibrationPlot(props: VibrationPlotProps) {
           <input
             type="range"
             class={rangeInput}
-            min="0"
-            max={Math.max(total(), 1)}
+            min={span()[0]}
+            max={span()[0] + Math.max(total(), 1)}
             step="any"
             value={shown()[1]}
             aria-label="Range end"
-            aria-valuetext={formatClock(firstTime() + shown()[1], false)}
+            aria-valuetext={formatClock(shown()[1], false)}
             onInput={(e) =>
               props.onViewChange(
-                moveRangeEnd(
-                  props.view,
-                  total(),
-                  Number(e.currentTarget.value),
-                ),
+                moveRangeEnd(props.view, span(), Number(e.currentTarget.value)),
               )
             }
           />
