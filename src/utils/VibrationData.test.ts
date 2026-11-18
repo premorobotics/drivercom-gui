@@ -1,8 +1,7 @@
 import { describe, expect, test } from "vitest";
 import {
-  appendSweeps,
   axisDecimals,
-  createSeries,
+  calculateCapacity,
   formatAcceleration,
   fitAxis,
   isWholeRange,
@@ -10,25 +9,44 @@ import {
   lowerBound,
   moveRangeEnd,
   moveRangeStart,
-  parseViloCsv,
+  parseCsv,
+  SampleSeries,
   shownRange,
-  sliceWindow,
   upperBound,
-  viloCsvHeader,
-  viloCsvRows,
   wholeView,
 } from "./VibrationData";
 
-describe("parseViloCsv", () => {
-  test("reads vilo's CSV with trailing commas", () => {
-    const actual = parseViloCsv(
+// A series of these samples, with room for `capacity`, so that the first
+// ones are dropped if it is smaller. Times are in seconds.
+function seriesOf(
+  time: number[],
+  channels: number[][],
+  capacity = time.length,
+): SampleSeries {
+  const series = new SampleSeries(
+    channels.map((_, c) => `ch${c + 1}`),
+    capacity,
+  );
+  time.forEach((t, i) => {
+    series.push(
+      i,
+      t * 1e9,
+      channels.map((channel) => channel[i]),
+    );
+  });
+  return series;
+}
+
+describe("parseCsv", () => {
+  test("reads a CSV with trailing commas", () => {
+    const actual = parseCsv(
       "tick,timestamp,ch1,ch2,ch3,\n" +
         "1,1000000000,0.5,-0.25,1,\n" +
         "2,1002000000,0.75,0,1.5,\n",
     );
     expect(actual.labels).toStrictEqual(["ch1", "ch2", "ch3"]);
-    expect(actual.time).toStrictEqual([1, 1.002]);
-    expect(actual.channels).toStrictEqual([
+    expect(actual.time.toArray()).toStrictEqual([1, 1.002]);
+    expect(actual.channels.map((c) => c.toArray())).toStrictEqual([
       [0.5, 0.75],
       [-0.25, 0],
       [1, 1.5],
@@ -36,59 +54,85 @@ describe("parseViloCsv", () => {
   });
 
   test("keeps column names and order", () => {
-    const actual = parseViloCsv("x,timestamp,tick\n1,2000000000,7");
+    const actual = parseCsv("x,timestamp,tick\n1,2000000000,7");
     expect(actual.labels).toStrictEqual(["x"]);
-    expect(actual.time).toStrictEqual([2]);
-    expect(actual.channels).toStrictEqual([[1]]);
+    expect(actual.time.toArray()).toStrictEqual([2]);
+    expect(actual.channels.map((c) => c.toArray())).toStrictEqual([[1]]);
   });
 
   test("rejects a file without a header", () => {
-    expect(() => parseViloCsv("1,1000000000,0.5,0.1,0.2,\n")).toThrow("header");
+    expect(() => parseCsv("1,1000000000,0.5,0.1,0.2,\n")).toThrow("header");
   });
 
   test("rejects an empty file", () => {
-    expect(() => parseViloCsv("\n\n")).toThrow("empty");
+    expect(() => parseCsv("\n\n")).toThrow("empty");
   });
 
   test("rejects a header without channels", () => {
-    expect(() => parseViloCsv("tick,timestamp,\n1,1,\n")).toThrow("channel");
+    expect(() => parseCsv("tick,timestamp,\n1,1,\n")).toThrow("channel");
   });
 
   test("rejects a header without data", () => {
-    expect(() => parseViloCsv("tick,timestamp,ch1,\n")).toThrow("no data");
+    expect(() => parseCsv("tick,timestamp,ch1,\n")).toThrow("no data");
   });
 
   test("rejects a short line", () => {
-    expect(() => parseViloCsv("tick,timestamp,ch1,\n1,1,\n")).toThrow("Line 2");
+    expect(() => parseCsv("tick,timestamp,ch1,\n1,1,\n")).toThrow("Line 2");
   });
 
   test("rejects an invalid timestamp", () => {
-    expect(() => parseViloCsv("tick,timestamp,ch1,\n1,abc,0.1,\n")).toThrow(
+    expect(() => parseCsv("tick,timestamp,ch1,\n1,abc,0.1,\n")).toThrow(
       "timestamp",
     );
   });
 });
 
 test("lowerBound and upperBound", () => {
-  const values = [1, 2, 2, 3];
-  expect(lowerBound(values, 2)).toBe(1);
-  expect(upperBound(values, 2)).toBe(3);
-  expect(lowerBound(values, 0)).toBe(0);
-  expect(upperBound(values, 9)).toBe(4);
+  const series = seriesOf([1, 2, 2, 3], [[0, 0, 0, 0]]);
+  expect(lowerBound(series.time, 2)).toBe(1);
+  expect(upperBound(series.time, 2)).toBe(3);
+  expect(lowerBound(series.time, 0)).toBe(0);
+  expect(upperBound(series.time, 9)).toBe(4);
+  // Kept: 3, 4, 5 and 6, from the middle of the arrays on.
+  const wrapped = seriesOf([1, 2, 3, 4, 5, 6], [[0, 0, 0, 0, 0, 0]], 4);
+  expect(lowerBound(wrapped.time, 4)).toBe(1);
+  expect(upperBound(wrapped.time, 5)).toBe(3);
+  expect(lowerBound(wrapped.time, 0)).toBe(0);
+  expect(upperBound(wrapped.time, 9)).toBe(4);
+});
+
+describe("sample store", () => {
+  test("drops the oldest samples once full", () => {
+    const actual = seriesOf([1, 2, 3, 4, 5], [[10, 20, 30, 40, 50]], 3);
+    expect(actual.time.length).toBe(3);
+    expect(actual.time.toArray()).toStrictEqual([3, 4, 5]);
+    expect(actual.channels[0].toArray()).toStrictEqual([30, 40, 50]);
+    expect(actual.ticks.toArray()).toStrictEqual([2, 3, 4]);
+  });
+
+  test("keeps nothing without room", () => {
+    const actual = seriesOf([1, 2], [[10, 20]], 0);
+    expect(actual.time.length).toBe(0);
+  });
+
+  test("calculateCapacity", () => {
+    expect(calculateCapacity("512hz", 10)).toBe(307200);
+    expect(calculateCapacity("64hz", 1)).toBe(3840);
+    expect(() => calculateCapacity("fast", 1)).toThrow("sample rate");
+  });
 });
 
 describe("sliceWindow", () => {
-  const series = {
-    labels: ["a", "b"],
-    time: [0, 1, 2, 3, 4, 5, 6, 7],
-    channels: [
+  const series = seriesOf(
+    [0, 1, 2, 3, 4, 5, 6, 7],
+    [
       [0, 5, 1, 1, 1, -3, 1, 1],
       [100, 100, 100, 100, 100, 100, 100, 100],
     ],
-  };
+  );
 
   test("returns the samples in the window", () => {
-    const actual = sliceWindow(series, 1, 3, 100, [true, false]);
+    const actual = series.sliceWindow(1, 3, 100, [true, false]);
     expect(actual.data).toStrictEqual([
       [1, 2, 3],
       [5, 1, 1],
@@ -99,7 +143,7 @@ describe("sliceWindow", () => {
   });
 
   test("keeps each bucket's peaks when decimating", () => {
-    const actual = sliceWindow(series, 0, 7, 4, [true, true]);
+    const actual = series.sliceWindow(0, 7, 4, [true, true]);
     expect(actual.data).toStrictEqual([
       [0, 3, 4, 7],
       [0, 5, 1, -3],
@@ -112,7 +156,7 @@ describe("sliceWindow", () => {
   test("gives each channel's stats from every sample", () => {
     // Drawn as is or decimated, the same samples count.
     for (const maxPoints of [100, 4]) {
-      const [a, b] = sliceWindow(series, 0, 7, maxPoints, [true, false]).stats;
+      const [a, b] = series.sliceWindow(0, 7, maxPoints, [true, false]).stats;
       expect(a.min).toBe(-3);
       expect(a.max).toBe(5);
       expect(a.mean).toBeCloseTo(7 / 8, 12);
@@ -122,21 +166,40 @@ describe("sliceWindow", () => {
     }
   });
 
+  test("reads the kept samples in order once full", () => {
+    // Kept: times 2 to 5, from the middle of the arrays on.
+    const wrapped = seriesOf([0, 1, 2, 3, 4, 5], [[9, 9, 1, 2, 3, 4]], 4);
+    for (const maxPoints of [100, 2]) {
+      const actual = wrapped.sliceWindow(0, 9, maxPoints, [true]);
+      expect(actual.lo).toBe(1);
+      expect(actual.hi).toBe(4);
+      expect(actual.stats[0].mean).toBeCloseTo(2.5, 12);
+    }
+    expect(wrapped.sliceWindow(3, 4, 100, [true]).data).toStrictEqual([
+      [3, 4],
+      [2, 3],
+    ]);
+    expect(wrapped.sliceWindow(0, 9, 2, [true]).data).toStrictEqual([
+      [2, 5],
+      [1, 4],
+    ]);
+  });
+
   test("keeps a small RMS on a large offset", () => {
-    const offset = { time: [0, 1, 2, 3], channels: [[1, 1.00001, 1, 1.00001]] };
-    const [actual] = sliceWindow(offset, 0, 3, 100, [true]).stats;
+    const offset = seriesOf([0, 1, 2, 3], [[1, 1.00001, 1, 1.00001]]);
+    const [actual] = offset.sliceWindow(0, 3, 100, [true]).stats;
     expect(actual.mean).toBeCloseTo(1.000005, 12);
     expect(actual.rms).toBeCloseTo(0.000005, 12);
   });
 
   test("skips missing values in the stats", () => {
-    const gappy = { time: [0, 1, 2], channels: [[1, NaN, 3]] };
-    const actual = sliceWindow(gappy, 0, 2, 100, [true]);
+    const gappy = seriesOf([0, 1, 2], [[1, NaN, 3]]);
+    const actual = gappy.sliceWindow(0, 2, 100, [true]);
     expect(actual.stats).toStrictEqual([{ min: 1, max: 3, mean: 2, rms: 1 }]);
   });
 
   test("has no stats without samples", () => {
-    const actual = sliceWindow(series, 10, 20, 100, [true, true]);
+    const actual = series.sliceWindow(10, 20, 100, [true, true]);
     expect(actual.stats[0]).toStrictEqual({
       min: Infinity,
       max: -Infinity,
@@ -146,7 +209,7 @@ describe("sliceWindow", () => {
   });
 
   test("has no range without visible channels", () => {
-    const actual = sliceWindow(series, 0, 7, 100, [false, false]);
+    const actual = series.sliceWindow(0, 7, 100, [false, false]);
     expect(actual.lo).toBe(Infinity);
     expect(actual.hi).toBe(-Infinity);
   });
@@ -166,37 +229,47 @@ test("fitAxis", () => {
 
 describe("range view", () => {
   test("follows the newest data with a fixed width", () => {
-    expect(shownRange(liveView(), 100)).toStrictEqual([70, 100]);
-    expect(shownRange(liveView(), 10)).toStrictEqual([0, 10]);
+    expect(shownRange(liveView(), [0, 100])).toStrictEqual([70, 100]);
+    expect(shownRange(liveView(), [0, 10])).toStrictEqual([0, 10]);
+    expect(shownRange(liveView(), [1000, 1010])).toStrictEqual([1000, 1010]);
   });
 
   test("shows the whole data", () => {
-    expect(shownRange(wholeView(), 100)).toStrictEqual([0, 100]);
-    expect(isWholeRange(wholeView(), 100)).toBe(true);
-    expect(isWholeRange(liveView(), 100)).toBe(false);
+    expect(shownRange(wholeView(), [0, 100])).toStrictEqual([0, 100]);
+    expect(shownRange(wholeView(), [50, 100])).toStrictEqual([50, 100]);
+    expect(isWholeRange(wholeView(), [0, 100])).toBe(true);
+    expect(isWholeRange(liveView(), [0, 100])).toBe(false);
   });
 
   test("holds still once the end is dragged back", () => {
-    const view = moveRangeEnd(liveView(), 100, 80);
+    const view = moveRangeEnd(liveView(), [0, 100], 80);
     expect(view.follow).toBe(false);
-    expect(shownRange(view, 200)).toStrictEqual([70, 80]);
+    expect(shownRange(view, [0, 200])).toStrictEqual([70, 80]);
+    // Older samples dropped, but not its own.
+    expect(shownRange(view, [60, 200])).toStrictEqual([70, 80]);
+  });
+
+  test("moves on with the oldest kept sample once its own are dropped", () => {
+    const view = moveRangeEnd(liveView(), [0, 100], 80);
+    expect(shownRange(view, [75, 200])).toStrictEqual([75, 85]);
   });
 
   test("follows again at the newest data", () => {
-    const view = moveRangeEnd(moveRangeEnd(liveView(), 100, 80), 100, 100);
+    const first = moveRangeEnd(liveView(), [0, 100], 80);
+    const view = moveRangeEnd(first, [0, 100], 100);
     expect(view.follow).toBe(true);
-    expect(shownRange(view, 200)).toStrictEqual([170, 200]);
+    expect(shownRange(view, [0, 200])).toStrictEqual([170, 200]);
   });
 
   test("moving the start to the first sample selects the whole", () => {
-    const view = moveRangeStart(liveView(), 100, 0.2);
+    const view = moveRangeStart(liveView(), [0, 100], 0.2);
     expect(view.whole).toBe(true);
-    expect(shownRange(view, 300)).toStrictEqual([0, 300]);
+    expect(shownRange(view, [0, 300])).toStrictEqual([0, 300]);
   });
 
   test("keeps a minimum span", () => {
-    const view = moveRangeStart(liveView(), 100, 150);
-    expect(shownRange(view, 100)).toStrictEqual([99, 100]);
+    const view = moveRangeStart(liveView(), [0, 100], 150);
+    expect(shownRange(view, [0, 100])).toStrictEqual([99, 100]);
   });
 });
 
@@ -212,42 +285,53 @@ test("formatAcceleration", () => {
 });
 
 test("appendSweeps", () => {
-  const series = createSeries(["ch1", "ch2", "ch3"]);
-  appendSweeps(series, [
+  const series = new SampleSeries(["ch1", "ch2", "ch3"], 10);
+  series.appendSweeps([
     { tick: 7, timestamp: 2500000000, ch1: 1, ch2: 2, ch3: 3 },
   ]);
-  expect(series.time).toStrictEqual([2.5]);
-  expect(series.ticks).toStrictEqual([7]);
-  expect(series.channels).toStrictEqual([[1], [2], [3]]);
+  expect(series.time.toArray()).toStrictEqual([2.5]);
+  expect(series.ticks.toArray()).toStrictEqual([7]);
+  expect(series.channels.map((c) => c.toArray())).toStrictEqual([
+    [1],
+    [2],
+    [3],
+  ]);
 });
 
-describe("vilo CSV", () => {
+describe("CSV", () => {
   const text =
     "tick,timestamp,ch1,ch2,ch3,\n" +
     "1,1000000000,0.5,-0.25,1,\n" +
     "2,1002000000,0.75,NaN,1.5,\n";
 
-  test("writes what vilo wrote", () => {
-    const series = parseViloCsv(text);
-    expect(series.ticks).toStrictEqual([1, 2]);
+  test("writes back what it read", () => {
+    const series = parseCsv(text);
+    expect(series.ticks.toArray()).toStrictEqual([1, 2]);
     expect(
-      viloCsvHeader(series) + viloCsvRows(series, 0, series.time.length),
+      series.formatCsvHeader() + series.formatCsvRows(0, series.time.length),
     ).toBe(text);
   });
 
   test("writes a range of samples", () => {
-    const series = parseViloCsv(text);
-    expect(viloCsvRows(series, 1, 2)).toBe("2,1002000000,0.75,NaN,1.5,\n");
+    const series = parseCsv(text);
+    expect(series.formatCsvRows(1, 2)).toBe("2,1002000000,0.75,NaN,1.5,\n");
+  });
+
+  test("writes the kept samples, oldest first", () => {
+    const series = seriesOf([1, 2, 3], [[10, 20, 30]], 2);
+    expect(series.formatCsvRows(0, series.time.length)).toBe(
+      "1,2000000000,20,\n2,3000000000,30,\n",
+    );
   });
 
   test("writes a timestamp to within a microsecond", () => {
     // As JSON.parse reads it from `vilo log show`.
     const expected = Number("1763000000123456789");
-    const series = createSeries(["ch1", "ch2", "ch3"]);
-    appendSweeps(series, [
+    const series = new SampleSeries(["ch1", "ch2", "ch3"], 1);
+    series.appendSweeps([
       { tick: 1, timestamp: expected, ch1: 0, ch2: 0, ch3: 0 },
     ]);
-    const actual = Number(viloCsvRows(series, 0, 1).split(",")[1]);
+    const actual = Number(series.formatCsvRows(0, 1).split(",")[1]);
     expect(Math.abs(actual - expected)).toBeLessThan(1000);
   });
 });
