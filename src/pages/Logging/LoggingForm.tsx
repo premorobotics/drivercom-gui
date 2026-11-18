@@ -13,6 +13,9 @@ export type LoggingFormProps = JSX.HTMLAttributes<HTMLDivElement> & {
 // A custom form component adpated to Logging configuration format.
 export function LoggingForm(props: LoggingFormProps) {
   const logForm = props.formData;
+  const description = props.description
+    ? props.description["config" as keyof typeof props.description]
+    : props.description;
 
   return (
     <div
@@ -28,7 +31,7 @@ export function LoggingForm(props: LoggingFormProps) {
         value={logForm}
         accordionStates={props.accordionStates}
         originalFile={props.originalFile}
-        description={props.description}
+        description={description}
       />
     </div>
   );

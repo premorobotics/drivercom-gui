@@ -9,18 +9,34 @@ import { Text } from "~/components/ui/text.tsx";
 import { css } from "styled-system/css/css";
 import { Button } from "~/components/ui/button.tsx";
 import { AccordionStates } from "~/pages/Configuration/ConfigForm/ConfigForm.tsx";
+import { HelpTooltip } from "~/components/HelpTooltip.tsx";
 
-type PortSideBarProps = {
+type LoggingSideBar = {
   id: string;
   config: LogConfigType;
   duration?: number;
   onStartLogging?: (portId: string) => void;
   accordionStates: AccordionStates;
   loadStartButton?: boolean;
+  description?: object;
 };
 
-export function LoggingSideBar(props: PortSideBarProps) {
+export function LoggingSideBar(props: LoggingSideBar) {
   const [logConfig, setLogConfig] = createStore<LogConfigType>(props.config);
+
+  const findDescriptionObject = (key: string, desc?: object) => {
+    if (!desc) return desc;
+    const findObj = desc[`${key}` as keyof typeof desc];
+    if (typeof findObj !== "object") return undefined;
+    return findObj;
+  };
+
+  const findDescription = (key: string, desc?: object) => {
+    const findObj = findDescriptionObject(`__${key}`, desc);
+    if (typeof findObj === "undefined") return findObj;
+    const findDesc = findObj["description" as keyof typeof findObj];
+    return findDesc;
+  };
 
   return (
     <div style={{ width: "100%", height: "100%" }}>
@@ -42,6 +58,13 @@ export function LoggingSideBar(props: PortSideBarProps) {
         </Text>
         <FormNumberInput
           id={`${props.id}.duration`}
+          desc={
+            props.description
+              ? props.description[
+                  "__duration" as keyof typeof props.description
+                ]
+              : props.description
+          }
           label={"duration"}
           inputValue={logConfig.duration}
           onInputChange={(value) => {
@@ -59,7 +82,10 @@ export function LoggingSideBar(props: PortSideBarProps) {
             background: "Canvas",
           })}
         >
-          <Text> {"Axes"}</Text>
+          <Text>
+            {"Axes"}
+            <HelpTooltip content={findDescription("axes", props.description)} />
+          </Text>
           <div
             class={css({
               display: "grid",
@@ -111,6 +137,7 @@ export function LoggingSideBar(props: PortSideBarProps) {
             accordionStates={props.accordionStates}
             config={logConfig.command}
             defaultValue={Object.keys(logConfig.command)[0]}
+            description={findDescriptionObject("command", props.description)}
           />
         </div>
         <div
