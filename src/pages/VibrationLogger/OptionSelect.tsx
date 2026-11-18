@@ -10,6 +10,8 @@ type OptionSelectProps = {
   value: string;
   // Values as vilo names them; the labels come from formatOption.
   options: string[];
+  // Labels for values that are not vilo's, in place of formatOption.
+  format?: (value: string) => string;
   disabled?: boolean;
   onChange: (value: string) => void;
 };
@@ -18,7 +20,7 @@ export function OptionSelect(props: OptionSelectProps) {
   const collection = createMemo(() =>
     createListCollection({
       items: props.options.map((value) => ({
-        label: formatOption(value),
+        label: (props.format ?? formatOption)(value),
         value,
       })),
     }),
