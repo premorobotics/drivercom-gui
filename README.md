@@ -12,18 +12,21 @@ A desktop GUI for **configuring, logging and analyzing** linear motion system (L
   - [1. Controller Configuration](#1-controller-configuration)
   - [2. Data Logging](#2-data-logging)
   - [3. Log Viewer](#3-log-viewer)
+  - [4. Tabs, Panels and Files](#4-tabs-panels-and-files)
 - [Shortcuts](#shortcuts)
 - [Parameter Reference](#parameter-reference)
 - [Glossary](#glossary)
 - [Documentation](#documentation)
+- [Development](#development)
 
 ## Features
 
 | Tab | Functions |
 |---|---|
-| **Configuration** | Read settings from the controller (`Get from port`), gain tuning (`tune`), check calibration values (`calibration`), save settings to the controller |
-| **Logging** | Select log items, duration and axes; save logs as CSV; log while a slider is moving |
-| **Log Viewer** | Plot CSV logs; show/hide and search legends; horizontal/vertical zoom; cursor lock; pan; partial save; split/merge graphs; legend styling |
+| **Configuration** | Read settings from the controller (`Get from port`), gain tuning (`tune`), check calibration values (`calibration`), save settings to the controller, import/save settings files (JSON5), m ↔ mm unit toggle |
+| **Logging** | Select log items, duration and axes; save logs as CSV; log while a slider is moving; import/save Log Config files |
+| **Log Viewer** | Plot CSV logs; show/hide and search legends; horizontal/vertical zoom; cursor lock; pan; reset; partial save; split/merge/reorder graphs; legend styling |
+| **Common** | Multiple tabs and split panels, drag-and-drop file opening, recent files, light/dark theme, version info |
 
 ## Screen Layout
 
@@ -31,8 +34,9 @@ A desktop GUI for **configuring, logging and analyzing** linear motion system (L
 |---|---|---|
 | ![Configuration](docs/images/configuration.png) | ![Logging](docs/images/logging.png) | ![Log Viewer](docs/images/log-viewer.png) |
 
-- **Left tree** — selects the `system` / `tune` / `calibration` settings group
-- **`Driver status` (right)** — shows the servo, CC-Link and axis status of the connected driver
+- **Left tree** — selects the `system` / `tune` / `calibration` settings group (toggle with the `Open/Close left dock` button)
+- **`Driver status` (right)** — shows the servo, CC-Link and axis status of the connected driver (toggle with the table button)
+- **Top bar** — switches between the Configuration / Logging / Log Viewer pages; the buttons at the top right toggle the light/dark theme and show the GUI/CLI version (ⓘ)
 
 ## Usage
 
@@ -45,6 +49,13 @@ A desktop GUI for **configuring, logging and analyzing** linear motion system (L
 3. Check that the settings are displayed.
 
 <img src="docs/images/get-from-port.png" width="640" alt="Get from port">
+
+#### Importing and saving settings files
+
+- **Import File** — opens a settings file (`.json5`). Recently opened files are listed for quick access.
+- **Save as file** (floppy disk button) — saves the current settings to a `.json5` file. Saving to a file does not change the controller.
+- **Change length and weight units** (ruler button) — switches length-based values between m and mm (m/s ↔ mm/s, m/s² ↔ mm/s²) for display and entry.
+- **`?` help** — hover over the `?` next to a parameter to see its description. The `flags.flip` and `flags.swap` help shows a sensor diagram.
 
 #### Gain tuning (`tune`)
 
@@ -72,7 +83,7 @@ Calibration values are measured and entered automatically by the controller. How
 > **Both the servo and CC-Link must be OFF** before saving. CC-Link stays enabled while the server on the PC is running, so shut down the server first.
 
 1. Shut down the server running on the PC.
-2. Click the server status refresh button and check that CC-Link is OFF.
+2. Click the refresh button in `Driver status` and check that CC-Link is OFF.
 3. Click `Disable servo` at the top right of `Driver status` and select the target driver.
 4. Check that the servo has turned OFF.
 5. Click the save button.
@@ -92,11 +103,13 @@ Calibration values are measured and entered automatically by the controller. How
 4. Specify the CSV save location. Progress is shown in the download manager at the bottom right.
 5. When finished, click the file button in the download manager to open the log directly in the Log Viewer.
 
+The Log Config (items, duration, axes and command) can be imported from or saved to a file with the import and floppy disk buttons, and recently used files are listed for quick access.
+
 #### Logging while a slider is moving
 
 1. Enter values in the `Initialize` bar on the right and select the driver on which to register the slider.
 2. On success, the axis information appears under `slider`.
-3. Select `speed_profile` or `position_profile` in `Command type`.
+3. Select `speed_profile` or `position_profile` in `Command type`. The default, `current_state`, logs without moving the slider.
 4. Enter the travel distance, speed, acceleration and slider ID, then click `Start logging`.
 
 <img src="docs/images/logging-with-motion.png" width="640" alt="Logging with motion">
@@ -112,10 +125,12 @@ Calibration values are measured and entered automatically by the controller. How
 | Vertical zoom | Select vertical zoom and drag (`Ctrl`); mouse wheel zoom supported |
 | Cursor lock | Select cursor lock and click a position (`Alt`) |
 | Pan | Select pan and drag |
+| Reset | `Reset` button → restores the original zoom and graph layout |
 | Partial save | Saves only the visible legends within the horizontal zoom range as CSV |
 | Legend search | Hide all → search → show legends button (clear the search to show all) |
+| Range select | `Shift` + click a second legend checkbox or visibility toggle to apply it to every legend in between |
 | Split graph | Split button → check legends → split |
-| Reorder graphs | Drag and drop the move handle |
+| Reorder graphs | `Reorder Graph` button → drag and drop the move handle |
 | Merge graphs | Check the graphs to merge → merge button |
 | Legend style | Button left of the legend → set color and line style (dotted/dashed/solid) → save |
 
@@ -123,15 +138,33 @@ Calibration values are measured and entered automatically by the controller. How
 |---|---|---|
 | ![Zoom](docs/images/horizontal-zoom.png) | ![Split](docs/images/split-graph.png) | ![Legend style](docs/images/legend-style.png) |
 
+### 4. Tabs, Panels and Files
+
+| Function | How to use |
+|---|---|
+| New tab | `+` button at the end of the tab bar |
+| Rename tab | Double-click the tab name, type, then press `Enter` |
+| Split panel | Drag a tab to the edge of a panel; the highlighted area shows where the new panel will be placed (`Esc` cancels the drag) |
+| Open by drag and drop | Drop one file onto a panel (`.json5` on Configuration/Logging, `.csv` on Log Viewer). Dropping in the middle opens it as a new tab; dropping on the left/right quarter splits the panel |
+| Changed settings | On Configuration tabs, a colored mark shows that the settings differ from the opened file |
+
 ## Shortcuts
+
+`Shift`, `Ctrl` and `Alt` switch the Log Viewer cursor mode only while held; releasing the key returns to the previously selected mode.
 
 | Input | Function | Notes |
 |---|---|---|
 | `Shift` + drag | Horizontal zoom | |
 | `Ctrl` + drag | Vertical zoom | |
-| `Alt` | Cursor lock | |
+| `Alt` + click | Cursor lock | |
+| Mouse wheel | Zoom horizontally and vertically around the cursor | |
+| `Shift` + wheel | Zoom using horizontal scroll | For touchpads / horizontal wheels |
 | Double-click (horizontal zoom mode) | Reset horizontal and vertical zoom | Horizontal zoom resets only in horizontal mode |
 | Double-click (vertical zoom mode) | Reset vertical zoom | Horizontal zoom is kept |
+| `Shift` + click (legend checkbox / visibility) | Apply to the whole range from the previous click | |
+| `Shift` + click (settings checkbox) | Apply to every checkbox between the previous click and this one | Within the same group |
+| Double-click (tab name) | Rename tab | |
+| `Esc` (while dragging a tab) | Cancel tab drag | |
 
 ## Parameter Reference
 
@@ -268,6 +301,32 @@ See the user manual for detailed procedures and all screenshots.
 
 - [User Manual (English)](docs/manual/Drivercom_GUI_User_Manual_Rev1.0_EN.docx)
 - [User Manual (Korean)](docs/manual/Drivercom_GUI_User_Manual_Rev1.0_KR.docx)
+
+## Development
+
+### Requirements
+
+1. `pnpm`
+2. `rustc` & `cargo`
+3. [`gh`](https://cli.github.com/) (GitHub CLI), logged in with access to `pmotionf/drivercom-cli`
+
+> [!NOTE]
+> `pnpm tauri ...` first runs `pnpm run drivercom`, which downloads the `drivercom-cli` binary from the GitHub releases of `pmotionf/drivercom-cli` with `gh release download` and generates the config types into `src-tauri/generated/config`. Run `gh auth login` beforehand.
+
+### Setup
+
+```sh
+pnpm i
+pnpm fmt
+pnpm check
+pnpm test
+```
+
+### Running
+
+To run a development build, use `pnpm tauri dev`.
+
+To build the installer, use `pnpm tauri build`.
 
 ---
 
