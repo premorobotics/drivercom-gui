@@ -51,7 +51,7 @@ type Session = { log: vilo.LogProcess; paused: boolean };
 type SelectedNode = { address: number; model: string | null };
 
 const liveLabels = ["ch1", "ch2", "ch3"];
-const pollInterval = 10;
+const pollInterval = 5;
 // Samples per write when saving, so a long session never needs one huge
 // string.
 const csvChunk = 20000;
@@ -390,7 +390,7 @@ function VibrationLogger() {
   const appendFetched = async (log: vilo.LogProcess, target: SampleSeries) => {
     const sweeps = await vilo.showLog(log.endpoint);
     // Unless a new session or a CSV file replaced the data meanwhile.
-    if (sweeps.length > 0 && series() === target) {
+    if (sweeps.tick.length > 0 && series() === target) {
       target.appendSweeps(sweeps);
       setVersion((v) => v + 1);
     }
