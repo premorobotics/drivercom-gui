@@ -16,6 +16,7 @@ import { css } from "styled-system/css";
 import { Button } from "~/components/ui/button";
 import { globalState } from "~/store/GlobalState";
 import { getComputedCSSVariableValue } from "~/utils/GetComputedCssVariableValue";
+import { endTimer, startTimer } from "~/utils/Timer";
 import {
   Axis,
   ChannelStats,
@@ -283,14 +284,8 @@ export function VibrationPlot(props: VibrationPlotProps) {
   const update = () => {
     if (!plot) return;
     const [start, end] = shown();
-    // One point per pixel: a min/max pair per 2 px still keeps every peak,
-    // and fewer strokes keep wide windows smooth.
-    const window = props.series.sliceWindow(
-      start,
-      end,
-      Math.max(200, plot.width),
-      visible(),
-    );
+    // Every sample in the shown range.
+    const window = props.series.sliceWindow(start, end, visible());
     axis = fitAxis(window.lo, window.hi);
     setStats(window.stats);
     xWindow = end > start ? [start, end] : [start, start + 1];

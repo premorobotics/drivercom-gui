@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   axisDecimals,
   calculateCapacity,
+  type ChannelStats,
   formatAcceleration,
   fitAxis,
   isWholeRange,
@@ -132,74 +133,60 @@ describe("sliceWindow", () => {
   );
 
   test("returns the samples in the window", () => {
-    const actual = series.sliceWindow(1, 3, 100, [true, false]);
+    const actual = series.sliceWindow(1, 3, [true, false]);
     expect(actual.data).toStrictEqual([
-      [1, 2, 3],
-      [5, 1, 1],
-      [100, 100, 100],
+      new Float64Array([1, 2, 3]),
+      new Float64Array([5, 1, 1]),
+      new Float64Array([100, 100, 100]),
     ]);
     expect(actual.lo).toBe(1);
     expect(actual.hi).toBe(5);
   });
 
-  test("keeps each bucket's peaks when decimating", () => {
-    const actual = series.sliceWindow(0, 7, 4, [true, true]);
-    expect(actual.data).toStrictEqual([
-      [0, 3, 4, 7],
-      [0, 5, 1, -3],
-      [100, 100, 100, 100],
-    ]);
+  test("spans every visible channel", () => {
+    const actual = series.sliceWindow(0, 7, [true, true]);
     expect(actual.lo).toBe(-3);
     expect(actual.hi).toBe(100);
   });
 
   test("gives each channel's stats from every sample", () => {
-    // Drawn as is or decimated, the same samples count.
-    for (const maxPoints of [100, 4]) {
-      const [a, b] = series.sliceWindow(0, 7, maxPoints, [true, false]).stats;
-      expect(a.min).toBe(-3);
-      expect(a.max).toBe(5);
-      expect(a.mean).toBeCloseTo(7 / 8, 12);
-      // sqrt(39 / 8 - (7 / 8)^2)
-      expect(a.rms).toBeCloseTo(Math.sqrt(4.109375), 12);
-      expect(b).toStrictEqual({ min: 100, max: 100, mean: 100, rms: 0 });
-    }
+    const [a, b] = series.sliceWindow(0, 7, [true, false]).stats;
+    expect(a.min).toBe(-3);
+    expect(a.max).toBe(5);
+    expect(a.mean).toBeCloseTo(7 / 8, 12);
+    // sqrt(39 / 8 - (7 / 8)^2)
+    expect(a.rms).toBeCloseTo(Math.sqrt(4.109375), 12);
+    expect(b).toStrictEqual({ min: 100, max: 100, mean: 100, rms: 0 });
   });
 
   test("reads the kept samples in order once full", () => {
     // Kept: times 2 to 5, from the middle of the arrays on.
     const wrapped = seriesOf([0, 1, 2, 3, 4, 5], [[9, 9, 1, 2, 3, 4]], 4);
-    for (const maxPoints of [100, 2]) {
-      const actual = wrapped.sliceWindow(0, 9, maxPoints, [true]);
-      expect(actual.lo).toBe(1);
-      expect(actual.hi).toBe(4);
-      expect(actual.stats[0].mean).toBeCloseTo(2.5, 12);
-    }
-    expect(wrapped.sliceWindow(3, 4, 100, [true]).data).toStrictEqual([
-      [3, 4],
-      [2, 3],
-    ]);
-    expect(wrapped.sliceWindow(0, 9, 2, [true]).data).toStrictEqual([
-      [2, 5],
-      [1, 4],
+    const actual = wrapped.sliceWindow(0, 9, [true]);
+    expect(actual.lo).toBe(1);
+    expect(actual.hi).toBe(4);
+    expect(actual.stats[0].mean).toBeCloseTo(2.5, 12);
+    expect(wrapped.sliceWindow(3, 4, [true]).data).toStrictEqual([
+      new Float64Array([3, 4]),
+      new Float64Array([2, 3]),
     ]);
   });
 
   test("keeps a small RMS on a large offset", () => {
     const offset = seriesOf([0, 1, 2, 3], [[1, 1.00001, 1, 1.00001]]);
-    const [actual] = offset.sliceWindow(0, 3, 100, [true]).stats;
+    const [actual] = offset.sliceWindow(0, 3, [true]).stats;
     expect(actual.mean).toBeCloseTo(1.000005, 12);
     expect(actual.rms).toBeCloseTo(0.000005, 12);
   });
 
   test("skips missing values in the stats", () => {
     const gappy = seriesOf([0, 1, 2], [[1, NaN, 3]]);
-    const actual = gappy.sliceWindow(0, 2, 100, [true]);
+    const actual = gappy.sliceWindow(0, 2, [true]);
     expect(actual.stats).toStrictEqual([{ min: 1, max: 3, mean: 2, rms: 1 }]);
   });
 
   test("has no stats without samples", () => {
-    const actual = series.sliceWindow(10, 20, 100, [true, true]);
+    const actual = series.sliceWindow(10, 20, [true, true]);
     expect(actual.stats[0]).toStrictEqual({
       min: Infinity,
       max: -Infinity,
@@ -209,11 +196,78 @@ describe("sliceWindow", () => {
   });
 
   test("has no range without visible channels", () => {
-    const actual = series.sliceWindow(0, 7, 100, [false, false]);
+    const actual = series.sliceWindow(0, 7, [false, false]);
     expect(actual.lo).toBe(Infinity);
     expect(actual.hi).toBe(-Infinity);
   });
+
+  test("keeps the stats right as the window moves", () => {
+    // Against stats counted afresh, while the window follows new samples,
+    // jumps back, and shows the whole store as it drops its oldest samples.
+    // 4 samples a second, 10 s kept, coming in batches of 1 to 7 samples,
+    // and now and then one larger than the store.
+    const moving = new SampleSeries(["ch1", "ch2", "ch3"], 40);
+    let n = 0;
+    for (let step = 0; step < 300; step++) {
+      const size = step % 50 === 49 ? 45 : (step % 7) + 1;
+      const numbers = Array.from({ length: size }, (_, k) => n + k);
+      n += size;
+      // Ties, a falling stretch, and missing values.
+      const ch1 = numbers.map((i) =>
+        i % 50 < 10 ? -i : Math.round(Math.sin(i * 1.7) * 4),
+      );
+      moving.appendSweeps({
+        tick: numbers,
+        timestamp: numbers.map((i) => i * 0.25e9),
+        ch1,
+        ch2: ch1.map((v, k) => (numbers[k] % 11 === 0 ? NaN : v * 0.5 + 1000)),
+        ch3: numbers.map((i) => Math.floor(i / 3) % 4),
+      });
+      const times = moving.time.toArray();
+      const last = times[times.length - 1];
+      const [start, end] =
+        step % 10 === 7
+          ? [last - 8, last - 4]
+          : step % 10 === 8
+            ? [times[0], last]
+            : [last - 5, last];
+      const actual = moving.sliceWindow(start, end, [true, true, true]);
+      moving.channels.forEach((channel, c) => {
+        const expected = recount(
+          channel
+            .toArray()
+            .filter((_, i) => times[i] >= start && times[i] <= end),
+        );
+        if (Number.isNaN(expected.mean)) {
+          // No numbers in the window.
+          expect(actual.stats[c]).toStrictEqual(expected);
+          return;
+        }
+        expect(actual.stats[c].min).toBe(expected.min);
+        expect(actual.stats[c].max).toBe(expected.max);
+        expect(actual.stats[c].mean).toBeCloseTo(expected.mean, 9);
+        expect(actual.stats[c].rms).toBeCloseTo(expected.rms, 9);
+      });
+    }
+  });
 });
+
+// Stats of `values`, counted the plain way.
+function recount(values: number[]): ChannelStats {
+  const finite = values.filter((v) => Number.isFinite(v));
+  if (finite.length === 0) {
+    return { min: Infinity, max: -Infinity, mean: NaN, rms: NaN };
+  }
+  const mean = finite.reduce((a, v) => a + v, 0) / finite.length;
+  const variance =
+    finite.reduce((a, v) => a + (v - mean) ** 2, 0) / finite.length;
+  return {
+    min: Math.min(...finite),
+    max: Math.max(...finite),
+    mean,
+    rms: Math.sqrt(variance),
+  };
+}
 
 test("fitAxis", () => {
   expect(fitAxis(-2.1, 3.4)).toStrictEqual({ min: -4, max: 4, step: 2 });
@@ -286,15 +340,19 @@ test("formatAcceleration", () => {
 
 test("appendSweeps", () => {
   const series = new SampleSeries(["ch1", "ch2", "ch3"], 10);
-  series.appendSweeps([
-    { tick: 7, timestamp: 2500000000, ch1: 1, ch2: 2, ch3: 3 },
-  ]);
-  expect(series.time.toArray()).toStrictEqual([2.5]);
-  expect(series.ticks.toArray()).toStrictEqual([7]);
+  series.appendSweeps({
+    tick: [7, 8],
+    timestamp: [2500000000, 2502000000],
+    ch1: [1, 4],
+    ch2: [2, 5],
+    ch3: [3, 6],
+  });
+  expect(series.time.toArray()).toStrictEqual([2.5, 2.502]);
+  expect(series.ticks.toArray()).toStrictEqual([7, 8]);
   expect(series.channels.map((c) => c.toArray())).toStrictEqual([
-    [1],
-    [2],
-    [3],
+    [1, 4],
+    [2, 5],
+    [3, 6],
   ]);
 });
 
@@ -328,9 +386,13 @@ describe("CSV", () => {
     // As JSON.parse reads it from `vilo log show`.
     const expected = Number("1763000000123456789");
     const series = new SampleSeries(["ch1", "ch2", "ch3"], 1);
-    series.appendSweeps([
-      { tick: 1, timestamp: expected, ch1: 0, ch2: 0, ch3: 0 },
-    ]);
+    series.appendSweeps({
+      tick: [1],
+      timestamp: [expected],
+      ch1: [0],
+      ch2: [0],
+      ch3: [0],
+    });
     const actual = Number(series.formatCsvRows(0, 1).split(",")[1]);
     expect(Math.abs(actual - expected)).toBeLessThan(1000);
   });

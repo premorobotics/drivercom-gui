@@ -57,14 +57,14 @@ export type LogOptions = {
   high_pass_filter: string[];
 };
 
-// One sweep from `vilo log show`. The timestamp is in nanoseconds since the
-// Unix epoch.
-export type Sample = {
-  tick: number;
-  timestamp: number;
-  ch1: number;
-  ch2: number;
-  ch3: number;
+// The sweeps from one `vilo log show`, one array per field, all the same
+// length. Timestamps are in nanoseconds since the Unix epoch.
+export type Sweeps = {
+  tick: number[];
+  timestamp: number[];
+  ch1: number[];
+  ch2: number[];
+  ch3: number[];
 };
 
 // A running `vilo log start` process. `endpoint` is the TCP port that the
@@ -311,9 +311,18 @@ export function startLog(port: string, node: number): Promise<LogProcess> {
 
 // New samples since the last call. vilo keeps none: whatever is not fetched
 // before the session ends is lost.
-export async function showLog(endpoint: number): Promise<Sample[]> {
+export async function showLog(endpoint: number): Promise<Sweeps> {
   const result = JSON.parse(await run(["log", "show", "-p", String(endpoint)]));
-  if (!Array.isArray(result)) {
+  const fields = ["tick", "timestamp", "ch1", "ch2", "ch3"] as const;
+  const isSweeps =
+    typeof result === "object" &&
+    result !== null &&
+    fields.every(
+      (field) =>
+        Array.isArray(result[field]) &&
+        result[field].length === result.tick.length,
+    );
+  if (!isSweeps) {
     throw new Error("The logger did not return data.");
   }
   return result;
