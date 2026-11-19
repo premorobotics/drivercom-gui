@@ -3,3 +3,5 @@ node_modules
 src-tauri
 styled-system
 src/components/ui
+README.md
+docs
