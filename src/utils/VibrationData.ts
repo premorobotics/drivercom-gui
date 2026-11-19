@@ -8,16 +8,16 @@ import { RingBuffer } from "./RingBuffer";
 // being the oldest.
 export class SampleSeries {
   readonly labels: string[];
-  readonly time: RingBuffer<number>;
-  readonly channels: RingBuffer<number>[];
+  readonly time: RingBuffer;
   // vilo's sweep counter.
-  readonly ticks: RingBuffer<number>;
+  readonly ticks: RingBuffer;
+  readonly channels: RingBuffer[];
 
   constructor(labels: string[], capacity: number) {
     this.labels = labels;
-    this.time = new RingBuffer<number>(capacity);
-    this.channels = labels.map(() => new RingBuffer<number>(capacity));
-    this.ticks = new RingBuffer<number>(capacity);
+    this.time = new RingBuffer(capacity);
+    this.channels = labels.map(() => new RingBuffer(capacity));
+    this.ticks = new RingBuffer(capacity);
   }
 
   // Adds one sample, in place of the oldest when the series is full.
@@ -28,121 +28,44 @@ export class SampleSeries {
     values.forEach((v, c) => this.channels[c].push(v));
   }
 
-  // Appends sweeps from `vilo log show` to a series of the channels ch1, ch2
-  // and ch3. Timestamps are nanoseconds since the epoch.
-  appendSweeps(
-    sweeps: {
-      tick: number;
-      timestamp: number;
-      ch1: number;
-      ch2: number;
-      ch3: number;
-    }[],
-  ): void {
-    for (const sweep of sweeps) {
-      this.push(sweep.tick, sweep.timestamp, [sweep.ch1, sweep.ch2, sweep.ch3]);
-    }
+  // Appends the sweeps of one `vilo log show` to a series of the channels
+  // ch1, ch2 and ch3: one array per field, all the same length, pushed in
+  // one go each. Timestamps are nanoseconds since the epoch.
+  appendSweeps(sweeps: {
+    tick: number[];
+    timestamp: number[];
+    ch1: number[];
+    ch2: number[];
+    ch3: number[];
+  }): void {
+    this.time.pushSlice(sweeps.timestamp.map((stamp) => stamp / 1e9));
+    this.ticks.pushSlice(sweeps.tick);
+    [sweeps.ch1, sweeps.ch2, sweeps.ch3].forEach((values, c) =>
+      this.channels[c].pushSlice(values),
+    );
   }
 
-  // The samples between `start` and `end`. With more than `maxPoints` samples,
-  // each bucket keeps its lowest and highest value per channel, so peaks stay
-  // visible. Hidden channels do not count toward `lo` and `hi`.
-  sliceWindow(
-    start: number,
-    end: number,
-    maxPoints: number,
-    visible: boolean[],
-  ): PlotWindow {
+  // Every sample between `start` and `end`, and each channel's stats over
+  // them. Hidden channels do not count toward `lo` and `hi`.
+  sliceWindow(start: number, end: number, visible: boolean[]): PlotWindow {
     const from = lowerBound(this.time, start);
     const to = upperBound(this.time, end);
     const count = Math.max(0, to - from);
+    // Copied out of the ring buffers in blocks.
+    const time = this.time.getSlice(from, from + count);
+    const values = this.channels.map((channel) =>
+      channel.getSlice(from, from + count),
+    );
+    const stats = values.map(calculateStats);
     let lo = Infinity;
     let hi = -Infinity;
-    const extend = (c: number, v: number) => {
-      if (visible[c] && Number.isFinite(v)) {
-        if (v < lo) lo = v;
-        if (v > hi) hi = v;
+    stats.forEach(({ min, max }, c) => {
+      if (visible[c]) {
+        lo = Math.min(lo, min);
+        hi = Math.max(hi, max);
       }
-    };
-    // The sums are of each sample minus the channel's first one, so that a
-    // large offset does not swallow the small variations in rounding errors.
-    const totals = this.channels.map(() => ({
-      min: Infinity,
-      max: -Infinity,
-      n: 0,
-      shift: 0,
-      sum: 0,
-      sumSq: 0,
-    }));
-    const tally = (c: number, v: number) => {
-      if (!Number.isFinite(v)) return;
-      const t = totals[c];
-      if (t.n === 0) t.shift = v;
-      if (v < t.min) t.min = v;
-      if (v > t.max) t.max = v;
-      const d = v - t.shift;
-      t.sum += d;
-      t.sumSq += d * d;
-      t.n++;
-    };
-    const stats = (): ChannelStats[] =>
-      totals.map(({ min, max, n, shift, sum, sumSq }) => {
-        if (n === 0) return { min, max, mean: NaN, rms: NaN };
-        const offset = sum / n;
-        const variance = Math.max(0, sumSq / n - offset * offset);
-        return { min, max, mean: shift + offset, rms: Math.sqrt(variance) };
-      });
-
-    if (count <= maxPoints) {
-      const time: number[] = [];
-      const values: number[][] = this.channels.map(() => []);
-      for (let i = from; i < to; i++) {
-        time.push(this.time.get(i));
-        this.channels.forEach((channel, c) => {
-          const v = channel.get(i);
-          extend(c, v);
-          tally(c, v);
-          values[c].push(v);
-        });
-      }
-      return { data: [time, ...values], lo, hi, stats: stats() };
-    }
-
-    const buckets = Math.max(1, Math.floor(maxPoints / 2));
-    const time: number[] = [];
-    const values: number[][] = this.channels.map(() => []);
-    for (let b = 0; b < buckets; b++) {
-      const i0 = from + Math.floor((b * count) / buckets);
-      const i1 = from + Math.floor(((b + 1) * count) / buckets);
-      if (i1 <= i0) continue;
-      time.push(this.time.get(i0), this.time.get(i1 - 1));
-      this.channels.forEach((channel, c) => {
-        let min = Infinity;
-        let max = -Infinity;
-        let minAt = i0;
-        let maxAt = i0;
-        for (let i = i0; i < i1; i++) {
-          const v = channel.get(i);
-          tally(c, v);
-          if (v < min) {
-            min = v;
-            minAt = i;
-          }
-          if (v > max) {
-            max = v;
-            maxAt = i;
-          }
-        }
-        extend(c, min);
-        extend(c, max);
-        if (minAt <= maxAt) {
-          values[c].push(min, max);
-        } else {
-          values[c].push(max, min);
-        }
-      });
-    }
-    return { data: [time, ...values], lo, hi, stats: stats() };
+    });
+    return { data: [time, ...values], lo, hi, stats };
   }
 
   // The header line of the CSV that Save CSV writes and `parseCsv` reads:
@@ -165,6 +88,33 @@ export class SampleSeries {
     }
     return lines.join("");
   }
+}
+
+// One channel's stats over `values`. Missing values (NaN) do not count. The
+// sums are of each value minus `shift`, the first one counted, so that a
+// large offset does not swallow the small variations in rounding errors.
+function calculateStats(values: Float64Array): ChannelStats {
+  let n = 0;
+  let shift = 0;
+  let sum = 0;
+  let sumSq = 0;
+  let min = Infinity;
+  let max = -Infinity;
+  for (let i = 0; i < values.length; i++) {
+    const v = values[i];
+    if (!Number.isFinite(v)) continue;
+    if (n === 0) shift = v;
+    if (v < min) min = v;
+    if (v > max) max = v;
+    const d = v - shift;
+    sum += d;
+    sumSq += d * d;
+    n++;
+  }
+  if (n === 0) return { min, max, mean: NaN, rms: NaN };
+  const offset = sum / n;
+  const variance = Math.max(0, sumSq / n - offset * offset);
+  return { min, max, mean: shift + offset, rms: Math.sqrt(variance) };
 }
 
 // Samples that `minutes` of logging at `sampleRate`, as vilo names it (such
@@ -237,7 +187,7 @@ export function parseCsv(text: string): SampleSeries {
 }
 
 // Index of the first value not less than `value`, in ascending values.
-export function lowerBound(values: RingBuffer<number>, value: number): number {
+export function lowerBound(values: RingBuffer, value: number): number {
   let lo = 0;
   let hi = values.length;
   while (lo < hi) {
@@ -252,7 +202,7 @@ export function lowerBound(values: RingBuffer<number>, value: number): number {
 }
 
 // Index of the first value greater than `value`, in ascending values.
-export function upperBound(values: RingBuffer<number>, value: number): number {
+export function upperBound(values: RingBuffer, value: number): number {
   let lo = 0;
   let hi = values.length;
   while (lo < hi) {
@@ -278,7 +228,7 @@ export type ChannelStats = {
 
 export type PlotWindow = {
   // uPlot data: time first, then one array per channel.
-  data: number[][];
+  data: Float64Array[];
   // Lowest and highest value of the visible channels in the window.
   lo: number;
   hi: number;
@@ -422,8 +372,8 @@ export function formatDuration(seconds: number): string {
 // An SVG path of one channel's lowest and highest value per bucket, scaled
 // to a width x height box.
 export function overviewPath(
-  time: RingBuffer<number>,
-  values: RingBuffer<number>,
+  time: RingBuffer,
+  values: RingBuffer,
   buckets: number,
   width: number,
   height: number,
