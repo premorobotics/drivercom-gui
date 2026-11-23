@@ -15,7 +15,7 @@ import {
 import { createStore } from "solid-js/store";
 import { TabList, TabListContext } from "~/components/Tab/TabList.tsx";
 import { Panel } from "~/components/Panel/Panel.tsx";
-import { LoggingTabContent } from "./Logging/LoggingTabContent.tsx";
+import { LoggingTabContent } from "~/features/Logging/LoggingTabContent.tsx";
 import { load } from "@tauri-apps/plugin-store";
 import { LogConfigType } from "src-tauri/generated/config/LogConfigType.tsx";
 import { AccordionStates } from "../features/Configuration/ConfigForm/ConfigForm.tsx";

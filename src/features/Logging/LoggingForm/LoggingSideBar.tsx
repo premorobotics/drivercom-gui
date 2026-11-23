@@ -8,7 +8,7 @@ import { For } from "solid-js";
 import { Text } from "~/components/ui/text.tsx";
 import { css } from "styled-system/css/css";
 import { Button } from "~/components/ui/button.tsx";
-import { AccordionStates } from "~/pages/Configuration/ConfigForm/ConfigForm.tsx";
+import { AccordionStates } from "~/features/Configuration/ConfigForm/ConfigForm.tsx";
 import { HelpTooltip } from "~/components/HelpTooltip.tsx";
 
 type LoggingSideBar = {
