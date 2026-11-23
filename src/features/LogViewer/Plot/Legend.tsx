@@ -23,9 +23,9 @@ import {
   IconPoint,
   IconX,
 } from "@tabler/icons-solidjs";
-import { Heading } from "../ui/heading";
+import { Heading } from "../../../components/ui/heading";
 import { Portal } from "solid-js/web";
-import * as Checkbox from "../ui/checkbox";
+import * as Checkbox from "../../../components/ui/checkbox";
 
 export type LegendProps = Omit<StackProps, "stroke"> & {
   plot: uPlot;

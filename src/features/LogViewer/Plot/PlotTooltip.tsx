@@ -9,7 +9,7 @@ import {
   on,
 } from "solid-js";
 import { Stack } from "styled-system/jsx";
-import { Text } from "../ui/text";
+import { Text } from "../../../components/ui/text";
 import { IconLine, IconLineDashed, IconPoint } from "@tabler/icons-solidjs";
 import { Dynamic, Portal } from "solid-js/web";
 

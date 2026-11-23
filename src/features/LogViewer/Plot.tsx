@@ -35,9 +35,9 @@ import {
 } from "@tabler/icons-solidjs";
 import { Stack } from "styled-system/jsx";
 import { Legend, LegendStroke } from "./Plot/Legend";
-import { Tooltip } from "./ui/tooltip";
+import { Tooltip } from "../../components/ui/tooltip";
 import { Portal } from "solid-js/web";
-import * as Splitter from "./ui/splitter";
+import * as Splitter from "../../components/ui/splitter";
 import type { CursorPluginMessageBus } from "@dschz/solid-uplot/plugins";
 import { SolidUplot, createPluginBus } from "@dschz/solid-uplot";
 import type { UplotPluginFactory } from "@dschz/solid-uplot";

@@ -5,7 +5,7 @@ import { Heading } from "~/components/ui/heading";
 import { IconButton } from "~/components/ui/icon-button";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
-import * as Card from "../ui/card";
+import * as Card from "~/components/ui/card";
 import {
   IconLine,
   IconLineDashed,
