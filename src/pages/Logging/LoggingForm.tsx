@@ -1,6 +1,6 @@
 import { JSX } from "solid-js";
 import { Form } from "~/components/Form";
-import { AccordionStates } from "../Configuration/ConfigForm/ConfigForm";
+import { AccordionStates } from "../../features/Configuration/ConfigForm/ConfigForm";
 
 export type LoggingFormProps = JSX.HTMLAttributes<HTMLDivElement> & {
   id: string;

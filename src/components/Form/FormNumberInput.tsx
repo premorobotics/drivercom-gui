@@ -3,7 +3,7 @@ import { Text } from "../ui/text";
 import {
   GainLockStates,
   LinkStates,
-} from "../../pages/Configuration/ConfigForm/ConfigForm";
+} from "../../features/Configuration/ConfigForm/ConfigForm";
 import { createSignal, Show, splitProps } from "solid-js";
 import {
   IconExclamationCircle,
