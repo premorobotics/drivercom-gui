@@ -19,7 +19,7 @@ import { PanelContext } from "../Panel/Panel.tsx";
 import { ConfigTabPage } from "~/pages/Configuration/ConfigTabContent.tsx";
 import { createSignal } from "solid-js";
 import { toaster } from "~/components/ui/toast.tsx";
-import { LoggingPageTabContentType } from "~/pages/Logging/Logging.tsx";
+import { LoggingPageTabContentType } from "~/pages/Logging.tsx";
 
 type ValueOf<Obj> = Obj[keyof Obj];
 type OneOnly<Obj, Key extends keyof Obj> = {
