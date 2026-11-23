@@ -11,7 +11,7 @@ import {
   PanelSizeContext,
 } from "~/components/Panel/PanelLayout.tsx";
 import { TabList, TabListContext } from "~/components/Tab/TabList.tsx";
-import { ConfigTabContent } from "./Configuration/ConfigTabContent";
+import { ConfigTabContent } from "../features/Configuration/ConfigTabContent";
 import { createEffect, createSignal, on, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { load } from "@tauri-apps/plugin-store";

@@ -3,7 +3,7 @@ import {
   AccordionStates,
   GainLockStates,
   LinkStates,
-} from "~/pages/Configuration/ConfigForm/ConfigForm";
+} from "~/features/Configuration/ConfigForm/ConfigForm";
 import { configFormFileFormat, tabStore } from "~/store/GlobalState";
 import JSON5 from "json5";
 import { logFormFileFormat } from "~/store/GlobalState";
