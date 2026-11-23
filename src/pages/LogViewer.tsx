@@ -2,7 +2,7 @@ import { Panel } from "~/components/Panel/Panel";
 import { PanelLayout } from "~/components/Panel/PanelLayout";
 import { TabList } from "~/components/Tab/TabList";
 import { Pages } from "~/store/GlobalState";
-import { LogViewerTabPageContent } from "./LogViewer/LogViewerTabPageContent";
+import { LogViewerTabPageContent } from "../features/LogViewer/LogViewerTabPageContent";
 import { toaster } from "~/components/ui/toast.tsx";
 import { FileHandler } from "~/services/FileHandler";
 import { addNewTab, generateNewLogViewerTab } from "~/services/TabFactory";
