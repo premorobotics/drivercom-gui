@@ -12,7 +12,7 @@ import { For } from "solid-js/web";
 import {
   LogViewerTabPage,
   LogViewerTabPageContentProps,
-} from "~/pages/LogViewer/LogViewerTabPageContent.tsx";
+} from "~/features/LogViewer/LogViewerTabPageContent.tsx";
 import { tabStore } from "~/store/GlobalState.ts";
 import { createStore } from "solid-js/store";
 import { PanelContext } from "../Panel/Panel.tsx";
