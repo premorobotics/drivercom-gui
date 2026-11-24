@@ -36,12 +36,21 @@ import {
   SampleSeries,
   wholeView,
 } from "~/utils/VibrationData";
-import { BaseStationCard, sessionLockText } from "./BaseStationCard";
-import { Tip, TipLayer } from "./CursorTip";
-import { NodeCard, NodeState } from "./NodeCard";
-import { OptionSelect } from "./OptionSelect";
-import { VibrationPlot } from "./VibrationPlot";
-import { emptyBox, hint, infoButton, notice, numeric } from "./styles";
+import {
+  BaseStationCard,
+  sessionLockText,
+} from "../features/VibrationLogger/BaseStationCard";
+import { Tip, TipLayer } from "../features/VibrationLogger/CursorTip";
+import { NodeCard, NodeState } from "../features/VibrationLogger/NodeCard";
+import { OptionSelect } from "../features/VibrationLogger/OptionSelect";
+import { VibrationPlot } from "../features/VibrationLogger/VibrationPlot";
+import {
+  emptyBox,
+  hint,
+  infoButton,
+  notice,
+  numeric,
+} from "../features/VibrationLogger/styles";
 
 type Stage = "detecting" | "noBase" | "ready";
 // What the plot shows: nothing, the running session, the session that just

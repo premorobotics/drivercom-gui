@@ -9,9 +9,7 @@ import App from "./App";
 const Configuration = lazy(() => import("./pages/Configuration.tsx"));
 const LogViewer = lazy(() => import("./pages/LogViewer.tsx"));
 const Logging = lazy(() => import("./pages/Logging.tsx"));
-const VibrationLogger = lazy(
-  () => import("./pages/VibrationLogger/VibrationLogger.tsx"),
-);
+const VibrationLogger = lazy(() => import("./pages/VibrationLogger.tsx"));
 
 render(
   () => (
