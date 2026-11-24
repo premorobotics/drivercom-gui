@@ -62,7 +62,7 @@ import {
   ConfigType,
 } from "src-tauri/generated/config/ConfigType.tsx";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
-import { TabContext } from "./components/Tab/TabTypes.ts";
+import { TabContext } from "./features/Tab/TabTypes.ts";
 import { FileHandler } from "./services/FileHandler.ts";
 import { Toaster } from "./components/ui/toast.tsx";
 import { toaster } from "~/components/ui/toast.tsx";

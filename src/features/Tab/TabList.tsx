@@ -7,7 +7,7 @@ import {
   useContext,
 } from "solid-js";
 import * as Tabs from "~/components/ui/tabs.tsx";
-import { Tab } from "~/components/Tab/Tab.tsx";
+import { Tab } from "~/features/Tab/Tab.tsx";
 import { For } from "solid-js/web";
 import { LogViewerTabPageContentProps } from "~/features/LogViewer/LogViewerTabPageContent.tsx";
 import { tabStore } from "~/store/GlobalState.ts";

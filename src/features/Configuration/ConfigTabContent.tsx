@@ -16,7 +16,7 @@ import {
   useContext,
 } from "solid-js";
 import { Stack } from "styled-system/jsx";
-import { TabPageContext } from "~/components/Tab/TabList";
+import { TabPageContext } from "~/features/Tab/TabList";
 import { Text } from "~/components/ui/text";
 import { Tooltip } from "~/components/ui/tooltip";
 import {
