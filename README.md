@@ -273,6 +273,13 @@ A device rejects a transmit power that its region does not allow.
 
 The log settings offer only the values for non-synchronized sampling on the G-Link-200 (see [Log settings](#log-settings)).
 
+#### Known issues
+
+| Issue | Workaround |
+|---|---|
+| The page cannot put the node to sleep. An idle node goes to sleep by itself only after its inactivity timeout (see [Fixed device settings](#fixed-device-settings)). ([#568](https://github.com/premorobotics/drivercom-gui/issues/568)) | Turn the node off to save its battery. |
+| A saved CSV can be opened only with `Load CSV…` in the Logger, which appears once a base station is connected and a node is reachable. ([#567](https://github.com/premorobotics/drivercom-gui/issues/567)) | Connect the base station and a node, then click `Load CSV…` before starting a session. |
+
 ### 5. Tabs, Panels and Files
 
 | Function | How to use |
