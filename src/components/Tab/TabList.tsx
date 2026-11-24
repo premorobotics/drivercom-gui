@@ -7,40 +7,15 @@ import {
   useContext,
 } from "solid-js";
 import * as Tabs from "~/components/ui/tabs.tsx";
-import { Tab, TabType } from "~/components/Tab/Tab.tsx";
+import { Tab } from "~/components/Tab/Tab.tsx";
 import { For } from "solid-js/web";
-import {
-  LogViewerTabPage,
-  LogViewerTabPageContentProps,
-} from "~/features/LogViewer/LogViewerTabPageContent.tsx";
+import { LogViewerTabPageContentProps } from "~/features/LogViewer/LogViewerTabPageContent.tsx";
 import { tabStore } from "~/store/GlobalState.ts";
 import { createStore } from "solid-js/store";
 import { PanelContext } from "../Panel/Panel.tsx";
-import { ConfigTabPage } from "~/features/Configuration/ConfigTabContent.tsx";
 import { createSignal } from "solid-js";
 import { toaster } from "~/components/ui/toast.tsx";
-import { LoggingPageTabContentType } from "~/pages/Logging.tsx";
-
-type ValueOf<Obj> = Obj[keyof Obj];
-type OneOnly<Obj, Key extends keyof Obj> = {
-  [key in Exclude<keyof Obj, Key>]: null;
-} & Pick<Obj, Key>;
-type OneOfByKey<Obj> = { [key in keyof Obj]: OneOnly<Obj, key> };
-export type OneOfType<Obj> = ValueOf<OneOfByKey<Obj>>;
-
-export type TabListContext = {
-  focusedTab: string;
-  tabContext: TabContext[];
-};
-
-export type TabContext = {
-  tab: TabType;
-  tabPage?: OneOfType<{
-    logViewerTabPage: LogViewerTabPage;
-    configTabPage: ConfigTabPage;
-    loggingTabPage: LoggingPageTabContentType;
-  }>;
-};
+import { TabContext, TabListContext } from "./TabTypes.ts";
 
 export type TabLocation =
   | "none"

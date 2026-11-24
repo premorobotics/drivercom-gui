@@ -12,14 +12,9 @@ import { Stack } from "styled-system/jsx/stack.mjs";
 import { createEffect } from "solid-js";
 import { Text } from "../ui/text.tsx";
 import { tabStore } from "~/store/GlobalState.ts";
-import { TabContext } from "./TabList.tsx";
+import { TabContext } from "./TabTypes.ts";
 import JSON5 from "json5";
 import { css } from "styled-system/css/css";
-
-export type TabType = {
-  id: string;
-  tabName: string;
-};
 
 export type TabProps = JSX.HTMLAttributes<HTMLDivElement> & {
   key: string;

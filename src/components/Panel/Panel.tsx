@@ -1,5 +1,6 @@
 import { createContext, JSX, useContext } from "solid-js";
-import { TabListContext, TabListProps, TabLocation } from "../Tab/TabList.tsx";
+import { TabListProps, TabLocation } from "../Tab/TabList.tsx";
+import { TabListContext } from "../Tab/TabTypes.ts";
 import { createSignal } from "solid-js";
 import { Show } from "solid-js";
 //@ts-ignore Has an Any type error
