@@ -62,7 +62,8 @@
     "typescript-eslint": "^8.65.0",
     "unzipper": "^0.12.5",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.10",
+    "vitest-canvas-mock": "^1.2.0"
   },
   "peerDependencies": {
     "@tauri-apps/cli": "^2.6.2",
