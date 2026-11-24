@@ -12,7 +12,8 @@ A desktop GUI for **configuring, logging and analyzing** linear motion system (L
   - [1. Controller Configuration](#1-controller-configuration)
   - [2. Data Logging](#2-data-logging)
   - [3. Log Viewer](#3-log-viewer)
-  - [4. Tabs, Panels and Files](#4-tabs-panels-and-files)
+  - [4. Vibration Logger](#4-vibration-logger)
+  - [5. Tabs, Panels and Files](#5-tabs-panels-and-files)
 - [Shortcuts](#shortcuts)
 - [Parameter Reference](#parameter-reference)
 - [Glossary](#glossary)
@@ -138,7 +139,141 @@ The Log Config (items, duration, axes and command) can be imported from or saved
 |---|---|---|
 | ![Zoom](docs/images/horizontal-zoom.png) | ![Split](docs/images/split-graph.png) | ![Legend style](docs/images/legend-style.png) |
 
-### 4. Tabs, Panels and Files
+### 4. Vibration Logger
+
+Records vibration from a MicroStrain G-Link-200 wireless accelerometer (the node) through a MicroStrain WSDA-200-USB (the base station), plots it live and saves it as CSV. The page drives both devices with the bundled `vilo` tool.
+
+#### Before you start
+
+1. Connect the base station to the PC by USB.
+2. Open the `Vibration Logger` page. It looks for base stations when it opens. If it finds none, it shows `No base station found`: connect the base station and click `Refresh`.
+3. Turn on the node. To connect by search, turn it on only after the search has started (see [Connecting by search](#connecting-by-search)).
+
+When several base stations are connected, the page uses the first one. Choose another in the `Port` list of the Base station card.
+
+#### Connecting by node address
+
+The node must already be on the base station's frequency and protocol. Its address is printed on the label of the node.
+
+<img src="docs/images/vibration-node-address.jpg" width="320" alt="Label on the node with the node address marked">
+
+1. Type the node address in the field marked 1 in the image below.
+2. Click `Connect` or press `Enter`.
+
+![Node card with the node address field and the Connect button marked](docs/images/vibration-connect-address.png)
+
+When the node answers, the Node card shows its address, frequency, protocol and transmit power, and the Logger appears below.
+
+#### Connecting by search
+
+The search finds a node on any frequency, but only while the node powers up.
+
+> [!IMPORTANT]
+> Start the search **before** turning the node on. A node that is already on is not found: turn it off, start the search, then turn it on.
+
+1. Click `Search for nodes`. The search listens for 60 seconds.
+2. Turn the node on. It announces itself while it powers up.
+3. The node appears in the list as `address · model`, with its frequency, its protocol and whether the base station has to switch.
+4. Click `Use`. If the node's frequency or protocol differs from the base station's, the base station switches to the node's first.
+
+![Node search list with Search for nodes, the power-cycle hint, the node found and its Use button marked](docs/images/vibration-search-nodes.png)
+
+`Stop` ends the search early. Once the search has ended, after 60 seconds or after `Stop`, `Stop` becomes `Search again`, which clears the list and listens for another 60 seconds.
+
+#### When the node does not answer
+
+The Node card shows `Unreachable` when the node does not answer the page's ping, after connecting by node address or when `Start logging` fails. The node may be asleep, switched off, out of range or on another frequency than the base station.
+
+1. `Unreachable` marks the node, and the card lists why it may not answer.
+2. `Set to idle` wakes a sleeping node, which takes up to about 10 s. The page then pings the node again: when it answers, the node is selected and the Logger appears. A node that is not asleep (switched off, out of range or on another frequency) does not answer, and the page shows the error `Node … was not set to idle`.
+3. `Change node` releases the node so that another can be chosen.
+
+![Node card of an unreachable node with Unreachable, Set to idle and Change node marked](docs/images/vibration-node-unreachable.png)
+
+A node chosen with `Use` that does not answer is not kept: the Node card returns to `No node selected` and shows `Node … did not answer`. Check that the node is on and in range, then search again.
+
+#### Log settings
+
+The Logger appears once a node is connected. The four log settings show the node's current values and are written to the node when the session starts.
+
+1. `Sample rate`: samples per second on each channel, 512, 256, 128 or 64 Hz.
+2. `Input range`: the measuring range, ±2, ±4, ±8, ±10, ±20 or ±40 g.
+3. `Low-pass filter`: the cut-off of the node's low-pass filter, which attenuates vibration above it, 209, 104, 52 or 26 Hz.
+4. `High-pass filter`: `Auto` removes the constant part of the signal, such as gravity, so each channel centers on 0 g. `Off` keeps it.
+5. `Store limit`: how much of the newest data the page keeps, 1 min to 1 h (default 10 min). Older data is dropped, so `Save CSV…` saves at most this much.
+6. `Start logging` starts the session.
+
+![Logger with the four log settings, Store limit and Start logging marked](docs/images/vibration-log-settings.png)
+
+The node rejects a value its model does not support, and the session does not start.
+
+#### During a session
+
+1. `Elapsed` shows the time since the session started, which keeps running while paused, and the number of samples kept.
+2. `Pause` sets the node to idle: sampling stops, and the session and its data stay. The button becomes `Resume`, which restarts sampling in the same session.
+3. `Save CSV…` saves the data kept so far, including the samples just received, and can be used at any time during or after the session. The default name is `vibration_YYYY-MM-DD_HHMM.csv` (the session start time). The columns are `tick`, `timestamp` (ns since the Unix epoch), `ch1`, `ch2` and `ch3`.
+4. One tile per channel, `ch1 (X)`, `ch2 (Y)` and `ch3 (Z)`, shows the RMS, min, max, p-p (peak to peak) and avg of the range shown on the plot. Click a tile to hide or show its channel.
+5. The range strip selects what the plot shows. By default it shows the newest 30 s and follows live data. Drag the handles to choose a range; while the right handle is at the newest sample, the plot keeps following live data. `Show all` shows all the data kept.
+6. `End session` stops the node and ends the session. The data stays on the plot and can still be saved, and `Load CSV…` appears to open a saved file.
+
+![Logging session with the elapsed time, Pause, Save CSV, the channel tiles, the range strip and End session marked](docs/images/vibration-logging-session.png)
+
+> [!WARNING]
+> `Start logging` clears the plot, and leaving the page or closing the app ends the session. **Save the data first**, or it is lost.
+
+> [!NOTE]
+> During a session, `Configure`, `Log settings`, `Store limit`, the base station `Port` and `Change node` are locked.
+
+If `Start logging` fails, the page checks the devices again. A base station that no longer responds is removed and the page returns to `No base station found`; a node that does not answer is marked `Unreachable`.
+
+#### Fixed device settings
+
+The page writes the following settings itself. They cannot be changed from the GUI.
+
+> [!NOTE]
+> These values were chosen so that users have fewer settings to understand on this page. They are set in `vilo` ([premorobotics/ViLo](https://github.com/premorobotics/ViLo)), so a different value is possible by changing `vilo`:
+>
+> | Settings | Set in |
+> |---|---|
+> | Node, written at every `Start logging` | `src/log/config/set.zig`; the active channels in `src/log/start.zig` |
+> | Node, written when its radio settings are applied | `src/node/config/set.zig` |
+>
+> The GUI uses the change once it is in a `vilo` release, which `pnpm tauri` downloads, or from a custom `vilo` binary in `src-tauri/binaries` (see `unpack.js`). Which radio settings can be edited (the last table) is decided by the page itself, in `src/pages/VibrationLogger.tsx` and the cards in `src/features/VibrationLogger/`.
+
+Node, written at every `Start logging`:
+
+| Setting | Value |
+|---|---|
+| Sampling mode | Non-synchronized |
+| Sampling duration | Unlimited, until `Pause` or `End session` |
+| Data collection | Transmit only; nothing is stored on the node |
+| Data format | Calibrated float |
+| Sensor output | Acceleration |
+| Data mode | Raw |
+| Diagnostic interval | 0 (no diagnostic packets) |
+| Active channels | `ch1`, `ch2`, `ch3` |
+
+Node, written whenever its radio settings are applied (node `Configure` → `Apply`, or a protocol change on the base station):
+
+| Setting | Value | Purpose |
+|---|---|---|
+| Default mode | Idle | Required to start logging |
+| Inactivity timeout | 1200 s | Saves battery: idle time before the node sleeps |
+| Check radio interval | 10 s | Saves battery: how often a sleeping node listens |
+
+Radio settings:
+
+| Setting | Base station | Node |
+|---|---|---|
+| Frequency | Follows the node chosen with `Use` (11–26); no manual setting | Not changeable |
+| Protocol | `Configure`: LXRS or LXRS+, also set on the connected node | Follows the base station |
+| Transmit power | `Configure`: 20, 16, 11, 10, 5 or 0 dBm | `Configure`: 20, 16, 12, 11, 10, 5, 1 or 0 dBm |
+
+A device rejects a transmit power that its region does not allow.
+
+The log settings offer only the values for non-synchronized sampling on the G-Link-200 (see [Log settings](#log-settings)).
+
+### 5. Tabs, Panels and Files
 
 | Function | How to use |
 |---|---|
