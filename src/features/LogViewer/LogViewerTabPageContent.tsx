@@ -8,7 +8,8 @@ import {
   useContext,
 } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
-import { Plot, PlotContext } from "~/features/LogViewer/Plot";
+import { Plot } from "./Plot/Plot";
+import { PlotContext } from "./Plot/PlotTypes";
 import { IconButton } from "~/components/ui/icon-button";
 import {
   IconFileDownload,
@@ -23,7 +24,7 @@ import * as Checkbox from "~/components/ui/checkbox";
 import { Tooltip } from "~/components/ui/tooltip";
 import { tabStore } from "~/store/GlobalState.ts";
 import { on } from "solid-js";
-import { LegendStroke } from "~/features/LogViewer/Plot/Legend";
+import { LegendStroke } from "./Plot/PlotTypes";
 import { TabContext, TabPageContext } from "~/components/Tab/TabList";
 import { CreateToasterReturn } from "@ark-ui/solid";
 import { FileHandler } from "../../services/FileHandler";
@@ -1017,7 +1018,6 @@ export function LogViewerTabPageContent() {
                     <Plot
                       id={currentID()}
                       group={tabPageProps.tabId}
-                      name=""
                       legendPanelMinWidth={legendPanelMinWidth()}
                       header={currentHeader}
                       series={currentItems}
