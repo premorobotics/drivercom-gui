@@ -25,7 +25,7 @@ import { Tooltip } from "~/components/ui/tooltip";
 import { tabStore } from "~/store/GlobalState.ts";
 import { on } from "solid-js";
 import { LegendStroke } from "./Plot/PlotTypes";
-import { TabPageContext } from "~/components/Tab/TabList";
+import { TabPageContext } from "~/features/Tab/TabList";
 import { CreateToasterReturn } from "@ark-ui/solid";
 import { FileHandler } from "../../services/FileHandler";
 import { createDraggable } from "@neodrag/solid";
@@ -33,7 +33,7 @@ import { css } from "styled-system/css";
 import { Portal } from "solid-js/web";
 import * as Editable from "~/components/ui/editable";
 import { Spinner } from "~/components/ui/spinner";
-import { TabContext } from "~/components/Tab/TabTypes";
+import { TabContext } from "~/features/Tab/TabTypes";
 
 export type ErrorMessage = {
   title: string;
