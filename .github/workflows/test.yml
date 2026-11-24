@@ -41,6 +41,7 @@ jobs:
         uses: pnpm/setup@v1
         with:
           version: 12.3.3
+          dest: ${{ runner.temp }}/setup-pnpm
 
       - name: Install dependencies
         run: pnpm i --frozen-lockfile
