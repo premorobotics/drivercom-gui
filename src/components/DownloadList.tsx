@@ -24,8 +24,7 @@ import {
 import { trackStore } from "@solid-primitives/deep";
 import { createStore } from "solid-js/store";
 import { PanelSizeContext } from "./Panel/PanelLayout";
-import { TabContext } from "./Tab/TabList";
-import { TabListContext } from "./Tab/TabList";
+import { TabContext, TabListContext } from "./Tab/TabTypes";
 import { css } from "styled-system/css";
 import { Progress } from "@ark-ui/solid/progress";
 

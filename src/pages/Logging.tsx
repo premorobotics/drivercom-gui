@@ -13,7 +13,8 @@ import {
   PanelSizeContext,
 } from "~/components/Panel/PanelLayout.tsx";
 import { createStore } from "solid-js/store";
-import { TabList, TabListContext } from "~/components/Tab/TabList.tsx";
+import { TabList } from "~/components/Tab/TabList.tsx";
+import { TabListContext } from "~/components/Tab/TabTypes.ts";
 import { Panel } from "~/components/Panel/Panel.tsx";
 import { LoggingTabContent } from "~/features/Logging/LoggingTabContent.tsx";
 import { load } from "@tauri-apps/plugin-store";

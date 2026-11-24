@@ -10,7 +10,8 @@ import {
   PanelLayout,
   PanelSizeContext,
 } from "~/components/Panel/PanelLayout.tsx";
-import { TabList, TabListContext } from "~/components/Tab/TabList.tsx";
+import { TabList } from "~/components/Tab/TabList.tsx";
+import { TabListContext } from "~/components/Tab/TabTypes";
 import { ConfigTabContent } from "../features/Configuration/ConfigTabContent";
 import { createEffect, createSignal, on, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
