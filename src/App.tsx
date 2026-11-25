@@ -32,10 +32,8 @@ import {
   page,
   Pages,
   setCliVersion,
-  setConfigFormFileFormat,
   setDriverComVersion,
   setGlobalState,
-  setLogFormFileFormat,
   setPage,
   Theme,
   setRecentConfigFilePaths,
@@ -43,9 +41,13 @@ import {
   panelStore,
   pageKeys,
   tabStore,
+} from "./stores/GlobalState.ts";
+import {
+  setConfigFormFileFormat,
+  setLogFormFileFormat,
   configFormFileFormat,
   logFormFileFormat,
-} from "./stores/GlobalState.ts";
+} from "./stores/config-format.ts";
 
 import { Text } from "~/components/ui/text.tsx";
 

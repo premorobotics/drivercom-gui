@@ -4,7 +4,7 @@ import {
   setConfigDescription,
   setConfigTabForm,
   setLogConfigDescription,
-} from "~/stores/GlobalState";
+} from "~/stores/config-format";
 import JSON5 from "json5";
 import { ConfigType } from "src-tauri/generated/config/ConfigType";
 import { LogConfigType } from "src-tauri/generated/config/LogConfigType";

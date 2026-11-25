@@ -1,8 +1,5 @@
 import { Accessor, createEffect, createMemo, JSX, on, Setter } from "solid-js";
-import { ConfigTuneType } from "src-tauri/generated/config/ConfigTune";
-import { ConfigSystemType } from "src-tauri/generated/config/ConfigSystem";
-import { ConfigCalibrationType } from "src-tauri/generated/config/ConfigCalibration";
-import { configTabForm } from "~/stores/GlobalState";
+import { configTabForm } from "~/stores/config-format";
 import { createStore } from "solid-js/store";
 import { ConfigType } from "src-tauri/generated/config/ConfigType";
 
@@ -25,12 +22,6 @@ export type LinkStates = Map<
 >;
 
 export type GainLockStates = Map<string, [Accessor<boolean>, Setter<boolean>]>;
-
-export type ConfigFormatType = {
-  tune: ConfigTuneType;
-  system: ConfigSystemType;
-  calibration: ConfigCalibrationType;
-};
 
 export type ConfigFormProps = {
   id: string;

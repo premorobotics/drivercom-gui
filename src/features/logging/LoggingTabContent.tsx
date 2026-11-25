@@ -1,14 +1,16 @@
 import { Stack } from "styled-system/jsx";
 import { Text } from "~/components/ui/text.tsx";
 import {
-  logFormFileFormat,
   Pages,
   pageKeys,
   recentLogFilePaths,
   setRecentLogFilePaths,
-  logConfigDescription,
   tabStore,
 } from "~/stores/GlobalState.ts";
+import {
+  logFormFileFormat,
+  logConfigDescription,
+} from "~/stores/config-format.ts";
 import { createSignal, Show, useContext } from "solid-js";
 import { LoggingForm } from "./LoggingForm.tsx";
 import {
