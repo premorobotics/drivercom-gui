@@ -32,12 +32,11 @@ import {
   setGlobalState,
   setPage,
   Theme,
-  setRecentConfigFilePaths,
-  setRecentLogFilePaths,
   panelStore,
   pageKeys,
   tabStore,
 } from "./stores/GlobalState.ts";
+import { setRecentConfigFilePaths, setRecentLogFilePaths } from "./stores/recent-file-paths.ts";
 import {
   setConfigFormFileFormat,
   setLogFormFileFormat,

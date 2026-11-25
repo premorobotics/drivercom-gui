@@ -20,10 +20,9 @@ import { TabPageContext } from "~/components/workspace/Tab/TabList";
 import { Text } from "~/components/ui/text";
 import { Tooltip } from "~/components/ui/tooltip";
 import {
-  recentConfigFilePaths,
-  setRecentConfigFilePaths,
   tabStore,
 } from "~/stores/GlobalState";
+import { recentConfigFilePaths, setRecentConfigFilePaths } from "~/stores/recent-file-paths";
 import {
   ConfigForm,
   LinkStates,

@@ -3,8 +3,8 @@ import {
   pageKeys,
   tabStore,
   panelStore,
-  recentConfigFilePaths,
 } from "~/stores/GlobalState";
+import { recentConfigFilePaths } from "~/stores/recent-file-paths";
 import { Panel } from "~/components/workspace/Panel/Panel.tsx";
 import {
   PanelLayout,

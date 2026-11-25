@@ -3,10 +3,10 @@ import {
   pageKeys,
   panelStore,
   tabStore,
-  recentLogFilePaths,
 } from "~/stores/GlobalState.ts";
 import { createEffect, createSignal, on, Show } from "solid-js";
 import { onMount } from "solid-js";
+import { recentLogFilePaths } from "~/stores/recent-file-paths.ts";
 
 import {
   PanelLayout,
