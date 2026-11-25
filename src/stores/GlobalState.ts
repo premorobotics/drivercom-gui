@@ -19,13 +19,6 @@ export const GlobalStateContext = createContext<{
   setGlobalState: SetStoreFunction<GlobalState>;
 }>();
 
-export const [recentLogFilePaths, setRecentLogFilePaths] = createSignal<
-  string[]
->([]);
-export const [recentConfigFilePaths, setRecentConfigFilePaths] = createSignal<
-  string[]
->([]);
-
 type PageKeys = Map<string, string>;
 export const pageKeys: PageKeys = new Map();
 

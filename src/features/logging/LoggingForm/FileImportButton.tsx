@@ -1,5 +1,5 @@
 import { Text } from "~/components/ui/text.tsx";
-import { recentLogFilePaths } from "~/stores/GlobalState";
+import { recentLogFilePaths } from "~/stores/recent-file-paths";
 import { For, Show } from "solid-js";
 import { IconChevronRight, IconFileImport } from "@tabler/icons-solidjs";
 import * as Menu from "~/components/ui/menu.tsx";

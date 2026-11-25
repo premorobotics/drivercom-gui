@@ -3,10 +3,9 @@ import { Text } from "~/components/ui/text.tsx";
 import {
   Pages,
   pageKeys,
-  recentLogFilePaths,
-  setRecentLogFilePaths,
   tabStore,
 } from "~/stores/GlobalState.ts";
+import { recentLogFilePaths, setRecentLogFilePaths } from "~/stores/recent-file-paths.ts";
 import {
   logFormFileFormat,
   logConfigDescription,
