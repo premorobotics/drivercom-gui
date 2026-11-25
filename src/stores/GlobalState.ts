@@ -3,7 +3,6 @@ import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { PanelSizeContext } from "~/components/workspace/Panel/PanelLayout.tsx";
 import { TabListContext } from "~/components/workspace/Tab/TabTypes";
 import { Child } from "@tauri-apps/plugin-shell";
-import { DownloadStates } from "~/components/DownloadList.tsx";
 import {
   ConfigType,
   configDefaultValues,
@@ -90,10 +89,6 @@ export type PortCommand = {
 };
 
 export const portCommands: Map<number, PortCommand> = new Map();
-
-export const [csvFileDownloads, setCsvFileDownloads] = createStore<
-  DownloadStates[]
->([]);
 
 export const [configDescription, setConfigDescription] = createSignal<object>(
   {},

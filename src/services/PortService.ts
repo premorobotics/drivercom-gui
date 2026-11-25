@@ -1,12 +1,11 @@
 import { Child, Command } from "@tauri-apps/plugin-shell";
 import {
-  csvFileDownloads,
   portCommands,
   setCclinkSpeed,
   setConfigDescription,
   setConfigTabForm,
-  setCsvFileDownloads,
   setLogConfigDescription,
+  Port,
 } from "~/stores/GlobalState";
 import JSON5 from "json5";
 import { ConfigType } from "src-tauri/generated/config/ConfigType";
@@ -14,8 +13,12 @@ import { LogConfigType } from "src-tauri/generated/config/LogConfigType";
 import { ConfigTuneType } from "src-tauri/generated/config/ConfigTune";
 import { ConfigCalibrationType } from "src-tauri/generated/config/ConfigCalibration";
 import { ConfigSystemType } from "src-tauri/generated/config/ConfigSystem";
-import { DownloadStates, DownloadStatus } from "~/components/DownloadList";
-import { Port } from "~/stores/GlobalState";
+import {
+  csvFileDownloads,
+  setCsvFileDownloads,
+  DownloadStatus,
+  DownloadStates,
+} from "~/stores/downloads";
 
 async function sendDrivercomCommand(
   args: string[],
