@@ -1,4 +1,4 @@
-import { TabContext } from "~/features/Tab/TabTypes";
+import { TabContext } from "~/components/workspace/Tab/TabTypes";
 import {
   AccordionStates,
   GainLockStates,

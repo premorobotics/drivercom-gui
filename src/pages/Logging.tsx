@@ -11,11 +11,11 @@ import { onMount } from "solid-js";
 import {
   PanelLayout,
   PanelSizeContext,
-} from "~/features/Panel/PanelLayout.tsx";
+} from "~/components/workspace/Panel/PanelLayout.tsx";
 import { createStore } from "solid-js/store";
-import { TabList } from "~/features/Tab/TabList.tsx";
-import { TabListContext } from "~/features/Tab/TabTypes.ts";
-import { Panel } from "~/features/Panel/Panel.tsx";
+import { TabList } from "~/components/workspace/Tab/TabList.tsx";
+import { TabListContext } from "~/components/workspace/Tab/TabTypes.ts";
+import { Panel } from "~/components/workspace/Panel/Panel.tsx";
 import { LoggingTabContent } from "~/features/logging/LoggingTabContent.tsx";
 import { load } from "@tauri-apps/plugin-store";
 import { LogConfigType } from "src-tauri/generated/config/LogConfigType.tsx";

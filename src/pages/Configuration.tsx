@@ -5,13 +5,13 @@ import {
   panelStore,
   recentConfigFilePaths,
 } from "~/store/GlobalState.ts";
-import { Panel } from "~/features/Panel/Panel.tsx";
+import { Panel } from "~/components/workspace/Panel/Panel.tsx";
 import {
   PanelLayout,
   PanelSizeContext,
-} from "~/features/Panel/PanelLayout.tsx";
-import { TabList } from "~/features/Tab/TabList.tsx";
-import { TabListContext } from "~/features/Tab/TabTypes";
+} from "~/components/workspace/Panel/PanelLayout.tsx";
+import { TabList } from "~/components/workspace/Tab/TabList";
+import { TabListContext } from "~/components/workspace/Tab/TabTypes";
 import { ConfigTabContent } from "../features/configuration/ConfigTabContent";
 import { createEffect, createSignal, on, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
