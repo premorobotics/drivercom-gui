@@ -16,10 +16,10 @@ import { createStore } from "solid-js/store";
 import { TabList } from "~/features/Tab/TabList.tsx";
 import { TabListContext } from "~/features/Tab/TabTypes.ts";
 import { Panel } from "~/features/Panel/Panel.tsx";
-import { LoggingTabContent } from "~/features/Logging/LoggingTabContent.tsx";
+import { LoggingTabContent } from "~/features/logging/LoggingTabContent.tsx";
 import { load } from "@tauri-apps/plugin-store";
 import { LogConfigType } from "src-tauri/generated/config/LogConfigType.tsx";
-import { AccordionStates } from "../features/Configuration/ConfigForm/ConfigForm.tsx";
+import { AccordionStates } from "../features/configuration/ConfigForm/ConfigForm.tsx";
 import { addNewTab, generateNewLoggingTab } from "~/services/TabFactory.ts";
 import { StateType } from "src-tauri/generated/config/ConfigType.tsx";
 

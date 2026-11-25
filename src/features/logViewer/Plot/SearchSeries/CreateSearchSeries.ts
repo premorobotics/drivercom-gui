@@ -1,5 +1,5 @@
 import { createMemo, createSignal, on } from "solid-js";
-import { fuzzySearch } from "~/features/LogViewer/Plot/SearchSeries/FuzzySearch";
+import { fuzzySearch } from "~/features/logViewer/Plot/SearchSeries/FuzzySearch";
 
 export function createSearchSeries(header: string[]) {
   const [searchInput, setSearchInput] = createSignal<string>("");

@@ -3,12 +3,12 @@ import { createStore } from "solid-js/store";
 import { FormNumberInput } from "~/components/Form/FormNumberInput.tsx";
 import { LoggingCommandTable } from "./LoggingCommandTable.tsx";
 import * as Checkbox from "../../../components/ui/checkbox.tsx";
-import { DrivercomCommandButton } from "../../Configuration/ConfigForm/DrivercomCommandButton.tsx";
+import { DrivercomCommandButton } from "~/features/configuration/ConfigForm/DrivercomCommandButton.tsx";
 import { For } from "solid-js";
 import { Text } from "~/components/ui/text.tsx";
 import { css } from "styled-system/css/css";
 import { Button } from "~/components/ui/button.tsx";
-import { AccordionStates } from "~/features/Configuration/ConfigForm/ConfigForm.tsx";
+import { AccordionStates } from "~/features/configuration/ConfigForm/ConfigForm.tsx";
 import { HelpTooltip } from "~/components/HelpTooltip.tsx";
 
 type LoggingSideBar = {
