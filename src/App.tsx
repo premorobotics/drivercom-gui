@@ -30,7 +30,7 @@ import {
   setGlobalState,
   Theme,
 } from "./stores/global-state.ts";
-import { panelStore, pageKeys, tabStore } from "./stores/layout.ts";
+import { panelStore, pageKeys, tabStore } from "./stores/layout/layout.ts";
 import { page, setPage, Pages } from "./stores/pages.ts";
 import {
   setRecentConfigFilePaths,
