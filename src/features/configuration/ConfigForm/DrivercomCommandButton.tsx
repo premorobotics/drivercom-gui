@@ -4,7 +4,7 @@ import { Tooltip } from "~/components/ui/tooltip";
 import { toaster } from "~/components/ui/toast.tsx";
 import * as Menu from "~/components/ui/menu";
 import { detectPort, getConfigFromPort } from "~/services/PortService";
-import { Port } from "~/stores/GlobalState";
+import { Port } from "~/stores/ports";
 
 type PortInfo = { driverId?: number; stationId?: number } & Port;
 

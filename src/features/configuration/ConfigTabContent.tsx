@@ -23,7 +23,6 @@ import {
   configDescription,
   configFormFileFormat,
   configTabForm,
-  portCommands,
   recentConfigFilePaths,
   setRecentConfigFilePaths,
   tabStore,
@@ -49,6 +48,7 @@ import { GetFromPortButton } from "./ConfigForm/GetFromPortButton";
 import { SaveToPort } from "./ConfigForm/SaveToPort";
 import { DriverStatus } from "./ConfigForm/DriverStatus";
 import { reconcile } from "solid-js/store";
+import { portCommands } from "~/stores/ports";
 
 export type ConfigTabPage = {
   filePath?: string;
