@@ -1,5 +1,6 @@
 import { createContext, JSX, useContext } from "solid-js";
-import { TabListProps, TabLocation } from "../Tab/TabList.tsx";
+import { TabListProps } from "../Tab/TabList.tsx";
+import { TabLocation } from "../types.ts";
 import { TabListContext } from "../Tab/TabTypes.ts";
 import { createSignal } from "solid-js";
 import { Show } from "solid-js";

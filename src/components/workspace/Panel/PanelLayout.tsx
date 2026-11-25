@@ -2,15 +2,11 @@ import { JSX } from "solid-js/jsx-runtime";
 import { Show } from "solid-js/web";
 import { For } from "solid-js/web";
 import * as Splitter from "~/components/ui/splitter.tsx";
-import { TabLocation } from "../Tab/TabList.tsx";
+import { TabLocation } from "../types.ts";
 import { createSignal, onMount } from "solid-js";
 import { panelStore, pageKeys } from "~/stores/layout.ts";
 import { PanelLayoutProvider } from "./PanelLayoutProvider.tsx";
-
-export type PanelSizeContext = {
-  id: string;
-  size: number;
-};
+import { PanelSizeContext } from "../types.ts";
 
 export type PanelLayoutProps = JSX.HTMLAttributes<HTMLDivElement> & {
   id: string;

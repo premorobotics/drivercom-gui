@@ -1,4 +1,4 @@
-import { PanelSizeContext } from "~/components/workspace/Panel/PanelLayout.tsx";
+import { PanelSizeContext } from "~/components/workspace/types";
 import { TabListContext } from "~/components/workspace/Tab/TabTypes";
 import { Store, SetStoreFunction } from "solid-js/store";
 import { Accessor, Setter } from "solid-js";

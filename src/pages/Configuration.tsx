@@ -3,8 +3,8 @@ import { recentConfigFilePaths } from "~/stores/recent-file-paths";
 import { Panel } from "~/components/workspace/Panel/Panel.tsx";
 import {
   PanelLayout,
-  PanelSizeContext,
 } from "~/components/workspace/Panel/PanelLayout.tsx";
+import { PanelSizeContext } from "~/components/workspace/types";
 import { TabList } from "~/components/workspace/Tab/TabList";
 import { TabListContext } from "~/components/workspace/Tab/TabTypes";
 import { ConfigTabContent } from "../features/configuration/ConfigTabContent";
