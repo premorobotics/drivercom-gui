@@ -42,6 +42,25 @@ export default defineConfig([
     extends: ["css/recommended"],
   },
   {
+    files: ["src/components/**", "src/stores/**", "src/services/**", "src/utils/**"],
+    rules: {
+      "no-restricted-imports": ["warn", {
+        patterns: [{
+          group: ["~/features/*", "~/pages/*"],
+          message: "shared layer can not import to features/pages/app"
+    }]}]}
+  },
+  {
+    files: ["src/features/**"],
+    rules: {
+      "no-restricted-imports": ["warn", {
+        patterns: [{
+          group: ["~/pages/*",],
+          message: "features can not import pages."
+    }]}]
+    }
+  },
+  {
     rules: {
       "@typescript-eslint/ban-ts-comment": "off",
     },
