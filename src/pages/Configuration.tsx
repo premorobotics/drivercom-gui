@@ -12,7 +12,7 @@ import {
 } from "~/features/Panel/PanelLayout.tsx";
 import { TabList } from "~/features/Tab/TabList.tsx";
 import { TabListContext } from "~/features/Tab/TabTypes";
-import { ConfigTabContent } from "../features/Configuration/ConfigTabContent";
+import { ConfigTabContent } from "../features/configuration/ConfigTabContent";
 import { createEffect, createSignal, on, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { load } from "@tauri-apps/plugin-store";

@@ -3,7 +3,7 @@ import { FormCheckBox } from "./Form/FormCheckBox.tsx";
 import { FormNumberInput } from "./Form/FormNumberInput.tsx";
 import { FormCollapsibleObject } from "./Form/FormCollapsibleObject.tsx";
 import { createStore } from "solid-js/store";
-import { AccordionStates } from "~/features/Configuration/ConfigForm/ConfigForm.tsx";
+import { AccordionStates } from "~/features/configuration/ConfigForm/ConfigForm.tsx";
 
 export type FormProps = JSX.HTMLAttributes<HTMLDivElement> & {
   id: string;

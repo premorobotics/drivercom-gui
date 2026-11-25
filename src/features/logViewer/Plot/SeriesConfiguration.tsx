@@ -13,7 +13,7 @@ import {
   IconX,
 } from "@tabler/icons-solidjs";
 import * as ToggleGroup from "~/components/ui/toggle-group";
-import { LegendStroke } from "../Plot/PlotTypes";
+import { LegendStroke } from "./PlotTypes";
 import { css } from "styled-system/css";
 import { COLOR_PALETTE } from "./ColorPalette";
 

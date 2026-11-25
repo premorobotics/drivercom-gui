@@ -24,7 +24,7 @@ import { toaster } from "~/components/ui/toast.tsx";
 import { TabPageContext } from "~/features/Tab/TabList.tsx";
 import { FileImportButton } from "./LoggingForm/FileImportButton.tsx";
 import { css } from "styled-system/css/css";
-import { DriverStatus } from "../../features/Configuration/ConfigForm/DriverStatus.tsx";
+import { DriverStatus } from "../configuration/ConfigForm/DriverStatus.tsx";
 import { LoggingSideBar } from "./LoggingForm/LoggingSideBar.tsx";
 import { startLogging } from "~/services/PortService.ts";
 import { IconButton } from "~/components/ui/icon-button.tsx";

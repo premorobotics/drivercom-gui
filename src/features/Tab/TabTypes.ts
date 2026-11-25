@@ -1,6 +1,6 @@
 import { LoggingPageTabContentType } from "~/pages/Logging.tsx";
-import { ConfigTabPage } from "~/features/Configuration/ConfigTabContent.tsx";
-import { LogViewerTabPage } from "~/features/LogViewer/LogViewerTabPageContent";
+import { ConfigTabPage } from "~/features/configuration/ConfigTabContent";
+import { LogViewerTabPage } from "~/features/logViewer/LogViewerTabPageContent";
 
 type ValueOf<Obj> = Obj[keyof Obj];
 type OneOnly<Obj, Key extends keyof Obj> = {
