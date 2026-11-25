@@ -1,4 +1,4 @@
-import { Accessor, createContext, createSignal, Setter } from "solid-js";
+import { Accessor, createContext, Setter } from "solid-js";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { PanelSizeContext } from "~/components/workspace/Panel/PanelLayout.tsx";
 import { TabListContext } from "~/components/workspace/Tab/TabTypes";
@@ -33,14 +33,3 @@ type TabStore = Map<
   [Store<TabListContext>, SetStoreFunction<TabListContext>]
 >;
 export const tabStore: TabStore = new Map();
-
-export enum Pages {
-  Configuration = "configuration",
-  Logging = "logging",
-  LogViewer = "logViewer",
-  VibrationLogger = "vibrationLogger",
-  Monitoring = "monitoring",
-  None = "none",
-}
-
-export const [page, setPage] = createSignal<Pages>(Pages.None);

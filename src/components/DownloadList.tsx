@@ -11,13 +11,11 @@ import { Button } from "./ui/button";
 import { Stack } from "styled-system/jsx";
 import { Text } from "./ui/text";
 import {
-  page,
   pageKeys,
-  Pages,
   panelStore,
-  setPage,
   tabStore,
 } from "~/stores/GlobalState";
+import { page, setPage, Pages } from "~/stores/pages";
 import { trackStore } from "@solid-primitives/deep";
 import { createStore } from "solid-js/store";
 import { PanelSizeContext } from "./workspace/Panel/PanelLayout";

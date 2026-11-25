@@ -1,5 +1,4 @@
 import {
-  Pages,
   pageKeys,
   tabStore,
   panelStore,
@@ -17,6 +16,7 @@ import { createEffect, createSignal, on, onMount, Show } from "solid-js";
 import { createStore } from "solid-js/store";
 import { load } from "@tauri-apps/plugin-store";
 import { addNewTab, generateNewConfigTab } from "~/services/TabFactory.ts";
+import { Pages } from "~/stores/pages";
 
 function Configuration() {
   const [render, setRender] = createSignal<boolean>(false);
