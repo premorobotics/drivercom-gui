@@ -1,0 +1,6 @@
+- Config : Press Get from port and save the file.
+- Logging: Start Logging -> Save as CSV file
+- Logviewer: Open CSV file -> Split plot and merge plot
+- Tabs : Split with Dragging, Move the tab to other panel
+- App: Drag over the file to open
+- Theme: Toggle dark & light mode
