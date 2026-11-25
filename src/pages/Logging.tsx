@@ -1,4 +1,4 @@
-import { pageKeys, panelStore, tabStore } from "~/stores/layout.ts";
+import { pageKeys, panelStore, tabStore } from "~/stores/layout/layout.ts";
 import { createEffect, createSignal, on, Show } from "solid-js";
 import { onMount } from "solid-js";
 import { recentLogFilePaths } from "~/stores/recent-file-paths.ts";

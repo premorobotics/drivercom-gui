@@ -10,7 +10,7 @@ import { createEffect, createSignal, For, JSX, on, Show } from "solid-js";
 import { Button } from "./ui/button";
 import { Stack } from "styled-system/jsx";
 import { Text } from "./ui/text";
-import { pageKeys, panelStore, tabStore } from "~/stores/layout";
+import { pageKeys, panelStore, tabStore } from "~/stores/layout/layout";
 import { page, setPage, Pages } from "~/stores/pages";
 import { trackStore } from "@solid-primitives/deep";
 import { createStore } from "solid-js/store";

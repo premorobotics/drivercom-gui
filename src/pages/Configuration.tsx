@@ -1,9 +1,7 @@
-import { pageKeys, tabStore, panelStore } from "~/stores/layout.ts";
+import { pageKeys, tabStore, panelStore } from "~/stores/layout/layout";
 import { recentConfigFilePaths } from "~/stores/recent-file-paths";
 import { Panel } from "~/components/workspace/Panel/Panel.tsx";
-import {
-  PanelLayout,
-} from "~/components/workspace/Panel/PanelLayout.tsx";
+import { PanelLayout } from "~/components/workspace/Panel/PanelLayout.tsx";
 import { PanelSizeContext } from "~/components/workspace/types";
 import { TabList } from "~/components/workspace/Tab/TabList";
 import { TabListContext } from "~/components/workspace/Tab/TabTypes";

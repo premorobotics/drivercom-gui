@@ -19,7 +19,7 @@ import { Stack } from "styled-system/jsx";
 import { TabPageContext } from "~/components/workspace/Tab/TabList";
 import { Text } from "~/components/ui/text";
 import { Tooltip } from "~/components/ui/tooltip";
-import { tabStore } from "~/stores/layout";
+import { tabStore } from "~/stores/layout/layout";
 import {
   recentConfigFilePaths,
   setRecentConfigFilePaths,

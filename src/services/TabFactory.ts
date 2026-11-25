@@ -4,7 +4,7 @@ import {
   GainLockStates,
   LinkStates,
 } from "~/features/configuration/ConfigForm/ConfigForm";
-import { tabStore } from "~/stores/layout";
+import { tabStore } from "~/stores/layout/layout";
 import JSON5 from "json5";
 import {
   logFormFileFormat,

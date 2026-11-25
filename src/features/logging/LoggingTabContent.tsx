@@ -1,6 +1,6 @@
 import { Stack } from "styled-system/jsx";
 import { Text } from "~/components/ui/text.tsx";
-import { pageKeys, tabStore } from "~/stores/layout.ts";
+import { pageKeys, tabStore } from "~/stores/layout/layout.ts";
 import { Pages } from "~/stores/pages";
 import {
   recentLogFilePaths,
