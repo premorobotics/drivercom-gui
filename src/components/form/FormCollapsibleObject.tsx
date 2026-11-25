@@ -2,7 +2,7 @@ import * as Accordion from "../ui/accordion";
 import { Text } from "../ui/text";
 import { Stack } from "styled-system/jsx";
 import { Show } from "solid-js";
-import { Form, FormProps } from "../Form";
+import { Form, FormProps } from "./Form";
 import { IconChevronDown } from "@tabler/icons-solidjs";
 import { LoggingCommandTable } from "~/features/logging/LoggingForm/LoggingCommandTable";
 import { CommandType } from "src-tauri/generated/config/LogConfigType";

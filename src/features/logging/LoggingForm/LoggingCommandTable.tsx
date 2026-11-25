@@ -9,7 +9,7 @@ import {
   Speed_profile_Schema,
 } from "src-tauri/generated/config/LogConfigType.tsx";
 import { Text } from "~/components/ui/text";
-import { Form, FormProps } from "~/components/Form";
+import { Form, FormProps } from "~/components/form/Form";
 import { css } from "styled-system/css";
 import { HelpTooltip } from "~/components/HelpTooltip";
 
