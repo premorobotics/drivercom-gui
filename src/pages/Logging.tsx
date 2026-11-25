@@ -1,5 +1,4 @@
 import {
-  Pages,
   pageKeys,
   panelStore,
   tabStore,
@@ -7,6 +6,7 @@ import {
 import { createEffect, createSignal, on, Show } from "solid-js";
 import { onMount } from "solid-js";
 import { recentLogFilePaths } from "~/stores/recent-file-paths.ts";
+import { Pages } from "~/stores/pages";
 
 import {
   PanelLayout,

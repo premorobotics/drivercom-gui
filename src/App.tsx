@@ -27,15 +27,13 @@ import {
 import {
   globalState,
   GlobalStateContext,
-  page,
-  Pages,
   setGlobalState,
-  setPage,
   Theme,
   panelStore,
   pageKeys,
   tabStore,
 } from "./stores/GlobalState.ts";
+import { page, setPage, Pages } from "./stores/pages.ts";
 import { setRecentConfigFilePaths, setRecentLogFilePaths } from "./stores/recent-file-paths.ts";
 import {
   setConfigFormFileFormat,

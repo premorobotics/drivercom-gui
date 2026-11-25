@@ -1,7 +1,7 @@
 import { Panel } from "~/components/workspace/Panel/Panel";
 import { PanelLayout } from "~/components/workspace//Panel/PanelLayout";
 import { TabList } from "~/components/workspace/Tab/TabList";
-import { Pages } from "~/stores/GlobalState";
+import { Pages } from "~/stores/pages";
 import { LogViewerTabPageContent } from "../features/logViewer/LogViewerTabPageContent";
 import { toaster } from "~/components/ui/toast.tsx";
 import { FileHandler } from "~/services/FileHandler";
