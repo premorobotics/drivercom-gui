@@ -22,7 +22,7 @@ import { Stack } from "styled-system/jsx";
 import { Text } from "~/components/ui/text";
 import * as Checkbox from "~/components/ui/checkbox";
 import { Tooltip } from "~/components/ui/tooltip";
-import { tabStore } from "~/stores/GlobalState";
+import { tabStore } from "~/stores/layout";
 import { on } from "solid-js";
 import { LegendStroke } from "./Plot/PlotTypes";
 import { TabPageContext } from "~/components/workspace/Tab/TabList";
