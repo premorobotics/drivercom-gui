@@ -22,7 +22,7 @@ import { createStore, reconcile } from "solid-js/store";
 import { toaster } from "~/components/ui/toast";
 import { trackStore } from "@solid-primitives/deep";
 import { DriverStatusAxes } from "./DriverStatusAxes";
-import { DriverStatusSectionCount } from "./DrivreStatusSectionCount";
+import { DriverStatusSectionCount } from "./DriverStatusSectionCount";
 import { FormNumberInput } from "~/components/form/FormNumberInput";
 import { initializeSlider } from "~/services/PortService";
 import * as Select from "~/components/ui/select";
