@@ -11,13 +11,11 @@ import { Button } from "./ui/button";
 import { Stack } from "styled-system/jsx";
 import { Text } from "./ui/text";
 import {
-  csvFileDownloads,
   page,
   pageKeys,
   Pages,
   panelStore,
   portCommands,
-  setCsvFileDownloads,
   setPage,
   tabStore,
 } from "~/stores/GlobalState";
@@ -27,21 +25,11 @@ import { PanelSizeContext } from "./workspace/Panel/PanelLayout";
 import { TabContext, TabListContext } from "./workspace/Tab/TabTypes";
 import { css } from "styled-system/css";
 import { Progress } from "@ark-ui/solid/progress";
-
-export enum DownloadStatus {
-  Progressing,
-  Cancel,
-  Success,
-  Error,
-}
-
-export type DownloadStates = {
-  filePath: string;
-  status: DownloadStatus;
-  port: string;
-  pid: number;
-  downloadProgress: number;
-};
+import {
+  csvFileDownloads,
+  setCsvFileDownloads,
+  DownloadStatus,
+} from "~/stores/downloads";
 
 // Component for managing active downloads.
 export const DownloadList = (props: JSX.HTMLAttributes<HTMLDivElement>) => {
