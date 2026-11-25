@@ -4,7 +4,7 @@ import {
   tabStore,
   panelStore,
   recentConfigFilePaths,
-} from "~/store/GlobalState.ts";
+} from "~/stores/GlobalState";
 import { Panel } from "~/components/workspace/Panel/Panel.tsx";
 import {
   PanelLayout,

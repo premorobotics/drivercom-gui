@@ -28,7 +28,7 @@ import { initializeSlider } from "~/services/PortService";
 import * as Select from "~/components/ui/select";
 import { createListCollection } from "@ark-ui/solid";
 import { Portal } from "solid-js/web";
-import { configDescription } from "~/store/GlobalState";
+import { configDescription } from "~/stores/GlobalState";
 
 const axisIdArray = ["1", "2", "3"] as const;
 type AxisIdType = (typeof axisIdArray)[number];

@@ -2,7 +2,7 @@ import { Accessor, createEffect, createMemo, JSX, on, Setter } from "solid-js";
 import { ConfigTuneType } from "src-tauri/generated/config/ConfigTune";
 import { ConfigSystemType } from "src-tauri/generated/config/ConfigSystem";
 import { ConfigCalibrationType } from "src-tauri/generated/config/ConfigCalibration";
-import { configTabForm } from "~/store/GlobalState";
+import { configTabForm } from "~/stores/GlobalState";
 import { createStore } from "solid-js/store";
 import { ConfigType } from "src-tauri/generated/config/ConfigType";
 

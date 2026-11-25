@@ -10,7 +10,7 @@ import * as Tabs from "~/components/ui/tabs.tsx";
 import { Tab } from "./Tab.tsx";
 import { For } from "solid-js/web";
 import { LogViewerTabPageContentProps } from "~/features/logViewer/LogViewerTabPageContent.tsx";
-import { tabStore } from "~/store/GlobalState.ts";
+import { tabStore } from "~/stores/GlobalState.ts";
 import { createStore } from "solid-js/store";
 import { PanelContext } from "../Panel/Panel.tsx";
 import { createSignal } from "solid-js";

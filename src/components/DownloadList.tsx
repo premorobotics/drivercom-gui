@@ -20,7 +20,7 @@ import {
   setCsvFileDownloads,
   setPage,
   tabStore,
-} from "~/store/GlobalState.ts";
+} from "~/stores/GlobalState";
 import { trackStore } from "@solid-primitives/deep";
 import { createStore } from "solid-js/store";
 import { PanelSizeContext } from "./workspace/Panel/PanelLayout";
