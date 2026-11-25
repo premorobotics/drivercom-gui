@@ -14,7 +14,7 @@ import { pageKeys, panelStore, tabStore } from "~/stores/layout";
 import { page, setPage, Pages } from "~/stores/pages";
 import { trackStore } from "@solid-primitives/deep";
 import { createStore } from "solid-js/store";
-import { PanelSizeContext } from "./workspace/Panel/PanelLayout";
+import { PanelSizeContext } from "./workspace/types";
 import { TabContext, TabListContext } from "./workspace/Tab/TabTypes";
 import { css } from "styled-system/css";
 import { Progress } from "@ark-ui/solid/progress";

@@ -3,11 +3,8 @@ import { createEffect, createSignal, on, Show } from "solid-js";
 import { onMount } from "solid-js";
 import { recentLogFilePaths } from "~/stores/recent-file-paths.ts";
 import { Pages } from "~/stores/pages";
-
-import {
-  PanelLayout,
-  PanelSizeContext,
-} from "~/components/workspace/Panel/PanelLayout.tsx";
+import { PanelSizeContext } from "~/components/workspace/types";
+import { PanelLayout } from "~/components/workspace/Panel/PanelLayout.tsx";
 import { createStore } from "solid-js/store";
 import { TabList } from "~/components/workspace/Tab/TabList.tsx";
 import { TabListContext } from "~/components/workspace/Tab/TabTypes.ts";

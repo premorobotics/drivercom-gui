@@ -1,5 +1,5 @@
 import { createContext } from "solid-js";
-import { TabLocation } from "../Tab/TabList";
+import { TabLocation } from "../types";
 
 export type PanelProps = {
   id: string;

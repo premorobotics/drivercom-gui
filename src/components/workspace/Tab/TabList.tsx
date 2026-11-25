@@ -16,14 +16,7 @@ import { PanelContext } from "../Panel/Panel.tsx";
 import { createSignal } from "solid-js";
 import { toaster } from "~/components/ui/toast.tsx";
 import { TabContext, TabListContext } from "./TabTypes.ts";
-
-export type TabLocation =
-  | "none"
-  | "rightSplitter"
-  | "leftSplitter"
-  | "otherPanel"
-  | "tabList"
-  | "centerSplitter";
+import { TabLocation } from "../types.ts";
 
 export type TabListProps = {
   id: string;
