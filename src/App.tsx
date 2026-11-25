@@ -29,12 +29,13 @@ import {
   GlobalStateContext,
   setGlobalState,
   Theme,
-  panelStore,
-  pageKeys,
-  tabStore,
 } from "./stores/GlobalState.ts";
+import { panelStore, pageKeys, tabStore } from "./stores/layout.ts";
 import { page, setPage, Pages } from "./stores/pages.ts";
-import { setRecentConfigFilePaths, setRecentLogFilePaths } from "./stores/recent-file-paths.ts";
+import {
+  setRecentConfigFilePaths,
+  setRecentLogFilePaths,
+} from "./stores/recent-file-paths.ts";
 import {
   setConfigFormFileFormat,
   setLogFormFileFormat,

@@ -1,8 +1,4 @@
-import {
-  pageKeys,
-  tabStore,
-  panelStore,
-} from "~/stores/GlobalState";
+import { pageKeys, tabStore, panelStore } from "~/stores/layout.ts";
 import { recentConfigFilePaths } from "~/stores/recent-file-paths";
 import { Panel } from "~/components/workspace/Panel/Panel.tsx";
 import {
