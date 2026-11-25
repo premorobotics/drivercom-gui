@@ -25,14 +25,10 @@ import {
 } from "@tabler/icons-solidjs";
 
 import {
-  cliVersion,
-  driverComVersion,
   globalState,
   GlobalStateContext,
   page,
   Pages,
-  setCliVersion,
-  setDriverComVersion,
   setGlobalState,
   setPage,
   Theme,
@@ -97,6 +93,9 @@ type PageMeta = {
 };
 
 function App(props: RouteSectionProps) {
+  const [cliVersion, setCliVersion] = createSignal<string>("");
+  const [driverComVersion, setDriverComVersion] = createSignal<string>("");
+
   // Necessary for light/dark mode detection
   onMount(async () => {
     const prefers_dark = globalThis.matchMedia(

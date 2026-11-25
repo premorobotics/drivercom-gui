@@ -19,9 +19,6 @@ export const GlobalStateContext = createContext<{
   setGlobalState: SetStoreFunction<GlobalState>;
 }>();
 
-export const [cliVersion, setCliVersion] = createSignal<string>("");
-export const [driverComVersion, setDriverComVersion] = createSignal<string>("");
-
 export const [recentLogFilePaths, setRecentLogFilePaths] = createSignal<
   string[]
 >([]);
