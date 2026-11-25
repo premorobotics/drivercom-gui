@@ -5,8 +5,8 @@ import { createStore } from "solid-js/store";
 import { Show, For, createSignal, onMount } from "solid-js";
 import * as Accordion from "../../../components/ui/accordion";
 import { Text } from "../../../components/ui/text";
-import { FormNumberInput } from "../../../components/Form/FormNumberInput";
-import { FormCheckBox } from "../../../components/Form/FormCheckBox";
+import { FormNumberInput } from "../../../components/form/FormNumberInput";
+import { FormCheckBox } from "../../../components/form/FormCheckBox";
 
 import { IconChevronDown, IconHelp } from "@tabler/icons-solidjs";
 import { prettierLabel } from "~/utils/PrettierLabel";
