@@ -15,11 +15,7 @@ import { ConfigTuneType } from "src-tauri/generated/config/ConfigTune";
 import { ConfigCalibrationType } from "src-tauri/generated/config/ConfigCalibration";
 import { ConfigSystemType } from "src-tauri/generated/config/ConfigSystem";
 import { DownloadStates, DownloadStatus } from "~/components/DownloadList";
-
-export type Port = {
-  id: string;
-  version: string;
-};
+import { Port } from "~/store/GlobalState";
 
 async function sendDrivercomCommand(
   args: string[],
