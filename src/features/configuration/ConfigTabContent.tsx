@@ -20,9 +20,6 @@ import { TabPageContext } from "~/components/workspace/Tab/TabList";
 import { Text } from "~/components/ui/text";
 import { Tooltip } from "~/components/ui/tooltip";
 import {
-  configDescription,
-  configFormFileFormat,
-  configTabForm,
   recentConfigFilePaths,
   setRecentConfigFilePaths,
   tabStore,
@@ -49,6 +46,11 @@ import { SaveToPort } from "./ConfigForm/SaveToPort";
 import { DriverStatus } from "./ConfigForm/DriverStatus";
 import { reconcile } from "solid-js/store";
 import { portCommands } from "~/stores/ports";
+import {
+  configDescription,
+  configFormFileFormat,
+  configTabForm,
+} from "~/stores/config-format";
 
 export type ConfigTabPage = {
   filePath?: string;

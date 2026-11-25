@@ -2,18 +2,6 @@ import { Accessor, createContext, createSignal, Setter } from "solid-js";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { PanelSizeContext } from "~/components/workspace/Panel/PanelLayout.tsx";
 import { TabListContext } from "~/components/workspace/Tab/TabTypes";
-import {
-  ConfigType,
-  configDefaultValues,
-} from "src-tauri/generated/config/ConfigType.tsx";
-import {
-  logConfigDefaultValues,
-  LogConfigType,
-} from "src-tauri/generated/config/LogConfigType.tsx";
-import { ConfigFormatType } from "~/features/configuration/ConfigForm/ConfigForm";
-import { configTuneDefaultValues } from "src-tauri/generated/config/ConfigTune.tsx";
-import { configSystemDefaultValues } from "src-tauri/generated/config/ConfigSystem.tsx";
-import { configCalibrationDefaultValues } from "src-tauri/generated/config/ConfigCalibration.tsx";
 
 const [globalState, setGlobalState] = createStore({
   theme: "light",
@@ -33,11 +21,6 @@ export const GlobalStateContext = createContext<{
 
 export const [cliVersion, setCliVersion] = createSignal<string>("");
 export const [driverComVersion, setDriverComVersion] = createSignal<string>("");
-
-export const [logFormFileFormat, setLogFormFileFormat] =
-  createSignal<LogConfigType>(logConfigDefaultValues);
-export const [configFormFileFormat, setConfigFormFileFormat] =
-  createSignal<ConfigType>(configDefaultValues);
 
 export const [recentLogFilePaths, setRecentLogFilePaths] = createSignal<
   string[]
@@ -71,22 +54,3 @@ export enum Pages {
 }
 
 export const [page, setPage] = createSignal<Pages>(Pages.None);
-
-export type MonitoringInputs = Map<string, [Accessor<string>, Setter<string>]>;
-export const monitoringInputs: MonitoringInputs = new Map();
-
-export const [configDescription, setConfigDescription] = createSignal<object>(
-  {},
-);
-export const [logConfigDescription, setLogConfigDescription] =
-  createSignal<object>({});
-
-export const [configTabForm, setConfigTabForm] = createSignal<ConfigFormatType>(
-  {
-    tune: configTuneDefaultValues,
-    system: configSystemDefaultValues,
-    calibration: configCalibrationDefaultValues,
-  },
-);
-
-export const [cclinkSpeed, setCclinkSpeed] = createSignal<string[]>([]);

@@ -4,9 +4,12 @@ import {
   GainLockStates,
   LinkStates,
 } from "~/features/configuration/ConfigForm/ConfigForm";
-import { configFormFileFormat, tabStore } from "~/stores/GlobalState";
+import { tabStore } from "~/stores/GlobalState";
 import JSON5 from "json5";
-import { logFormFileFormat } from "~/stores/GlobalState";
+import {
+  logFormFileFormat,
+  configFormFileFormat,
+} from "~/stores/config-format";
 import {
   ConfigType,
   State_Schema,

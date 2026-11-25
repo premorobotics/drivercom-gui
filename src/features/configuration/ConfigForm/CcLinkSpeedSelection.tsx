@@ -2,7 +2,7 @@ import { For, Show } from "solid-js";
 import * as Select from "../../../components/ui/select";
 import { createListCollection } from "@ark-ui/solid";
 import { Text } from "~/components/ui/text";
-import { cclinkSpeed } from "~/stores/GlobalState";
+import { cclinkSpeed } from "~/stores/config-format";
 import { css } from "styled-system/css";
 import { Tooltip } from "~/components/ui/tooltip";
 import { IconButton } from "~/components/ui/icon-button";
