@@ -45,7 +45,7 @@ import {
   tabStore,
   configFormFileFormat,
   logFormFileFormat,
-} from "./store/GlobalState.ts";
+} from "./stores/GlobalState.ts";
 
 import { Text } from "~/components/ui/text.tsx";
 

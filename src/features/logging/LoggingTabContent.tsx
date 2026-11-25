@@ -8,7 +8,7 @@ import {
   setRecentLogFilePaths,
   logConfigDescription,
   tabStore,
-} from "~/store/GlobalState.ts";
+} from "~/stores/GlobalState.ts";
 import { createSignal, Show, useContext } from "solid-js";
 import { LoggingForm } from "./LoggingForm.tsx";
 import {

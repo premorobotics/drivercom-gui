@@ -14,7 +14,7 @@ import "uplot/dist/uPlot.min.css";
 import { IconArrowsMaximize } from "@tabler/icons-solidjs";
 import { css } from "styled-system/css";
 import { Button } from "~/components/ui/button";
-import { globalState } from "~/store/GlobalState";
+import { globalState } from "~/stores/GlobalState";
 import { getComputedCSSVariableValue } from "~/utils/GetComputedCssVariableValue";
 import {
   Axis,

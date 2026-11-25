@@ -4,7 +4,7 @@ import {
   panelStore,
   tabStore,
   recentLogFilePaths,
-} from "~/store/GlobalState.ts";
+} from "~/stores/GlobalState.ts";
 import { createEffect, createSignal, on, Show } from "solid-js";
 import { onMount } from "solid-js";
 
