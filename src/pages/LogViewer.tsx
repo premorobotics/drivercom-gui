@@ -1,6 +1,6 @@
-import { Panel } from "~/features/Panel/Panel";
-import { PanelLayout } from "~/features/Panel/PanelLayout";
-import { TabList } from "~/features/Tab/TabList";
+import { Panel } from "~/components/workspace/Panel/Panel";
+import { PanelLayout } from "~/components/workspace//Panel/PanelLayout";
+import { TabList } from "~/components/workspace/Tab/TabList";
 import { Pages } from "~/store/GlobalState";
 import { LogViewerTabPageContent } from "../features/logViewer/LogViewerTabPageContent";
 import { toaster } from "~/components/ui/toast.tsx";

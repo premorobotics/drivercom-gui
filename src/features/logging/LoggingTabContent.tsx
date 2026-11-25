@@ -21,7 +21,7 @@ import { on } from "solid-js";
 import { Button } from "~/components/ui/button.tsx";
 import { FileHandler } from "../../services/FileHandler.ts";
 import { toaster } from "~/components/ui/toast.tsx";
-import { TabPageContext } from "~/features/Tab/TabList.tsx";
+import { TabPageContext } from "~/components/workspace/Tab/TabList.tsx";
 import { FileImportButton } from "./LoggingForm/FileImportButton.tsx";
 import { css } from "styled-system/css/css";
 import { DriverStatus } from "../configuration/ConfigForm/DriverStatus.tsx";
