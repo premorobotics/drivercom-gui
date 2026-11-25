@@ -1,11 +1,9 @@
 import { Child, Command } from "@tauri-apps/plugin-shell";
 import {
-  portCommands,
   setCclinkSpeed,
   setConfigDescription,
   setConfigTabForm,
   setLogConfigDescription,
-  Port,
 } from "~/stores/GlobalState";
 import JSON5 from "json5";
 import { ConfigType } from "src-tauri/generated/config/ConfigType";
@@ -19,6 +17,7 @@ import {
   DownloadStatus,
   DownloadStates,
 } from "~/stores/downloads";
+import { Port, portCommands } from "~/stores/ports";
 
 async function sendDrivercomCommand(
   args: string[],

@@ -2,7 +2,6 @@ import { Accessor, createContext, createSignal, Setter } from "solid-js";
 import { createStore, SetStoreFunction, Store } from "solid-js/store";
 import { PanelSizeContext } from "~/components/workspace/Panel/PanelLayout.tsx";
 import { TabListContext } from "~/components/workspace/Tab/TabTypes";
-import { Child } from "@tauri-apps/plugin-shell";
 import {
   ConfigType,
   configDefaultValues,
@@ -27,11 +26,6 @@ export type GlobalState = {
   theme: Theme;
 };
 
-export type Port = {
-  id: string;
-  version: string;
-};
-
 export const GlobalStateContext = createContext<{
   globalState: GlobalState;
   setGlobalState: SetStoreFunction<GlobalState>;
@@ -39,8 +33,6 @@ export const GlobalStateContext = createContext<{
 
 export const [cliVersion, setCliVersion] = createSignal<string>("");
 export const [driverComVersion, setDriverComVersion] = createSignal<string>("");
-
-export const [portList, setPortList] = createSignal<Port[]>([]);
 
 export const [logFormFileFormat, setLogFormFileFormat] =
   createSignal<LogConfigType>(logConfigDefaultValues);
@@ -82,13 +74,6 @@ export const [page, setPage] = createSignal<Pages>(Pages.None);
 
 export type MonitoringInputs = Map<string, [Accessor<string>, Setter<string>]>;
 export const monitoringInputs: MonitoringInputs = new Map();
-
-export type PortCommand = {
-  port: string;
-  child: Child;
-};
-
-export const portCommands: Map<number, PortCommand> = new Map();
 
 export const [configDescription, setConfigDescription] = createSignal<object>(
   {},

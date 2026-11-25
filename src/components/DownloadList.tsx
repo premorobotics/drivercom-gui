@@ -15,7 +15,6 @@ import {
   pageKeys,
   Pages,
   panelStore,
-  portCommands,
   setPage,
   tabStore,
 } from "~/stores/GlobalState";
@@ -30,6 +29,7 @@ import {
   setCsvFileDownloads,
   DownloadStatus,
 } from "~/stores/downloads";
+import { portCommands } from "~/stores/ports";
 
 // Component for managing active downloads.
 export const DownloadList = (props: JSX.HTMLAttributes<HTMLDivElement>) => {
