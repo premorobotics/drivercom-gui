@@ -13,7 +13,7 @@ import { createStore, reconcile, unwrap } from "solid-js/store";
 import uPlot from "uplot";
 import "uplot/dist/uPlot.min.css";
 
-import { GlobalStateContext } from "~/stores/GlobalState";
+import { GlobalStateContext } from "~/stores/global-state";
 import { IconButton } from "~/components/ui/icon-button";
 import {
   IconChevronLeftPipe,

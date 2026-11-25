@@ -29,7 +29,7 @@ import {
   GlobalStateContext,
   setGlobalState,
   Theme,
-} from "./stores/GlobalState.ts";
+} from "./stores/global-state.ts";
 import { panelStore, pageKeys, tabStore } from "./stores/layout.ts";
 import { page, setPage, Pages } from "./stores/pages.ts";
 import {
