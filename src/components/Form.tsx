@@ -1,7 +1,7 @@
 import { For, createSignal, JSX, Show } from "solid-js";
-import { FormCheckBox } from "./Form/FormCheckBox.tsx";
-import { FormNumberInput } from "./Form/FormNumberInput.tsx";
-import { FormCollapsibleObject } from "./Form/FormCollapsibleObject.tsx";
+import { FormCheckBox } from "./form/FormCheckBox.tsx";
+import { FormNumberInput } from "./form/FormNumberInput.tsx";
+import { FormCollapsibleObject } from "./form/FormCollapsibleObject.tsx";
 import { createStore } from "solid-js/store";
 import { AccordionStates } from "~/features/configuration/ConfigForm/ConfigForm.tsx";
 

@@ -23,7 +23,7 @@ import { toaster } from "~/components/ui/toast";
 import { trackStore } from "@solid-primitives/deep";
 import { DriverStatusAxes } from "./DriverStatusAxes";
 import { DriverStatusSectionCount } from "./DrivreStatusSectionCount";
-import { FormNumberInput } from "~/components/Form/FormNumberInput";
+import { FormNumberInput } from "~/components/form/FormNumberInput";
 import { initializeSlider } from "~/services/PortService";
 import * as Select from "~/components/ui/select";
 import { createListCollection } from "@ark-ui/solid";

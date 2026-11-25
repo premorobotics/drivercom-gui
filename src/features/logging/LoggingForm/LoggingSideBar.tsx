@@ -1,6 +1,6 @@
 import { LogConfigType } from "src-tauri/generated/config/LogConfigType.tsx";
 import { createStore } from "solid-js/store";
-import { FormNumberInput } from "~/components/Form/FormNumberInput.tsx";
+import { FormNumberInput } from "~/components/form/FormNumberInput.tsx";
 import { LoggingCommandTable } from "./LoggingCommandTable.tsx";
 import * as Checkbox from "../../../components/ui/checkbox.tsx";
 import { DrivercomCommandButton } from "~/features/configuration/ConfigForm/DrivercomCommandButton.tsx";
