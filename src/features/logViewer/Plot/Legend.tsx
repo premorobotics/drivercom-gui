@@ -27,6 +27,7 @@ import { Heading } from "~/components/ui/heading";
 import { Portal } from "solid-js/web";
 import * as Checkbox from "~/components/ui/checkbox";
 import { LegendStroke } from "./PlotTypes";
+import { formatTimestamp } from "./TimeFormat";
 
 export type LegendProps = Omit<StackProps, "stroke"> & {
   plot: uPlot;
@@ -120,6 +121,10 @@ export function Legend(props: LegendProps) {
             setValue(`undefined(${val})`);
           }
         } else {
+          if (props.series === "timestamp") {
+            setValue(formatTimestamp(val));
+            return;
+          }
           setValue(val);
         }
       } else {

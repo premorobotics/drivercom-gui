@@ -315,12 +315,24 @@ export function LogViewerTabPageContent() {
 
   const [header, setHeader] = createSignal<string[]>([]);
   const [series, setSeries] = createSignal<number[][]>([]);
+  const [timestamp, setTimestamp] = createSignal<number[]>();
 
   const prepareCsvFile = async () => {
     try {
       const csvFile = await fileHandler.readCsvFile(filePath());
-      setSeries(csvFile.series);
-      setHeader(csvFile.header);
+      let header = csvFile.header;
+      let series = csvFile.series;
+      if (csvFile.header.includes("timestamp")) {
+        const findTimeStamp = csvFile.header.findIndex(
+          (str) => str === "timestamp",
+        );
+        setTimestamp(series[findTimeStamp]);
+        header = header.filter((_, i) => i !== findTimeStamp);
+        series = series.filter((_, i) => i !== findTimeStamp);
+      }
+      setHeader(header);
+      setSeries(series);
+
       if (csvFile.enumSeriesMap) {
         setEnumMappings(csvFile.enumSeriesMap);
       }
@@ -1019,6 +1031,7 @@ export function LogViewerTabPageContent() {
                     <Plot
                       id={currentID()}
                       group={tabPageProps.tabId}
+                      timestamp={timestamp()}
                       legendPanelMinWidth={legendPanelMinWidth()}
                       header={currentHeader}
                       series={currentItems}

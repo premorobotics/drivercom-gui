@@ -47,6 +47,7 @@ export type PlotProps = JSX.HTMLAttributes<HTMLDivElement> & {
   group?: string;
   header: string[];
   series: number[][];
+  timestamp?: number[];
   legendPanelMinWidth?: number;
   enumMapping?: Map<string, Map<number, string>>;
   context?: PlotContext;
@@ -65,6 +66,7 @@ export function Plot(props: PlotProps) {
   const [, rest] = splitProps(props, [
     "header",
     "series",
+    "timestamp",
     "group",
     "legendPanelMinWidth",
     "enumMapping",
@@ -186,6 +188,15 @@ export function Plot(props: PlotProps) {
       props.onLegendShrinkChange?.(newStatus),
   });
 
+  const xValue = () => {
+    if (props.timestamp) return props.timestamp;
+    const defaultXValue = Array.from(
+      { length: props.series[0].length },
+      (_, i) => i,
+    );
+    return defaultXValue;
+  };
+
   return (
     <>
       <Splitter.Root
@@ -220,7 +231,7 @@ export function Plot(props: PlotProps) {
                 setRender(true);
               }}
               onCursorMove={(e) => {
-                setCursorIdx(e.cursor.xValue);
+                setCursorIdx(e.cursor.idx);
               }}
               cursor={{
                 sync: {
@@ -233,14 +244,14 @@ export function Plot(props: PlotProps) {
                 },
               }}
               autoResize={true}
-              axes={toAxesOptions(color())}
+              axes={toAxesOptions(color(), props.timestamp !== undefined)}
               data={[
-                Array.from({ length: props.series[0].length }, (_, i) => i), // x values
+                xValue(), // x values
                 ...props.series,
               ]}
               scales={{
                 x: {
-                  time: false,
+                  time: props.timestamp ? true : false,
                 },
               }}
               series={
@@ -248,7 +259,7 @@ export function Plot(props: PlotProps) {
                   ? plot.series
                   : [
                       {
-                        label: "Cycle",
+                        label: props.timestamp ? "timestamp" : "Cycle",
                         stroke: "#ffffff",
                       },
                       ...props.header.map((_, index) => {
@@ -368,6 +379,7 @@ export function Plot(props: PlotProps) {
                   ctx={ctx}
                   setCtx={setCtx}
                   plot={plot!}
+                  hasTimestamp={props.timestamp !== undefined}
                   onContextChange={(newCtx) => {
                     props.onContextChange?.(structuredClone(unwrap(newCtx)));
                   }}
