@@ -9,6 +9,35 @@ export function xDataRange(u: uPlot): [number, number] {
   return [xs[0], xs[xs.length - 1]];
 }
 
+// Number of samples whose x value lies in [min, max]. X values ascend.
+export function countSamplesInRange(
+  xs: ArrayLike<number>,
+  min: number,
+  max: number,
+): number {
+  const lowerBound = (value: number) => {
+    let lo = 0;
+    let hi = xs.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (xs[mid] < value) lo = mid + 1;
+      else hi = mid;
+    }
+    return lo;
+  };
+  const upperBound = (value: number) => {
+    let lo = 0;
+    let hi = xs.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      if (xs[mid] <= value) lo = mid + 1;
+      else hi = mid;
+    }
+    return lo;
+  };
+  return Math.max(0, upperBound(max) - lowerBound(min));
+}
+
 // Moves [min, max] back inside [lo, hi] without changing its width. A window
 // wider than [lo, hi] is clamped to [lo, hi].
 export function clampWindow(

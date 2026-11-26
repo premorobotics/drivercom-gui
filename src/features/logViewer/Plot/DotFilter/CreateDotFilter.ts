@@ -1,6 +1,7 @@
 import { createEffect, createMemo, on } from "solid-js";
 import type uPlot from "uplot";
 import { LegendStroke, PlotContext } from "../PlotTypes";
+import { countSamplesInRange } from "../PlotScale/XDataRange";
 
 export function createDotFilter(opts: {
   xScale: () => [number, number];
@@ -18,8 +19,10 @@ export function createDotFilter(opts: {
         if (!plot) return [] as number[];
 
         const domainWidth: number = plot.over.offsetWidth;
-        const xRange = xMax - xMin;
-        const scale: number = xRange / domainWidth;
+        // Samples on screen, not the x range: x values may be timestamps
+        // rather than cycle indexes.
+        const sampleCount = countSamplesInRange(plot.data[0], xMin, xMax);
+        const scale: number = sampleCount / domainWidth;
         if (scale <= 0.1) return [];
 
         const array: number[] = [];

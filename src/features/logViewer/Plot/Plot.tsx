@@ -132,7 +132,12 @@ export function Plot(props: PlotProps) {
   });
 
   const { checkDotFilter } = createDotFilter({
-    xScale: () => props.xScale ?? [0, props.series[0].length - 1],
+    xScale: () => {
+      if (props.xScale) return props.xScale;
+      const ts = props.timestamp;
+      if (ts && ts.length > 0) return [ts[0], ts[ts.length - 1]];
+      return [0, props.series[0].length - 1];
+    },
     ctx,
     plot: () => plot,
   });
