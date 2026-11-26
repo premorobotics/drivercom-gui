@@ -72,7 +72,7 @@ export class SampleSeries {
   // tick, timestamp, then each channel's label. Every line ends with a
   // comma.
   formatCsvHeader(): string {
-    return `tick,timestamp,${this.labels.join(",")},\n`;
+    return `timestamp,${this.labels.join(",")},\n`;
   }
 
   // The CSV lines of samples `from` to `to` (exclusive), counted from the
@@ -84,7 +84,7 @@ export class SampleSeries {
       // hold exactly.
       const stamp = Math.round(this.time.get(i) * 1e9);
       const values = this.channels.map((channel) => `${channel.get(i)},`);
-      lines.push(`${this.ticks.get(i)},${stamp},${values.join("")}\n`);
+      lines.push(`${stamp},${values.join("")}\n`);
     }
     return lines.join("");
   }
