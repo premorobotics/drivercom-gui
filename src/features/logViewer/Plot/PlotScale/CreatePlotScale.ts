@@ -2,6 +2,7 @@ import { UplotPluginFactory } from "@dschz/solid-uplot";
 import { CursorPluginMessageBus } from "@dschz/solid-uplot/plugins";
 import { Accessor, createSignal } from "solid-js";
 import uPlot from "uplot";
+import { xDataRange } from "./XDataRange";
 
 type CreatePlotScaleProps = {
   xScale: () => [number, number] | undefined;
@@ -26,8 +27,8 @@ export function createPlotScale(props: CreatePlotScaleProps): {
 
   const resetZoom = (plot: uPlot, group: string) => {
     uPlot.sync(group).plots.forEach((up: uPlot) => {
-      const xMax = Number(up.data[0].length - 1);
-      up.setScale("x", { min: 0, max: xMax });
+      const [xMin, xMax] = xDataRange(up);
+      up.setScale("x", { min: xMin, max: xMax });
     });
     plot.setScale("y", {
       min: yScale().min,
@@ -62,11 +63,12 @@ export function createPlotScale(props: CreatePlotScaleProps): {
             isReady = true;
           },
           setScale: (plot, scaleKey) => {
+            const [dataXMin, dataXMax] = xDataRange(plot);
             if (
               (typeof plot.scales.x.min !== "undefined" &&
-                plot.scales.x.min > 0) ||
+                plot.scales.x.min > dataXMin) ||
               (typeof plot.scales.x.max !== "undefined" &&
-                plot.scales.x.max < plot.data[0].length - 1)
+                plot.scales.x.max < dataXMax)
             ) {
               setIsZoomReset(false);
             } else {
