@@ -4,6 +4,7 @@ import uPlot from "uplot";
 import { horizontalSelectionZoom } from "./HorizontalSelectionZoom";
 import { panningPlot } from "./PanningPlot";
 import { verticalSelectionZoom } from "./VerticalSelectionZoom";
+import { xDataRange } from "../PlotScale/XDataRange";
 
 export function createSelectionZoom(
   cursorMode: Accessor<CursorMode>,
@@ -98,10 +99,8 @@ export function createSelectionZoom(
             min: up.scales.y.min!,
             max: up.scales.y.max!,
           });
-          up.setScale("x", {
-            min: 0,
-            max: u.data[0].length - 1,
-          });
+          const [xMin, xMax] = xDataRange(u);
+          up.setScale("x", { min: xMin, max: xMax });
         });
       } else if (cursorMode() === CursorMode.Vertical) {
         uPlot.sync(plotGroupId()).plots.forEach((up) => {
@@ -120,10 +119,8 @@ export function createSelectionZoom(
             min: up.scales.y.min!,
             max: up.scales.y.max!,
           });
-          up.setScale("x", {
-            min: 0,
-            max: u.data[0].length - 1,
-          });
+          const [xMin, xMax] = xDataRange(u);
+          up.setScale("x", { min: xMin, max: xMax });
         });
       }
       return null;

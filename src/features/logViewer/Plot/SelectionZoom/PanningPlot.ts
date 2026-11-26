@@ -1,5 +1,6 @@
 import uPlot from "uplot";
 import { Accessor } from "solid-js";
+import { clampWindow, xDataRange } from "../PlotScale/XDataRange";
 
 export function panningPlot(props: {
   u: uPlot;
@@ -7,8 +8,7 @@ export function panningPlot(props: {
   group: string;
   yScale?: Accessor<{ min: number; max: number }>;
 }) {
-  const xMin = 0;
-  const xMax = props.u.data[0].length - 1;
+  const [xMin, xMax] = xDataRange(props.u);
 
   const left0 = props.e.clientX;
 
@@ -39,37 +39,24 @@ export function panningPlot(props: {
     const left1 = e.clientX;
     const dx = xUnitsPerPx * (left1 - left0);
 
-    const minXBoundary = scXMin0 - dx;
-    const maxXBoundary = scXMax0 - dx;
-
-    let scaleXMin = minXBoundary;
-    let scaleXMax = maxXBoundary;
-
-    if (xMin >= minXBoundary) {
-      scaleXMin = xMin;
-      scaleXMax = scXMax0;
-    } else if (xMax <= maxXBoundary) {
-      scaleXMin = scXMin0;
-      scaleXMax = xMax;
-    }
+    // Stop at the ends of the data, keeping the zoom level.
+    const [scaleXMin, scaleXMax] = clampWindow(
+      scXMin0 - dx,
+      scXMax0 - dx,
+      xMin,
+      xMax,
+    );
 
     // Tilting (Vertical panning)
     const top1 = e.clientY;
     const topDx = yUnitsPerPx * (top1 - top0);
 
-    const minYBoundary = scYMin0 - topDx;
-    const maxYBoundary = scYMax0 - topDx;
-
-    let scaleYMin = minYBoundary;
-    let scaleYMax = maxYBoundary;
-
-    if (yMin >= minYBoundary) {
-      scaleYMin = yMin;
-      scaleYMax = scYMax0;
-    } else if (yMax <= maxYBoundary) {
-      scaleYMin = scYMin0;
-      scaleYMax = yMax;
-    }
+    const [scaleYMin, scaleYMax] = clampWindow(
+      scYMin0 - topDx,
+      scYMax0 - topDx,
+      yMin,
+      yMax,
+    );
 
     uPlot.sync(props.group).plots.forEach((up) => {
       up.setScale("x", {
