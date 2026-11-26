@@ -18,6 +18,7 @@ import {
   DownloadStates,
 } from "~/stores/downloads";
 import { Port, portCommands } from "~/stores/ports";
+import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 
 async function sendDrivercomCommand(
   args: string[],
@@ -175,6 +176,7 @@ export async function startLogging(
     stringifyLogConfig,
   ];
   const startLogging = Command.sidecar("binaries/drivercom", args);
+  const startTime = Date.now();
 
   // Get percentage
   startLogging.stderr.addListener("data", async (line) => {
@@ -191,7 +193,7 @@ export async function startLogging(
 
   let child: Child | null = null;
   const done = new Promise<void>((resolve, reject) => {
-    startLogging.on("close", ({ code, signal }) => {
+    startLogging.on("close", async ({ code, signal }) => {
       if (child) {
         portCommands.delete(child.pid);
       }
@@ -202,6 +204,7 @@ export async function startLogging(
         if (findIndex === -1) {
           return reject("Cannot find download entry.");
         }
+        await writeTimestamp(filePath, startTime);
         setCsvFileDownloads(findIndex, "status", DownloadStatus.Success);
         resolve();
       } else {
@@ -245,6 +248,25 @@ export async function startLogging(
   };
   setCsvFileDownloads((prev) => [...prev, newFileDownload]);
   return done;
+}
+
+async function writeTimestamp(filePath: string, startTime: number) {
+  const str = await readTextFile(filePath);
+  const split = str.split("\n").filter((char) => char.trim().length > 0);
+
+  // uPlot time scales expect Unix time in seconds, so write seconds
+  // (startTime is in milliseconds). Samples are logged at 15 kHz.
+  const startSeconds = startTime / 1000;
+  const sampleInterval = 1 / 15000;
+  const parseSplit = split.map((line, i) => {
+    if (i === 0) {
+      return `${line}timestamp,`;
+    }
+    const currentTimeStamp = startSeconds + sampleInterval * (i - 1);
+    // Microsecond precision keeps the 66.7 µs steps without float noise.
+    return `${line}${currentTimeStamp.toFixed(6)},`;
+  });
+  await writeTextFile(filePath, parseSplit.join("\n"));
 }
 
 function parseToPercentage(line: string) {

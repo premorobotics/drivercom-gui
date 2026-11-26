@@ -11,6 +11,7 @@ import { toSeriesOptions } from "./SeriesOption/SeriesOption";
 type LegendListProps = {
   plot: uPlot;
   group: string;
+  hasTimestamp: boolean;
   ctx: PlotContext;
   setCtx: SetStoreFunction<PlotContext>;
   onContextChange?: (ctx: PlotContext) => void;
@@ -136,7 +137,7 @@ export function LegendList(props: LegendListProps) {
         </IconButton>
         <Legend
           plot={props.plot}
-          series="Cycle"
+          series={props.hasTimestamp ? "timestamp" : "Cycle"}
           group={group()}
           width="min-content"
           cursorIdx={cursorIdx()}
