@@ -127,8 +127,8 @@ export const PlotToolTip = (
                   </Text>
                   <Text textStyle="sm">
                     {enumValues
-                      ? `${enumValues.get(props.u.data[i() + 1][props.cursor.xValue]!)}(${props.u.data[i() + 1][props.cursor.xValue]})`
-                      : props.u.data[i() + 1][props.cursor.xValue]}
+                      ? `${enumValues.get(props.u.data[i() + 1][props.cursor.idx]!)}(${props.u.data[i() + 1][props.cursor.idx]})`
+                      : props.u.data[i() + 1][props.cursor.idx]}
                   </Text>
                 </Stack>
               </Show>
