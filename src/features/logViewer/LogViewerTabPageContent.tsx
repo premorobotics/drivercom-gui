@@ -34,6 +34,7 @@ import { Portal } from "solid-js/web";
 import * as Editable from "~/components/ui/editable";
 import { Spinner } from "~/components/ui/spinner";
 import { TabContext } from "~/components/workspace/Tab/TabTypes";
+import { toUnixSeconds } from "./Plot/TimeFormat";
 
 export type ErrorMessage = {
   title: string;
@@ -326,7 +327,7 @@ export function LogViewerTabPageContent() {
         const findTimeStamp = csvFile.header.findIndex(
           (str) => str === "timestamp",
         );
-        setTimestamp(series[findTimeStamp]);
+        setTimestamp(toUnixSeconds(series[findTimeStamp]));
         header = header.filter((_, i) => i !== findTimeStamp);
         series = series.filter((_, i) => i !== findTimeStamp);
       }

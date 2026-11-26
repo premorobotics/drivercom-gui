@@ -26,6 +26,24 @@ export function formatTimestamp(seconds: number): string {
   return `${ymd} ${formatTime(seconds)}`;
 }
 
+// Converts a timestamp column to Unix time in seconds. Files store it in
+// different units: drivercom logs in seconds (older ones in milliseconds) and
+// the Vibration Logger in nanoseconds. Present-day epoch values differ by
+// three orders of magnitude per unit, so the first finite value tells which.
+export function toUnixSeconds(values: number[]): number[] {
+  const first = values.find((v) => Number.isFinite(v));
+  if (first === undefined) return values;
+  const magnitude = Math.abs(first);
+  let divisor = 1;
+  if (magnitude >= 1e17)
+    divisor = 1e9; // nanoseconds
+  else if (magnitude >= 1e14)
+    divisor = 1e6; // microseconds
+  else if (magnitude >= 1e11) divisor = 1e3; // milliseconds
+  if (divisor === 1) return values;
+  return values.map((v) => v / divisor);
+}
+
 // Decimals needed to tell apart ticks `incr` seconds apart (0 to 6).
 export function decimalsForIncrement(incr: number): number {
   if (!(incr > 0)) return 0;
