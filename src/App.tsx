@@ -5,6 +5,7 @@ import {
   createEffect,
   createSignal,
   Index,
+  lazy,
   on,
   onCleanup,
   onMount,
@@ -32,6 +33,7 @@ import {
 } from "./stores/global-state.ts";
 import { panelStore, pageKeys, tabStore } from "./stores/layout/layout.ts";
 import { page, setPage, Pages } from "./stores/pages.ts";
+import { vibrationLogging } from "./stores/vibration-logger.ts";
 import {
   setRecentConfigFilePaths,
   setRecentLogFilePaths,
@@ -83,6 +85,8 @@ import {
   generateNewLoggingTab,
   generateNewLogViewerTab,
 } from "./services/TabFactory.ts";
+
+const VibrationLogger = lazy(() => import("./pages/VibrationLogger.tsx"));
 
 type PageMeta = {
   icon: ValidComponent;
@@ -473,6 +477,12 @@ function App(props: RouteSectionProps) {
 
   const navbarHeight = "2rem";
 
+  const [vibrationLoggerMounted, setVibrationLoggerMounted] =
+    createSignal(false);
+  createEffect(() => {
+    if (page() === Pages.VibrationLogger) setVibrationLoggerMounted(true);
+  });
+
   const applyTheme = (theme: "light" | "dark") => {
     document.documentElement.dataset.theme = theme;
     setGlobalState("theme", theme);
@@ -559,6 +569,21 @@ function App(props: RouteSectionProps) {
                   >
                     {pages[val()].label}
                   </Text>
+                  <Show
+                    when={val() === Pages.VibrationLogger && vibrationLogging()}
+                  >
+                    <span
+                      title="Logging in progress"
+                      aria-label="Logging in progress"
+                      class={css({
+                        width: "2",
+                        height: "2",
+                        borderRadius: "full",
+                        background: "red.9",
+                        flex: "none",
+                      })}
+                    />
+                  </Show>
                 </Button>
               )}
             </Index>
@@ -681,6 +706,19 @@ function App(props: RouteSectionProps) {
         }}
       >
         {props.children}
+        {/* Mounted on its first visit and then only hidden, so that a
+            logging session keeps running while other pages are shown. */}
+        <Show when={vibrationLoggerMounted()}>
+          <div
+            style={{
+              width: "100%",
+              height: "100%",
+              display: page() === Pages.VibrationLogger ? "block" : "none",
+            }}
+          >
+            <VibrationLogger />
+          </div>
+        </Show>
       </div>
       <Show when={page() !== Pages.None}>
         <DownloadList

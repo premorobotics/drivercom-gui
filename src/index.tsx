@@ -9,7 +9,6 @@ import App from "./App";
 const Configuration = lazy(() => import("./pages/Configuration.tsx"));
 const LogViewer = lazy(() => import("./pages/LogViewer.tsx"));
 const Logging = lazy(() => import("./pages/Logging.tsx"));
-const VibrationLogger = lazy(() => import("./pages/VibrationLogger.tsx"));
 
 render(
   () => (
@@ -17,7 +16,9 @@ render(
       <Route path="/configuration" component={Configuration} />
       <Route path="/logviewer" component={LogViewer} />
       <Route path="/logging" component={Logging} />
-      <Route path="/vibrationlogger" component={VibrationLogger} />
+      {/* App renders the Vibration Logger itself, so that it keeps running
+          while other pages are shown. */}
+      <Route path="/vibrationlogger" component={() => null} />
     </Router>
   ),
   document.getElementById("root") as HTMLElement,

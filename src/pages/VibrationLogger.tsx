@@ -1,4 +1,5 @@
 import {
+  createEffect,
   createSignal,
   Match,
   onCleanup,
@@ -26,6 +27,7 @@ import { Spinner } from "~/components/ui/spinner";
 import { toaster } from "~/components/ui/toast";
 import { FileHandler } from "~/services/FileHandler";
 import * as vilo from "~/services/ViloService";
+import { setVibrationLogging } from "~/stores/vibration-logger";
 import {
   calculateCapacity,
   formatClock,
@@ -578,7 +580,9 @@ function VibrationLogger() {
     }
   };
 
-  // Leaving the page or closing the app ends the session.
+  // The page stays mounted while other pages are shown (see App), so a
+  // session keeps running in the background. Closing the app ends it.
+  createEffect(() => setVibrationLogging(session() !== null));
   let unlistenClose: (() => void) | undefined;
   let disposed = false;
   onMount(async () => {
@@ -601,6 +605,7 @@ function VibrationLogger() {
   });
   onCleanup(() => {
     disposed = true;
+    setVibrationLogging(false);
     unlistenClose?.();
     const current = session();
     if (current) {
