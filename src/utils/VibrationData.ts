@@ -69,7 +69,7 @@ export class SampleSeries {
   }
 
   // The header line of the CSV that Save CSV writes and `parseCsv` reads:
-  // tick, timestamp, then each channel's label. Every line ends with a
+  // timestamp, then each channel's label. Every line ends with a
   // comma.
   formatCsvHeader(): string {
     return `timestamp,${this.labels.join(",")},\n`;
@@ -128,8 +128,9 @@ export function calculateCapacity(sampleRate: string, minutes: number): number {
 }
 
 // Reads a CSV that Save CSV wrote, in the format vilo's former `log save`
-// wrote too. A header is required with `tick` and `timestamp` (nanoseconds)
-// columns; every other column is a channel and keeps its name. A trailing
+// wrote too. A header is required with a `timestamp` (nanoseconds) column;
+// a `tick` column is optional, as Save CSV no longer writes it. Every other
+// column is a channel and keeps its name. A trailing
 // comma on each line is accepted.
 export function parseCsv(text: string): SampleSeries {
   const lines = text
@@ -149,8 +150,8 @@ export function parseCsv(text: string): SampleSeries {
   const header = split(lines[0]);
   const tickIndex = header.indexOf("tick");
   const timeIndex = header.indexOf("timestamp");
-  if (tickIndex < 0 || timeIndex < 0) {
-    throw new Error("The file needs a header with tick and timestamp columns.");
+  if (timeIndex < 0) {
+    throw new Error("The file needs a header with a timestamp column.");
   }
   const channelIndexes = header
     .map((_, i) => i)
@@ -175,7 +176,7 @@ export function parseCsv(text: string): SampleSeries {
       throw new Error(`Line ${row + 1} has an invalid timestamp.`);
     }
     series.push(
-      Number(cells[tickIndex]),
+      tickIndex < 0 ? NaN : Number(cells[tickIndex]),
       stamp,
       channelIndexes.map((col) => Number(cells[col])),
     );

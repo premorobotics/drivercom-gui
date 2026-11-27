@@ -54,6 +54,13 @@ describe("parseCsv", () => {
     ]);
   });
 
+  test("reads a CSV without a tick column", () => {
+    const actual = parseCsv("timestamp,ch1,\n1000000000,0.5,\n");
+    expect(actual.labels).toStrictEqual(["ch1"]);
+    expect(actual.time.toArray()).toStrictEqual([1]);
+    expect(actual.channels.map((c) => c.toArray())).toStrictEqual([[0.5]]);
+  });
+
   test("keeps column names and order", () => {
     const actual = parseCsv("x,timestamp,tick\n1,2000000000,7");
     expect(actual.labels).toStrictEqual(["x"]);
@@ -358,13 +365,12 @@ test("appendSweeps", () => {
 
 describe("CSV", () => {
   const text =
-    "tick,timestamp,ch1,ch2,ch3,\n" +
-    "1,1000000000,0.5,-0.25,1,\n" +
-    "2,1002000000,0.75,NaN,1.5,\n";
+    "timestamp,ch1,ch2,ch3,\n" +
+    "1000000000,0.5,-0.25,1,\n" +
+    "1002000000,0.75,NaN,1.5,\n";
 
   test("writes back what it read", () => {
     const series = parseCsv(text);
-    expect(series.ticks.toArray()).toStrictEqual([1, 2]);
     expect(
       series.formatCsvHeader() + series.formatCsvRows(0, series.time.length),
     ).toBe(text);
@@ -372,13 +378,13 @@ describe("CSV", () => {
 
   test("writes a range of samples", () => {
     const series = parseCsv(text);
-    expect(series.formatCsvRows(1, 2)).toBe("2,1002000000,0.75,NaN,1.5,\n");
+    expect(series.formatCsvRows(1, 2)).toBe("1002000000,0.75,NaN,1.5,\n");
   });
 
   test("writes the kept samples, oldest first", () => {
     const series = seriesOf([1, 2, 3], [[10, 20, 30]], 2);
     expect(series.formatCsvRows(0, series.time.length)).toBe(
-      "1,2000000000,20,\n2,3000000000,30,\n",
+      "2000000000,20,\n3000000000,30,\n",
     );
   });
 
@@ -393,7 +399,7 @@ describe("CSV", () => {
       ch2: [0],
       ch3: [0],
     });
-    const actual = Number(series.formatCsvRows(0, 1).split(",")[1]);
+    const actual = Number(series.formatCsvRows(0, 1).split(",")[0]);
     expect(Math.abs(actual - expected)).toBeLessThan(1000);
   });
 });
