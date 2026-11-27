@@ -1,19 +1,24 @@
-import { createSignal, For, JSX, Show } from "solid-js";
+import { createSignal, For, Show } from "solid-js";
 import { Text } from "~/components/ui/text";
 import { Tooltip } from "~/components/ui/tooltip";
 import { toaster } from "~/components/ui/toast.tsx";
 import * as Menu from "~/components/ui/menu";
 import { detectPort, getConfigFromPort } from "~/services/PortService";
 import { Port } from "~/stores/ports";
+import {
+  IconPlugConnected,
+  IconPlugConnectedX,
+  IconX,
+} from "@tabler/icons-solidjs";
+import { IconButton } from "~/components/ui/icon-button";
 
 type PortInfo = { driverId?: number; stationId?: number } & Port;
 
-export function DrivercomCommandButton(
-  props: {
-    onRunCommand?: (portId: string, version: string) => void;
-    tooltipContent?: string;
-  } & JSX.HTMLAttributes<HTMLDivElement>,
-) {
+export function PortConnectButton(props: {
+  isConnect: boolean;
+  onPortConnected?: (portId: string, version: string) => void;
+  size?: "2xs" | "xs" | "sm";
+}) {
   const [ports, setPorts] = createSignal<PortInfo[]>([]);
   const [open, setOpen] = createSignal<boolean>(false);
 
@@ -28,7 +33,9 @@ export function DrivercomCommandButton(
       <Menu.Trigger
         width="min-content"
         height={"min-content"}
-        onClick={async () => {
+        onClick={async (e) => {
+          e.stopPropagation();
+          if (open()) return;
           const detectedPorts = await detectPort();
           if (detectedPorts.length === 0) {
             toaster.create({
@@ -54,11 +61,14 @@ export function DrivercomCommandButton(
           setPorts(portInfos);
         }}
       >
-        <Tooltip
-          disabled={!props.tooltipContent}
-          content={props.tooltipContent}
-        >
-          {props.children}
+        <Tooltip content={"Detect which port is connected to driver."}>
+          <IconButton
+            size={props.size ?? "xs"}
+            variant={"plain"}
+            color={props.isConnect ? "accent.9" : "fg.default"}
+          >
+            {props.isConnect ? <IconPlugConnected /> : <IconPlugConnectedX />}
+          </IconButton>
         </Tooltip>
       </Menu.Trigger>
       <Menu.Positioner>
@@ -68,21 +78,36 @@ export function DrivercomCommandButton(
               {(port) => {
                 return (
                   <Menu.Item
-                    onClick={() => props.onRunCommand?.(port.id, port.version)}
+                    onClick={() =>
+                      props.onPortConnected?.(port.id, port.version)
+                    }
                     value={port.id}
                     display={"flex"}
-                    flexDir={"column"}
                     textAlign={"left"}
                     gap="0"
+                    paddingRight="0"
                   >
-                    <Text width="100%" fontSize="sm">
-                      {port.id}
-                    </Text>
-                    <Show when={port.stationId}>
-                      <Text width="100%" fontWeight="light" textStyle="xs">
-                        {`CC-Link Station ID: ${port.stationId}`}
+                    <div>
+                      <Text width="100%" fontSize="sm">
+                        {port.id}
                       </Text>
-                    </Show>
+                      <Show when={port.stationId}>
+                        <Text width="100%" fontWeight="light" textStyle="xs">
+                          {`CC-Link Station ID: ${port.stationId}`}
+                        </Text>
+                      </Show>
+                    </div>
+                    <IconButton
+                      borderRadius="2rem"
+                      size="xs"
+                      variant="plain"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        props.onPortConnected?.("", "");
+                      }}
+                    >
+                      <IconX />
+                    </IconButton>
                   </Menu.Item>
                 );
               }}

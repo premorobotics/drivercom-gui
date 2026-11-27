@@ -16,7 +16,6 @@ import { Tooltip } from "~/components/ui/tooltip";
 import { IconButton } from "~/components/ui/icon-button";
 import { Badge } from "~/components/ui/badge";
 import { Button } from "~/components/ui/button";
-import { DrivercomCommandButton } from "./DrivercomCommandButton";
 import { getConfigFromPort, toggleServo } from "~/services/PortService";
 import { createStore, reconcile } from "solid-js/store";
 import { toaster } from "~/components/ui/toast";
@@ -37,6 +36,7 @@ type DriverStatusProps = {
   id: string;
   driverStatus: StateType;
   accordionStatuses?: AccordionStates;
+  portId?: string;
 };
 
 // Since the Driver status is immutable, It has a seperate components.
@@ -95,6 +95,21 @@ export function DriverStatus(props: DriverStatusProps) {
     setDriverStatus(reconcile(newConfig.state));
   }
 
+  const isConnected = () => {
+    if (
+      typeof props.portId !== "string" ||
+      (typeof props.portId === "string" && props.portId!.length === 0)
+    ) {
+      toaster.create({
+        title: "Disconnected Port",
+        description: "Port is disconnected.",
+        type: "error",
+      });
+      return false;
+    }
+    return true;
+  };
+
   return (
     <div
       class={css({
@@ -127,56 +142,59 @@ export function DriverStatus(props: DriverStatusProps) {
             "justify-content": "right",
           }}
         >
-          <DrivercomCommandButton
-            onRunCommand={async (port, version) => {
-              if (isToggleButtonLoading()) return;
-              try {
-                setIsToggleButtonLoading(true);
-                await toggleServo(port, driverStatus.servo_enabled);
-                await refreshStatus(port, version);
-                setIsToggleButtonLoading(false);
-              } catch (e) {
-                setIsToggleButtonLoading(false);
-                toaster.create({
-                  title: "Toggle Servo Error",
-                  description: e as string,
-                  type: "error",
-                });
-              }
-            }}
-            tooltipContent={"Enable or disable the servo."}
-          >
+          <Tooltip content={"Enable or disable the servo."}>
             <Button
               variant={"outline"}
               size="2xs"
               fontWeight="normal"
               loading={isToggleButtonLoading()}
+              onClick={async () => {
+                if (isToggleButtonLoading()) return;
+                if (!isConnected()) return;
+                try {
+                  setIsToggleButtonLoading(true);
+                  await toggleServo(props.portId!, driverStatus.servo_enabled);
+                  await refreshStatus(props.portId!);
+                  setIsToggleButtonLoading(false);
+                } catch (e) {
+                  setIsToggleButtonLoading(false);
+                  toaster.create({
+                    title: "Toggle Servo Error",
+                    description: e as string,
+                    type: "error",
+                  });
+                }
+              }}
             >
               {driverStatus.servo_enabled ? "Disable servo" : "Enable servo"}
             </Button>
-          </DrivercomCommandButton>
-          <DrivercomCommandButton
-            onRunCommand={async (port, version) => {
-              if (isReseting()) return;
-              try {
-                setIsReseting(true);
-                await refreshStatus(port, version);
-                setIsReseting(false);
-              } catch (e) {
-                setIsReseting(false);
-                toaster.create({
-                  title: "Refresh Driver status Error",
-                  description: e as string,
-                  type: "error",
-                });
-              }
-            }}
-            tooltipContent={"Refresh Driver status"}
-          >
-            <IconButton variant="plain" size="2xs" loading={isReseting()}>
+          </Tooltip>
+
+          <Tooltip content={"Refresh Driver status"}>
+            <IconButton
+              onClick={async () => {
+                if (isReseting()) return;
+                if (!isConnected()) return;
+                try {
+                  setIsReseting(true);
+                  await refreshStatus(props.portId!);
+                  setIsReseting(false);
+                } catch (e) {
+                  setIsReseting(false);
+                  toaster.create({
+                    title: "Refresh Driver status Error",
+                    description: e as string,
+                    type: "error",
+                  });
+                }
+              }}
+              variant="plain"
+              size="2xs"
+              loading={isReseting()}
+            >
               <IconRefresh />
             </IconButton>
-          </DrivercomCommandButton>
+          </Tooltip>
         </div>
       </div>
       <div
@@ -347,11 +365,16 @@ export function DriverStatus(props: DriverStatusProps) {
               width: "100%",
             }}
           >
-            <DrivercomCommandButton
-              onRunCommand={async (portId, version) => {
+            <Button
+              onClick={async () => {
+                if (isConnected()) return;
                 try {
-                  await initializeSlider(portId, Number(axisId()), sliderId());
-                  await refreshStatus(portId, version);
+                  await initializeSlider(
+                    props.portId!,
+                    Number(axisId()),
+                    sliderId(),
+                  );
+                  await refreshStatus(props.portId!);
                 } catch (e) {
                   toaster.create({
                     title: "Initialize failed",
@@ -360,9 +383,10 @@ export function DriverStatus(props: DriverStatusProps) {
                   });
                 }
               }}
+              size="2xs"
             >
-              <Button size="2xs">{"Start"}</Button>
-            </DrivercomCommandButton>
+              {"Start"}
+            </Button>
           </div>
         </div>
         <div>{DriverStatusReactiveTable()}</div>

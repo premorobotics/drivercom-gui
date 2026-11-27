@@ -460,17 +460,17 @@ function App(props: RouteSectionProps) {
     },
     logging: {
       icon: IconGraph,
-      label: "Logging",
-      disabled: false,
-    },
-    logViewer: {
-      icon: IconDeviceAnalytics,
-      label: "Log Viewer",
+      label: "Driver Logger",
       disabled: false,
     },
     vibrationLogger: {
       icon: IconWaveSine,
       label: "Vibration Logger",
+      disabled: false,
+    },
+    logViewer: {
+      icon: IconDeviceAnalytics,
+      label: "Log Viewer",
       disabled: false,
     },
   };

@@ -90,6 +90,22 @@ export function LoggingTabContent() {
     );
   };
 
+  const getPort = () => {
+    return tabStore.get(loggingTabProps.key)![0].tabContext[getTabIndex()]
+      .tabPage!.loggingTabPage!.portId;
+  };
+
+  const setPortId = (newPort: string) => {
+    return tabStore.get(loggingTabProps.key)![1](
+      "tabContext",
+      getTabIndex(),
+      "tabPage",
+      "loggingTabPage",
+      "portId",
+      newPort,
+    );
+  };
+
   const getTabId = () => {
     return tabStore.get(loggingTabProps.key)![0].tabContext[getTabIndex()].tab
       .id;
@@ -276,6 +292,8 @@ export function LoggingTabContent() {
               accordionStates={getAccordionStates()}
               loadStartButton={loadStartLogButton()}
               description={logConfigDescription()}
+              portId={getPort()}
+              onPortConnect={setPortId}
               onStartLogging={async (portId) => {
                 setLoadStartLogButton(true);
                 try {

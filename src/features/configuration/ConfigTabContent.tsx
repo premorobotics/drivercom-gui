@@ -51,6 +51,7 @@ import {
   configFormFileFormat,
   configTabForm,
 } from "~/stores/config-format";
+import { PortConnectButton } from "~/components/workspace/port-connect-button/PortConnectButton";
 
 export type ConfigTabPage = {
   filePath?: string;
@@ -401,10 +402,10 @@ export function ConfigTabContent() {
     }
   };
 
-  const getFromPort = async (portId: string, version: string) => {
+  const getFromPort = async (portId: string) => {
     try {
       setRender(false);
-      const config = await getConfigFromPort(portId, version);
+      const config = await getConfigFromPort(portId);
       setConfigForm(config);
       setFilePath("");
       setTabName(portId);
@@ -462,7 +463,7 @@ export function ConfigTabContent() {
           gap="0"
           background={"gray.2"}
           display={"grid"}
-          gridTemplateColumns={`minmax(0, 1fr) repeat(6, 2rem)`}
+          gridTemplateColumns={`minmax(0, 1fr) repeat(7, 2rem)`}
         >
           <Text
             fontSize="sm"
@@ -594,15 +595,48 @@ export function ConfigTabContent() {
               <IconDeviceFloppy />
             </IconButton>
           </Tooltip>
+          {/*Port Connect Button */}
+          <div style={{ "border-left-width": "1px" }}>
+            <PortConnectButton
+              isConnect={
+                typeof getPortId() === "string" && getPortId()!.length > 0
+              }
+              onPortConnected={(port) => setPortId(port)}
+            />
+          </div>
           {/*Get from port */}
           <GetFromPortButton
-            onGetFromPort={async (portId, version) =>
-              await getFromPort(portId, version)
-            }
+            onGetFromPort={async () => {
+              if (
+                typeof getPortId() === "undefined" ||
+                (typeof getPortId() === "string" && getPortId()!.length === 0)
+              ) {
+                toaster.create({
+                  title: "Port Connection Error",
+                  description: "Port is not connected",
+                  type: "error",
+                });
+                return;
+              }
+              await getFromPort(getPortId()!);
+            }}
           />
           {/* Save to port */}
           <SaveToPort
-            onSaveToPort={async (portId) => await saveToPort(portId)}
+            onSaveToPort={async () => {
+              if (
+                typeof getPortId() === "undefined" ||
+                (typeof getPortId() === "string" && getPortId()!.length === 0)
+              ) {
+                toaster.create({
+                  title: "Port Connection Error",
+                  description: "Port is not connected",
+                  type: "error",
+                });
+                return;
+              }
+              await saveToPort(getPortId()!);
+            }}
           />
           <div style={{ "border-left-width": "1px" }}>
             <Tooltip
@@ -704,6 +738,7 @@ export function ConfigTabContent() {
             id={getTabId() + "." + "driverStatus"}
             driverStatus={getConfigForm()!.state}
             accordionStatuses={getAccordionStatuses()!}
+            portId={getPortId()}
           />
         </div>
       </Show>
