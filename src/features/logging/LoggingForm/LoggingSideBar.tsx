@@ -3,13 +3,14 @@ import { createStore } from "solid-js/store";
 import { FormNumberInput } from "~/components/form/FormNumberInput.tsx";
 import { LoggingCommandTable } from "./LoggingCommandTable.tsx";
 import * as Checkbox from "../../../components/ui/checkbox.tsx";
-import { DrivercomCommandButton } from "~/features/configuration/ConfigForm/DrivercomCommandButton.tsx";
 import { For } from "solid-js";
 import { Text } from "~/components/ui/text.tsx";
 import { css } from "styled-system/css/css";
 import { Button } from "~/components/ui/button.tsx";
 import { AccordionStates } from "~/features/configuration/ConfigForm/ConfigForm.tsx";
 import { HelpTooltip } from "~/components/HelpTooltip.tsx";
+import { PortConnectButton } from "~/components/workspace/port-connect-button/PortConnectButton.tsx";
+import { toaster } from "~/components/ui/toast.tsx";
 
 type LoggingSideBar = {
   id: string;
@@ -19,6 +20,8 @@ type LoggingSideBar = {
   accordionStates: AccordionStates;
   loadStartButton?: boolean;
   description?: object;
+  portId?: string;
+  onPortConnect?: (portId: string, version: string) => void;
 };
 
 export function LoggingSideBar(props: LoggingSideBar) {
@@ -143,15 +146,33 @@ export function LoggingSideBar(props: LoggingSideBar) {
         <div
           style={{ "justify-content": "right", display: "flex", width: "100%" }}
         >
-          <DrivercomCommandButton
-            onRunCommand={(portId) => {
-              props.onStartLogging?.(portId);
+          <PortConnectButton
+            size="2xs"
+            isConnect={
+              typeof props.portId === "string" && props.portId!.length > 0
+            }
+            onPortConnected={props.onPortConnect}
+          />
+          <Button
+            onClick={() => {
+              if (
+                !props.portId ||
+                (typeof props.portId === "string" && props.portId.length === 0)
+              ) {
+                toaster.create({
+                  title: "Port Not Connected",
+                  description: "Port is not connected",
+                  type: "error",
+                });
+                return;
+              }
+              props.onStartLogging?.(props.portId!);
             }}
+            loading={props.loadStartButton}
+            size="2xs"
           >
-            <Button loading={props.loadStartButton} size="2xs">
-              {"Start Logging"}
-            </Button>
-          </DrivercomCommandButton>
+            {"Start Logging"}
+          </Button>
         </div>
       </div>
     </div>
